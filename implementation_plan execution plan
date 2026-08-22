@@ -1,0 +1,1364 @@
+# 🏆 Storyline Event Management ERP — Full Implementation Plan
+
+> **Architecture**: Java 21 + Spring Boot 3.3 Modular Monolith + React/Vite Frontend + PostgreSQL + Redis  
+> **Project**: `storyline-erp`  
+> **Workspace**: `c:\storyline management software`
+
+## System Overview
+
+A comprehensive Event Management ERP built around 5 major business engines:
+
+```mermaid
+graph TD
+    A["CRM<br/>Leads & Clients"] --> B["Sales & Quotations<br/>Quotes, Revisions, History"]
+    B --> C["Event Operations<br/>Teams, Vendors, Tasks"]
+    C --> D["Hamper Manufacturing<br/>BOM, Production, Inventory"]
+    D --> E["Finance & Analytics<br/>Payments, P&L, Reports"]
+    E -.-> A
+    
+    style A fill:#4F46E5,color:white
+    style B fill:#7C3AED,color:white
+    style C fill:#EC4899,color:white
+    style D fill:#F59E0B,color:black
+    style E fill:#10B981,color:white
+```
+
+---
+
+## Technology Stack
+
+| Layer | Technology | Rationale |
+|-------|-----------|-----------|
+| **Language** | Java 21 (LTS) | Records, sealed classes, virtual threads |
+| **Backend** | Spring Boot 3.3 + Spring Modulith | Modular monolith with enforced boundaries |
+| **API** | REST (OpenAPI/Swagger) | Standard, well-documented |
+| **Database** | PostgreSQL 16 | JSONB for flexible data, strong relational integrity |
+| **Cache** | Redis | Session management, real-time notifications, caching |
+| **ORM** | Spring Data JPA + Hibernate 6 | Type-safe queries, automatic auditing |
+| **Migrations** | Flyway | Version-controlled schema migrations |
+| **Security** | Spring Security + JWT | Stateless auth, RBAC + scope-based access |
+| **Validation** | Jakarta Bean Validation | Declarative input validation |
+| **PDF** | iText / OpenPDF | Quotation & invoice PDF generation |
+| **Frontend** | React 18 + Vite + TypeScript | Fast builds, rich ERP UI |
+| **UI Library** | Ant Design / Shadcn | Enterprise-grade components |
+| **State** | TanStack Query + Zustand | Server-state caching + lightweight global state |
+| **Charts** | Recharts / Apache ECharts | Dashboards & analytics |
+| **Build** | Maven (multi-module) | Proven Java build system |
+| **Testing** | JUnit 5 + Mockito + Testcontainers | Unit + integration with real Postgres |
+| **Docs** | OpenAPI 3.0 (Springdoc) | Auto-generated API docs |
+| **DevOps** | Docker + Docker Compose | Consistent dev/prod environments |
+
+---
+
+## Project Structure
+
+### Backend (Maven Multi-Module)
+
+```
+storyline-erp/
+├── pom.xml                          (Parent POM)
+├── docker-compose.yml               (PostgreSQL + Redis)
+│
+├── storyline-app/                   (Main Spring Boot application)
+│   ├── pom.xml
+│   └── src/main/java/com/storyline/erp/
+│       ├── StorylineErpApplication.java
+│       └── config/
+│           ├── SecurityConfig.java
+│           ├── JwtConfig.java
+│           ├── CorsConfig.java
+│           ├── AuditConfig.java
+│           └── SwaggerConfig.java
+│
+├── storyline-common/                (Shared utilities, DTOs, events)
+│   ├── pom.xml
+│   └── src/main/java/com/storyline/erp/common/
+│       ├── dto/            (PageResponse, ApiResponse, etc.)
+│       ├── entity/         (BaseEntity, AuditableEntity)
+│       ├── event/          (Domain events for module communication)
+│       ├── exception/      (Custom exceptions + GlobalExceptionHandler)
+│       ├── security/       (CurrentUser, SecurityUtils)
+│       └── util/           (DateUtils, IdGenerator, etc.)
+│
+├── module-identity/                 (Auth, Users, Roles, Permissions)
+│   ├── pom.xml
+│   └── src/main/java/com/storyline/erp/identity/
+│       ├── api/            (Public interfaces exposed to other modules)
+│       ├── internal/
+│       │   ├── controller/
+│       │   ├── service/
+│       │   ├── repository/
+│       │   ├── entity/
+│       │   └── dto/
+│       └── package-info.java
+│
+├── module-crm/                      (Leads, Clients, Follow-ups)
+├── module-sales/                    (Quotations, Versions, History)
+├── module-events/                   (Events, Plans, Assignments)
+├── module-teams/                    (Teams, Members, Departments)
+├── module-vendors/                  (Vendors, Assignments, Ratings)
+├── module-tasks/                    (Tasks, Checklists, Progress)
+├── module-hampers/                  (Products, BOM, Manufacturing)
+├── module-inventory/                (Stock, Reservations, Dispatch)
+├── module-finance/                  (Invoices, Payments, Expenses, P&L)
+├── module-notifications/            (Alerts, Escalations, Reminders)
+├── module-reports/                  (Analytics, KPIs, Dashboards)
+├── module-documents/                (File storage, PDFs, Attachments)
+├── module-audit/                    (Audit logs, Version history)
+│
+└── storyline-frontend/              (React + Vite + TypeScript)
+    ├── package.json
+    ├── vite.config.ts
+    └── src/
+        ├── api/            (Axios clients, API types)
+        ├── components/     (Reusable UI components)
+        ├── features/       (Feature-based modules)
+        │   ├── auth/
+        │   ├── dashboard/
+        │   ├── crm/
+        │   ├── sales/
+        │   ├── events/
+        │   ├── teams/
+        │   ├── vendors/
+        │   ├── tasks/
+        │   ├── hampers/
+        │   ├── inventory/
+        │   ├── finance/
+        │   └── reports/
+        ├── hooks/          (Custom React hooks)
+        ├── layouts/        (App shell, sidebar, topbar)
+        ├── store/          (Zustand stores)
+        ├── types/          (TypeScript interfaces)
+        └── utils/          (Formatters, validators)
+```
+
+### Module Internal Structure (Each module follows this pattern)
+
+```
+module-crm/
+└── src/main/java/com/storyline/erp/crm/
+    ├── api/                         (PUBLIC — exposed to other modules)
+    │   ├── CrmApi.java              (Interface)
+    │   ├── ClientCreatedEvent.java  (Domain event)
+    │   └── ClientSummaryDto.java    (Read-only DTO)
+    │
+    └── internal/                    (PRIVATE — hidden from other modules)
+        ├── controller/
+        │   ├── LeadController.java
+        │   └── ClientController.java
+        ├── service/
+        │   ├── LeadService.java
+        │   └── ClientService.java
+        ├── repository/
+        │   ├── LeadRepository.java
+        │   └── ClientRepository.java
+        ├── entity/
+        │   ├── Lead.java
+        │   └── Client.java
+        ├── dto/
+        │   ├── LeadRequest.java
+        │   ├── LeadResponse.java
+        │   ├── ClientRequest.java
+        │   └── ClientResponse.java
+        └── mapper/
+            ├── LeadMapper.java
+            └── ClientMapper.java
+```
+
+---
+
+## Database Architecture
+
+### Entity Relationship Summary
+
+```mermaid
+erDiagram
+    USERS ||--o{ USER_ROLES : has
+    ROLES ||--o{ USER_ROLES : has
+    ROLES ||--o{ ROLE_PERMISSIONS : has
+    PERMISSIONS ||--o{ ROLE_PERMISSIONS : has
+    
+    LEADS ||--o| CLIENTS : converts_to
+    LEADS ||--o{ FOLLOWUPS : has
+    CLIENTS ||--o{ QUOTATIONS : receives
+    
+    QUOTATIONS ||--o{ QUOTATION_ITEMS : contains
+    QUOTATIONS ||--o{ QUOTATION_VERSIONS : has
+    QUOTATIONS ||--o| EVENTS : converts_to
+    
+    EVENTS ||--o{ EVENT_TEAMS : has
+    EVENTS ||--o{ EVENT_VENDORS : has
+    EVENTS ||--o{ TASKS : has
+    EVENTS ||--o{ EVENT_PLAN_VERSIONS : has
+    
+    TEAMS ||--o{ TEAM_MEMBERS : has
+    VENDORS ||--o{ VENDOR_ASSIGNMENTS : has
+    
+    TASKS ||--o{ TASK_CHECKLISTS : has
+    TASKS ||--o{ TASK_COMMENTS : has
+    
+    HAMPER_PRODUCTS ||--o{ HAMPER_BOM_ITEMS : has
+    MANUFACTURING_BATCHES ||--o{ QUALITY_CHECKS : has
+    
+    EVENTS ||--o{ INVOICES : generates
+    INVOICES ||--o{ CLIENT_PAYMENTS : receives
+    VENDORS ||--o{ VENDOR_PAYMENTS : receives
+    EVENTS ||--o{ EXPENSES : incurs
+```
+
+---
+
+## Security Architecture — RBAC + Scope-Based Access
+
+### Role Hierarchy
+
+```
+SUPER_ADMIN
+    └── ADMIN
+        ├── FINANCE_MANAGER
+        ├── EVENT_MANAGER
+        │   └── EVENT_HEAD
+        │       └── TEAM_HEAD
+        │           └── TEAM_MEMBER
+        └── INVENTORY_MANAGER
+VENDOR (External role — limited portal access)
+```
+
+### Scope-Based Access Control
+
+Beyond roles, each user's access is scoped:
+
+```java
+// Example: SecurityScope
+record SecurityScope(
+    Role role,
+    Set<Long> allowedEventIds,    // null = all events
+    Set<Long> allowedTeamIds,     // null = all teams
+    Set<String> moduleAccess      // e.g., ["CRM", "SALES", "EVENTS"]
+) {}
+```
+
+| Role | CRM | Sales | Events | Teams | Vendors | Tasks | Hampers | Finance | Reports |
+|------|-----|-------|--------|-------|---------|-------|---------|---------|---------|
+| **Admin** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Finance Manager** | 👁️ | ✅ | 👁️ | ❌ | 👁️ | ❌ | 👁️ | ✅ | ✅ |
+| **Event Manager** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 👁️ | 👁️ | ✅ |
+| **Event Head** | 👁️ | 👁️ | ✅* | ✅* | ✅* | ✅* | 👁️ | ❌ | 👁️ |
+| **Team Head** | ❌ | ❌ | 👁️* | ✅* | 👁️* | ✅* | ❌ | ❌ | ❌ |
+| **Team Member** | ❌ | ❌ | 👁️* | 👁️* | ❌ | ✅* | ❌ | ❌ | ❌ |
+| **Vendor** | ❌ | ❌ | 👁️* | ❌ | 👁️* | 👁️* | ❌ | ❌ | ❌ |
+
+*✅* = only assigned items, 👁️ = read-only, 👁️* = read-only for assigned items*
+
+---
+
+## ⚙️ Phase 1 — Foundation (Weeks 1–3)
+
+### 1.1 Project Bootstrap
+
+#### [NEW] Parent `pom.xml`
+- Java 21, Spring Boot 3.3.x parent
+- Spring Modulith BOM
+- Dependency management for all modules
+- Plugin configuration (compiler, surefire, failsafe)
+
+#### [NEW] `docker-compose.yml`
+- PostgreSQL 16 with initialization script
+- Redis 7 for caching/sessions
+- pgAdmin for database management
+
+#### [NEW] `storyline-app` module
+- Main `StorylineErpApplication.java`
+- `SecurityConfig.java` — JWT filter chain, CORS, CSRF
+- `JwtTokenProvider.java` — Token generation + validation
+- `AuditConfig.java` — JPA Auditing (createdBy, createdAt, etc.)
+- `SwaggerConfig.java` — OpenAPI 3.0 config
+- `GlobalExceptionHandler.java` — Unified error responses
+- `application.yml` — DB, Redis, JWT, server config
+
+#### [NEW] `storyline-common` module
+- `BaseEntity.java` — id, createdAt, updatedAt, createdBy, updatedBy
+- `AuditableEntity.java` — extends BaseEntity + soft delete
+- `ApiResponse<T>` — Standard API wrapper
+- `PageResponse<T>` — Paginated response wrapper
+- `IdGenerator.java` — Prefixed ID generation (QT-2026-001, EVT-2026-001)
+- Custom exceptions: `ResourceNotFoundException`, `BusinessException`, `AccessDeniedException`
+
+### 1.2 Identity Module
+
+#### [NEW] `module-identity`
+
+**Entities:**
+```
+users
+├── id (UUID)
+├── username (unique)
+├── email (unique)
+├── password_hash
+├── full_name
+├── phone
+├── avatar_url
+├── is_active
+├── last_login
+├── created_at / updated_at / created_by / updated_by
+
+roles
+├── id
+├── name (ADMIN, EVENT_MANAGER, EVENT_HEAD, TEAM_HEAD, TEAM_MEMBER, FINANCE_MANAGER, INVENTORY_MANAGER, VENDOR)
+├── description
+├── is_system_role
+
+permissions
+├── id
+├── module (CRM, SALES, EVENTS, TEAMS, VENDORS, TASKS, HAMPERS, INVENTORY, FINANCE, REPORTS)
+├── action (CREATE, READ, UPDATE, DELETE, EXPORT, APPROVE)
+├── scope (ALL, OWN, ASSIGNED)
+
+user_roles         (user_id, role_id, assigned_at, assigned_by)
+role_permissions   (role_id, permission_id)
+user_event_scopes  (user_id, event_id, team_id)  — scope-based access
+```
+
+**API Endpoints:**
+```
+POST   /api/auth/login          → JWT token pair (access + refresh)
+POST   /api/auth/refresh        → New access token
+POST   /api/auth/logout         → Invalidate refresh token
+GET    /api/auth/me             → Current user profile
+
+GET    /api/users               → List users (paginated, filtered)
+POST   /api/users               → Create user
+GET    /api/users/{id}          → Get user details
+PUT    /api/users/{id}          → Update user
+PATCH  /api/users/{id}/status   → Activate/deactivate
+
+GET    /api/roles               → List roles
+POST   /api/roles               → Create custom role
+PUT    /api/roles/{id}/permissions → Update role permissions
+```
+
+### 1.3 Frontend Foundation
+
+#### [NEW] `storyline-frontend`
+
+- Vite + React 18 + TypeScript setup
+- Ant Design component library
+- React Router v6 with route guards
+- Axios API client with JWT interceptor (auto-refresh)
+- Auth context & protected routes
+- App shell layout:
+  - **Sidebar** — Collapsible navigation (matches UI structure from plan Section 38)
+  - **Top bar** — User profile, notifications bell, search
+  - **Content area** — Responsive layout
+- **Login page** — Email/password with JWT
+- **Dashboard page** — Placeholder cards for each module
+- **User management page** — CRUD with role assignment
+- Dark mode support, theming system
+
+### 1.4 Database Migrations (Flyway)
+
+```
+db/migration/
+├── V1.0.0__create_identity_tables.sql
+├── V1.0.1__seed_default_roles.sql
+├── V1.0.2__seed_admin_user.sql
+└── V1.0.3__seed_default_permissions.sql
+```
+
+### Phase 1 Deliverables
+- ✅ Working Spring Boot app with PostgreSQL + Redis
+- ✅ JWT authentication (login/register/refresh)
+- ✅ RBAC with 7 predefined roles + custom role support
+- ✅ User management API
+- ✅ React frontend with login, sidebar navigation, dashboard shell
+- ✅ Docker Compose for local development
+- ✅ Swagger UI for API documentation
+
+---
+
+## 💼 Phase 2 — CRM + Sales/Quotations (Weeks 4–7)
+
+### 2.1 CRM Module
+
+#### [NEW] `module-crm`
+
+**Entities:**
+```
+leads
+├── id
+├── lead_number (auto: LEAD-2026-001)
+├── name, company, phone, email
+├── event_type (WEDDING, CORPORATE, BIRTHDAY, ANNIVERSARY, SOCIAL, OTHER)
+├── expected_event_date, venue
+├── guest_count, estimated_budget
+├── lead_source (WEBSITE, REFERRAL, SOCIAL_MEDIA, WALK_IN, PHONE, OTHER)
+├── assigned_salesperson_id → users
+├── pipeline_stage (NEW, CONTACTED, MEETING, REQUIREMENT_COLLECTED, QUOTATION_SENT, NEGOTIATION, WON, LOST)
+├── lost_reason
+├── converted_to_client_id → clients (nullable)
+├── notes (TEXT)
+├── created_at / updated_at
+
+clients
+├── id
+├── client_number (auto: CLT-2026-001)
+├── lead_id → leads (original lead)
+├── name, company, phone, email
+├── address, city, state, pincode
+├── gst_number
+├── contact_persons (JSONB — array of {name, phone, email, designation})
+├── notes
+├── is_active
+├── created_at / updated_at
+
+followups
+├── id
+├── lead_id → leads (or client_id → clients)
+├── type (CALL, EMAIL, MEETING, WHATSAPP, SITE_VISIT)
+├── scheduled_at, completed_at
+├── outcome (CONNECTED, NO_RESPONSE, RESCHEDULED, INTERESTED, NOT_INTERESTED)
+├── notes
+├── next_followup_date
+├── created_by → users
+```
+
+**Lead Pipeline Flow:**
+```
+NEW → CONTACTED → MEETING → REQUIREMENT_COLLECTED → QUOTATION_SENT → NEGOTIATION → WON/LOST
+```
+
+**API Endpoints:**
+```
+# Leads
+GET    /api/leads                      → List (paginated, filterable)
+POST   /api/leads                      → Create lead
+GET    /api/leads/{id}                 → Lead detail (with follow-ups, quotations)
+PUT    /api/leads/{id}                 → Update lead
+PATCH  /api/leads/{id}/stage           → Move to next pipeline stage
+POST   /api/leads/{id}/convert         → Convert lead → client
+GET    /api/leads/pipeline             → Pipeline view (counts per stage)
+
+# Clients
+GET    /api/clients                    → List clients
+GET    /api/clients/{id}               → Full client profile (events, quotations, payments, history)
+PUT    /api/clients/{id}               → Update client
+
+# Follow-ups
+GET    /api/followups                  → List (today's, overdue, upcoming)
+POST   /api/followups                  → Schedule follow-up
+PUT    /api/followups/{id}             → Update/complete follow-up
+```
+
+**Frontend Pages:**
+- Lead list with pipeline view (Kanban board + table toggle)
+- Lead detail page (timeline, follow-ups, quotations)
+- Lead creation form (multi-step wizard)
+- Client list with search/filter
+- Client 360° profile page (tabs: Info, Events, Quotations, Payments, Documents, Communication)
+- Follow-up calendar view
+- Lead → Client conversion flow
+
+### 2.2 Sales / Quotation Module
+
+#### [NEW] `module-sales`
+
+**Entities:**
+```
+quotations
+├── id
+├── quotation_number (auto: QT-2026-001)
+├── client_id → clients
+├── lead_id → leads (optional — before conversion)
+├── current_version (integer, starts at 1)
+├── status (DRAFT, SENT, VIEWED, NEGOTIATION, REVISED, ACCEPTED, REJECTED, EXPIRED)
+├── event_name, event_type, event_date, venue
+├── valid_until
+├── subtotal, discount_amount, discount_percent
+├── gst_rate, gst_amount
+├── grand_total
+├── terms_and_conditions (TEXT)
+├── internal_notes (TEXT — not shown to client)
+├── assigned_salesperson_id → users
+├── converted_to_event_id → events (nullable)
+├── created_at / updated_at / created_by
+
+quotation_items
+├── id
+├── quotation_id → quotations
+├── version_number
+├── item_name
+├── description
+├── category (DECORATION, SOUND, HOSPITALITY, HAMPERS, CATERING, PHOTOGRAPHY, VENUE, LOGISTICS, OTHER)
+├── quantity, unit
+├── unit_rate, amount
+├── sort_order
+
+quotation_versions
+├── id
+├── quotation_id → quotations
+├── version_number
+├── snapshot (JSONB — complete quotation snapshot at that version)
+├── changes_summary (TEXT — what changed)
+├── subtotal, discount_amount, gst_amount, grand_total
+├── created_at, created_by → users
+
+quotation_status_history
+├── id
+├── quotation_id → quotations
+├── from_status, to_status
+├── changed_at, changed_by → users
+├── notes
+
+quotation_terms
+├── id
+├── quotation_id → quotations
+├── term_text
+├── sort_order
+```
+
+**Company Settings (for Quotation Header):**
+```
+company_settings
+├── company_name, company_logo_url
+├── address, phone, email, website
+├── gst_number, pan_number
+├── bank_name, account_number, ifsc_code
+├── quotation_prefix (default: "QT")
+├── quotation_terms_template (TEXT)
+```
+
+**Quotation Version Flow:**
+```
+QT-2026-001
+    ├── Version 1 — ₹8,50,000  (Original)
+    ├── Version 2 — ₹8,00,000  (Items changed)
+    └── Version 3 — ₹7,75,000  (Discount applied) ← Current
+```
+
+**API Endpoints:**
+```
+# Quotations
+GET    /api/quotations                        → List (paginated, multi-filter)
+POST   /api/quotations                        → Create new quotation
+GET    /api/quotations/{id}                   → Full quotation detail
+PUT    /api/quotations/{id}                   → Update (creates new version automatically)
+PATCH  /api/quotations/{id}/status            → Change status
+POST   /api/quotations/{id}/duplicate         → Duplicate as new quotation
+POST   /api/quotations/{id}/convert-to-event  → Create event from accepted quotation
+GET    /api/quotations/{id}/versions          → List all versions
+GET    /api/quotations/{id}/versions/{v}      → Get specific version snapshot
+GET    /api/quotations/{id}/pdf               → Generate PDF
+GET    /api/quotations/{id}/versions/{v}/pdf  → PDF for specific version
+
+# Quotation History
+GET    /api/quotations/history                → Advanced search (client, date range, amount, status, salesperson, FY)
+
+# Quotation Analytics
+GET    /api/quotations/analytics              → Dashboard stats (this month/quarter/year)
+GET    /api/quotations/analytics/conversion   → Conversion funnel
+GET    /api/quotations/analytics/salesperson   → Salesperson performance
+```
+
+**Frontend Pages:**
+- Quotation list with advanced filters
+- **Professional Quotation Builder** — drag-and-drop items, live total calculation
+- Quotation PDF preview (with company branding)
+- Version history comparison view (side-by-side diff)
+- Quotation → Event conversion wizard
+- **Quotation Analytics Dashboard:**
+  - Quotes Created / Sent / Accepted / Rejected
+  - Conversion rate gauge
+  - Quoted vs Confirmed value chart
+  - Salesperson leaderboard
+  - Monthly trend line chart
+- Quotation history search page (all past quotations)
+
+### Phase 2 Deliverables
+- ✅ Lead management with pipeline view (Kanban + table)
+- ✅ Client 360° profile
+- ✅ Follow-up scheduling & tracking
+- ✅ Professional quotation builder with PDF generation
+- ✅ Quotation versioning system (never overwrite)
+- ✅ Complete quotation history & search
+- ✅ Quotation → Event conversion
+- ✅ Sales analytics dashboard
+
+---
+
+## 🎪 Phase 3 — Event Operations (Weeks 8–12)
+
+### 3.1 Events Module
+
+#### [NEW] `module-events`
+
+**Entities:**
+```
+events
+├── id
+├── event_number (auto: EVT-2026-001)
+├── client_id → clients
+├── quotation_id → quotations (source quotation)
+├── event_name, event_type
+├── start_date, end_date
+├── venue_name, venue_address, venue_city
+├── guest_count
+├── status (PLANNING, CONFIRMED, IN_PROGRESS, COMPLETED, CANCELLED, POSTPONED)
+├── current_plan_version
+├── event_head_id → users
+├── budget (from quotation grand_total)
+├── actual_cost (calculated from expenses + vendor costs + hamper costs)
+├── progress_percentage (auto-calculated from tasks)
+├── notes
+├── created_at / updated_at
+
+event_plan_versions
+├── id
+├── event_id → events
+├── version_number
+├── snapshot (JSONB — teams, vendors, tasks, checklists, timeline)
+├── changes_summary
+├── created_at, created_by
+
+event_teams
+├── id
+├── event_id → events
+├── team_id → teams
+├── team_head_id → users
+├── department (COORDINATION, HOSPITALITY, LOGISTICS, HAMPER, DECORATION, CATERING)
+├── progress_percentage (auto-calculated)
+
+event_vendors
+├── id
+├── event_id → events
+├── vendor_id → vendors
+├── department
+├── scope_of_work (TEXT)
+├── agreed_amount
+├── advance_paid, remaining_amount
+├── status (ASSIGNED, CONFIRMED, IN_PROGRESS, COMPLETED, CANCELLED)
+├── delivery_deadline
+├── rating (post-event)
+├── notes
+```
+
+**Event Conversion (from Quotation):**
+```
+Quotation (ACCEPTED) → Create Event
+    → Client auto-linked
+    → Event details auto-filled
+    → Quoted items → Event service line items
+    → Budget = Grand Total
+    → Payment terms created
+```
+
+### 3.2 Teams Module
+
+#### [NEW] `module-teams`
+
+**Entities:**
+```
+departments
+├── id
+├── name (Coordination, Hospitality, Logistics, Hamper, Decoration, etc.)
+├── description
+
+teams
+├── id
+├── department_id → departments
+├── name
+├── team_head_id → users
+
+team_members
+├── id
+├── team_id → teams
+├── user_id → users
+├── role_in_team (HEAD, MEMBER)
+├── joined_at
+```
+
+### 3.3 Tasks Module
+
+#### [NEW] `module-tasks`
+
+**Entities:**
+```
+tasks
+├── id
+├── task_number (auto: TSK-2026-001)
+├── event_id → events
+├── department
+├── team_id → teams (optional)
+├── assigned_to → users
+├── vendor_id → vendors (optional — if vendor task)
+├── title, description
+├── priority (LOW, MEDIUM, HIGH, URGENT)
+├── start_date, deadline
+├── status (NOT_STARTED, ASSIGNED, IN_PROGRESS, WAITING, COMPLETED, VERIFIED)
+├── progress_percentage
+├── parent_task_id → tasks (for sub-tasks)
+├── estimated_hours, actual_hours
+├── created_at / updated_at
+
+task_checklists
+├── id
+├── task_id → tasks
+├── item_text
+├── is_completed
+├── completed_at, completed_by
+├── sort_order
+
+task_comments
+├── id
+├── task_id → tasks
+├── user_id → users
+├── comment_text
+├── created_at
+
+task_attachments
+├── id
+├── task_id → tasks
+├── file_name, file_url, file_type, file_size
+├── uploaded_by, uploaded_at
+
+task_history
+├── id
+├── task_id → tasks
+├── field_changed
+├── old_value, new_value
+├── changed_by, changed_at
+```
+
+**Checklist Templates:**
+```
+checklist_templates
+├── id
+├── name (Wedding Pre-Event, Corporate Event Day, Post-Event, etc.)
+├── event_type
+├── phase (PRE_EVENT, EVENT_PREPARATION, EVENT_DAY, POST_EVENT)
+
+checklist_template_items
+├── id
+├── template_id → checklist_templates
+├── item_text
+├── sort_order
+├── is_mandatory
+```
+
+### 3.4 Vendor Module
+
+#### [NEW] `module-vendors`
+
+**Entities:**
+```
+vendors
+├── id
+├── vendor_number (auto: VND-2026-001)
+├── name, company_name
+├── category (DECORATION, SOUND, PHOTOGRAPHY, CATERING, TRANSPORTATION, HOSPITALITY, PRINTING, OTHER)
+├── phone, email, address
+├── gst_number, pan_number
+├── bank_name, account_number, ifsc_code
+├── services_offered (JSONB)
+├── rate_card (JSONB — service → rate mapping)
+├── documents (JSONB — agreement URLs, licenses)
+├── is_active
+├── overall_rating (auto-calculated)
+├── total_events_worked
+├── notes, created_at / updated_at
+
+vendor_assignments
+├── id
+├── event_id → events
+├── vendor_id → vendors
+├── service_category
+├── scope_of_work
+├── agreed_amount
+├── status (ASSIGNED, CONFIRMED, IN_PROGRESS, COMPLETED)
+
+vendor_ratings
+├── id
+├── vendor_id → vendors
+├── event_id → events
+├── quality_rating (1-5)
+├── timeliness_rating (1-5)
+├── communication_rating (1-5)
+├── cost_effectiveness_rating (1-5)
+├── overall_rating (1-5)
+├── review_notes
+├── rated_by, rated_at
+```
+
+**API Endpoints (Events):**
+```
+# Events
+GET    /api/events                         → List events
+POST   /api/events                         → Create event (usually via quotation conversion)
+GET    /api/events/{id}                    → Event Command Center (full detail)
+PUT    /api/events/{id}                    → Update event (creates plan version)
+PATCH  /api/events/{id}/status             → Change event status
+GET    /api/events/{id}/progress           → Calculate live progress
+GET    /api/events/{id}/plan-versions      → Plan revision history
+GET    /api/events/calendar                → Calendar view
+
+# Event Teams
+POST   /api/events/{id}/teams              → Assign team
+DELETE /api/events/{id}/teams/{teamId}     → Remove team
+
+# Event Vendors
+POST   /api/events/{id}/vendors            → Assign vendor
+PUT    /api/events/{id}/vendors/{vid}      → Update vendor assignment
+POST   /api/events/{id}/vendors/{vid}/rate → Rate vendor
+
+# Tasks
+GET    /api/tasks                          → List (my tasks, team tasks, all tasks)
+POST   /api/tasks                          → Create task
+PUT    /api/tasks/{id}                     → Update task
+PATCH  /api/tasks/{id}/status              → Change status
+POST   /api/tasks/{id}/checklist           → Add checklist items
+PATCH  /api/tasks/{id}/checklist/{cid}     → Toggle checklist item
+POST   /api/tasks/{id}/comments            → Add comment
+GET    /api/tasks/templates                → Get checklist templates
+```
+
+**Frontend Pages:**
+- Event list (table + calendar view)
+- **Event Command Center** — The centerpiece dashboard for each event:
+  - Overview tab (status, progress, timeline)
+  - Teams tab (assignment, member list, progress per department)
+  - Vendors tab (assignments, status, costs)
+  - Tasks tab (Gantt chart, Kanban board, list view)
+  - Checklists tab (template-based)
+  - Finance tab (budget vs actual)
+  - Documents tab
+  - History tab (plan versions, audit trail)
+- Team management page
+- Vendor directory with ratings & performance
+- Task management (My Tasks, Team Tasks, All Tasks views)
+- Task detail with checklist, comments, attachments
+- **Event Progress Dashboard** — hierarchical progress view:
+  ```
+  Event 78% ──┬── Coordination 91%
+               ├── Hospitality 84%
+               ├── Vendor Management 72%
+               ├── Hamper 95%
+               └── Logistics 67%
+  ```
+
+### Phase 3 Deliverables
+- ✅ Event creation from accepted quotation (auto-transfer)
+- ✅ Event Command Center (one page = everything about an event)
+- ✅ Team assignment system (Event Head → Teams → Members)
+- ✅ Vendor management with assignment & ratings
+- ✅ Task system with checklists, comments, attachments
+- ✅ Reusable checklist templates
+- ✅ Hierarchical progress tracking (Task → Team → Department → Event)
+- ✅ Event plan versioning (audit trail)
+- ✅ Event calendar view
+
+---
+
+## 🎁 Phase 4 — Hamper Manufacturing & Inventory (Weeks 13–16)
+
+### 4.1 Hamper Module
+
+#### [NEW] `module-hampers`
+
+**Entities:**
+```
+hamper_products
+├── id
+├── product_code (auto: HAM-001)
+├── name (e.g., "Premium Wedding Hamper")
+├── category (WEDDING, CORPORATE, FESTIVAL, CUSTOM)
+├── description
+├── selling_price (suggested)
+├── photo_url
+├── is_active, created_at / updated_at
+
+hamper_bom (Bill of Materials — header)
+├── id
+├── product_id → hamper_products
+├── version
+├── effective_from
+├── notes
+
+hamper_bom_items
+├── id
+├── bom_id → hamper_bom
+├── material_id → raw_materials
+├── quantity_per_unit
+├── unit
+├── sort_order
+
+raw_materials
+├── id
+├── sku (auto: RM-001)
+├── name (Box, Ribbon, Chocolate, Dry Fruit Pack, Candle, Card, etc.)
+├── category (PACKAGING, DECORATIVE, FOOD, GIFT_ITEM, OTHER)
+├── unit (PCS, KG, METER, PACK)
+├── current_stock
+├── minimum_stock
+├── reorder_level
+├── purchase_price
+├── storage_location
+├── is_active
+
+material_suppliers
+├── id
+├── material_id → raw_materials
+├── supplier_name, contact, phone, email
+├── unit_price, lead_time_days
+├── is_preferred
+```
+
+### 4.2 Manufacturing
+
+```
+manufacturing_batches
+├── id
+├── batch_number (auto: MFG-2026-015)
+├── product_id → hamper_products
+├── planned_quantity
+├── produced_quantity
+├── rejected_quantity
+├── status (PLANNED, MATERIAL_RESERVED, IN_PRODUCTION, QC_PENDING, QC_DONE, COMPLETED, CANCELLED)
+├── start_date, completion_date
+├── event_id → events (optional — if manufactured for specific event)
+├── notes
+├── created_at, created_by
+
+manufacturing_materials (materials consumed per batch)
+├── id
+├── batch_id → manufacturing_batches
+├── material_id → raw_materials
+├── required_quantity
+├── actual_consumed
+├── wastage
+
+quality_checks
+├── id
+├── batch_id → manufacturing_batches
+├── checked_by → users
+├── qc_date
+├── total_checked, passed, rejected
+├── rejection_reason
+├── notes
+```
+
+### 4.3 Inventory Module
+
+#### [NEW] `module-inventory`
+
+**Entities:**
+```
+inventory (unified view — raw materials + finished hampers)
+├── id
+├── item_type (RAW_MATERIAL, FINISHED_HAMPER)
+├── item_id (raw_material_id or hamper_product_id)
+├── total_stock
+├── reserved_stock
+├── available_stock (total - reserved)
+├── last_updated
+
+inventory_transactions
+├── id
+├── item_type, item_id
+├── transaction_type (PURCHASE, PRODUCTION_IN, PRODUCTION_CONSUME, RESERVE, DISPATCH, ADJUSTMENT, RETURN)
+├── quantity (positive for in, negative for out)
+├── reference_type (BATCH, EVENT, PURCHASE_ORDER, MANUAL)
+├── reference_id
+├── notes
+├── created_at, created_by
+
+stock_reservations
+├── id
+├── hamper_product_id → hamper_products
+├── event_id → events
+├── quantity_reserved
+├── status (RESERVED, PARTIALLY_DISPATCHED, FULLY_DISPATCHED, CANCELLED)
+├── reserved_at, reserved_by
+
+event_hamper_allocations
+├── id
+├── event_id → events
+├── hamper_product_id → hamper_products
+├── quantity_needed
+├── quantity_reserved
+├── quantity_dispatched
+├── status (PENDING, RESERVED, MANUFACTURING, DISPATCHED, DELIVERED)
+
+dispatches
+├── id
+├── dispatch_number (auto: DSP-2026-001)
+├── event_id → events
+├── hamper_product_id
+├── quantity
+├── dispatch_date
+├── delivery_date
+├── receiver_name
+├── status (PACKED, DISPATCHED, IN_TRANSIT, DELIVERED)
+├── notes
+```
+
+**Hamper → Event Flow:**
+```
+Event needs 200 hampers
+    → Check finished stock
+    → If insufficient → Create manufacturing batch
+    → Reserve stock for event
+    → Dispatch → Delivered
+    → Update inventory
+```
+
+**API Endpoints:**
+```
+# Hamper Products & BOM
+GET    /api/hampers/products                       → List products
+POST   /api/hampers/products                       → Create product
+GET    /api/hampers/products/{id}                  → Product detail with BOM
+POST   /api/hampers/products/{id}/bom              → Create/update BOM
+
+# Raw Materials
+GET    /api/hampers/materials                      → List raw materials
+POST   /api/hampers/materials                      → Add material
+PUT    /api/hampers/materials/{id}                 → Update material
+GET    /api/hampers/materials/low-stock            → Below reorder level
+
+# Manufacturing
+GET    /api/hampers/manufacturing                  → List batches
+POST   /api/hampers/manufacturing                  → Create batch (auto-calculates materials needed)
+PATCH  /api/hampers/manufacturing/{id}/status      → Update batch status
+POST   /api/hampers/manufacturing/{id}/qc          → Record QC results
+
+# Inventory
+GET    /api/inventory                              → Current stock levels
+GET    /api/inventory/transactions                 → Transaction history
+POST   /api/inventory/reserve                      → Reserve for event
+POST   /api/inventory/dispatch                     → Create dispatch
+GET    /api/inventory/events/{eventId}/allocations → Event hamper allocation status
+```
+
+**Frontend Pages:**
+- Hamper product catalog (grid/card view)
+- BOM builder (drag-and-drop materials)
+- Raw material inventory dashboard (stock levels, low-stock alerts)
+- Manufacturing batch list & detail
+- Manufacturing workflow (Plan → Reserve → Produce → QC → Stock)
+- QC recording form
+- Inventory dashboard (stock levels, reservations, dispatches)
+- Event hamper allocation view
+- Dispatch tracking
+
+### Phase 4 Deliverables
+- ✅ Hamper product catalog with BOM
+- ✅ Raw material inventory tracking
+- ✅ Manufacturing batch management
+- ✅ Quality control workflow
+- ✅ Automatic material requirement calculation
+- ✅ Stock reservation for events
+- ✅ Dispatch & delivery tracking
+- ✅ Low-stock alerts (reorder level triggers)
+
+---
+
+## 💰 Phase 5 — Finance (Weeks 17–20)
+
+### 5.1 Finance Module
+
+#### [NEW] `module-finance`
+
+**Entities:**
+```
+invoices
+├── id
+├── invoice_number (auto: INV-2026-001)
+├── event_id → events
+├── client_id → clients
+├── quotation_id → quotations
+├── invoice_date, due_date
+├── subtotal, discount, gst_rate, gst_amount, grand_total
+├── status (DRAFT, SENT, PARTIALLY_PAID, PAID, OVERDUE, CANCELLED)
+├── payment_terms (TEXT)
+├── notes
+
+invoice_items
+├── id
+├── invoice_id → invoices
+├── description, quantity, unit_rate, amount
+├── sort_order
+
+client_payments
+├── id
+├── invoice_id → invoices
+├── client_id → clients
+├── event_id → events
+├── amount
+├── payment_date
+├── payment_mode (CASH, CHEQUE, NEFT, UPI, CARD)
+├── reference_number
+├── payment_type (ADVANCE, PARTIAL, FINAL)
+├── notes
+├── recorded_by
+
+vendor_bills
+├── id
+├── vendor_id → vendors
+├── event_id → events
+├── vendor_assignment_id → vendor_assignments
+├── bill_number, bill_date
+├── amount, gst_amount, total
+├── status (PENDING, PARTIALLY_PAID, PAID)
+├── due_date
+
+vendor_payments
+├── id
+├── vendor_bill_id → vendor_bills
+├── vendor_id → vendors
+├── event_id → events
+├── amount
+├── payment_date, payment_mode
+├── reference_number
+├── payment_type (ADVANCE, PARTIAL, FINAL)
+├── notes, recorded_by
+
+expenses
+├── id
+├── expense_number (auto: EXP-2026-001)
+├── category (VENDOR, TRANSPORTATION, MATERIAL, HAMPER_RAW_MATERIAL, STAFF, FOOD, ACCOMMODATION, MISCELLANEOUS)
+├── linked_to_type (EVENT, HAMPER_BATCH, COMPANY)
+├── linked_to_id
+├── amount
+├── expense_date
+├── description
+├── receipt_url
+├── approved_by → users
+├── status (PENDING, APPROVED, REJECTED)
+├── created_by
+
+expense_categories
+├── id
+├── name, description
+├── is_active
+```
+
+**Client Payment Flow:**
+```
+Quotation: ₹10,00,000
+    → Payment Plan:
+        Advance:  ₹3,00,000  ✅ Received
+        Second:   ₹4,00,000  ✅ Received
+        Final:    ₹3,00,000  ⏳ Outstanding
+    → Total Received: ₹7,00,000
+    → Outstanding:    ₹3,00,000
+```
+
+**Event Profitability Calculation:**
+```
+Event Revenue (Client Payments)     ₹12,00,000
+  - Vendor Costs                    ₹6,00,000
+  - Hamper Manufacturing Cost       ₹1,20,000
+  - Staff/Logistics Expenses        ₹80,000
+  - Other Expenses                  ₹50,000
+                                    ──────────
+  = Estimated Profit                ₹3,50,000
+  = Profit Margin                   29.2%
+```
+
+**API Endpoints:**
+```
+# Invoices
+GET    /api/finance/invoices                       → List invoices
+POST   /api/finance/invoices                       → Create invoice
+GET    /api/finance/invoices/{id}                  → Invoice detail
+GET    /api/finance/invoices/{id}/pdf              → Generate invoice PDF
+
+# Client Payments
+GET    /api/finance/client-payments                → List payments
+POST   /api/finance/client-payments                → Record payment
+GET    /api/finance/client-payments/outstanding    → Outstanding payments
+
+# Vendor Payments
+GET    /api/finance/vendor-payments                → List vendor payments
+POST   /api/finance/vendor-payments                → Record payment
+
+# Expenses
+GET    /api/finance/expenses                       → List expenses
+POST   /api/finance/expenses                       → Record expense
+PATCH  /api/finance/expenses/{id}/approve          → Approve/reject
+
+# Analytics
+GET    /api/finance/dashboard                      → Finance dashboard data
+GET    /api/finance/events/{id}/profitability      → Event P&L
+GET    /api/finance/reports/revenue                → Revenue report
+GET    /api/finance/reports/expenses               → Expense report
+GET    /api/finance/reports/profit-loss             → P&L statement
+GET    /api/finance/reports/receivables            → Accounts receivable aging
+GET    /api/finance/reports/payables               → Accounts payable aging
+GET    /api/finance/reports/gst                    → GST summary
+```
+
+**Frontend Pages:**
+- **Finance Dashboard:**
+  - Revenue / Receivables / Payables / Expenses cards
+  - Revenue vs Expenses trend chart
+  - Outstanding payments list
+  - Cash flow timeline
+- Invoice list & PDF generation
+- Client payment recording & tracking
+- Vendor payment tracking (per event per vendor)
+- Expense management with approval workflow
+- **Event Profitability Report** — Revenue vs all costs per event
+- **P&L Statement** — Filterable by date range, event type
+- GST report
+- Receivables & Payables aging reports
+
+### Phase 5 Deliverables
+- ✅ Invoice generation with PDF
+- ✅ Client payment tracking (advance/partial/final)
+- ✅ Vendor payment management per event
+- ✅ Expense tracking with approval workflow
+- ✅ Event profitability calculation
+- ✅ Finance dashboard with KPIs
+- ✅ P&L, Receivables, Payables, GST reports
+- ✅ Payment reminders
+
+---
+
+## 📊 Phase 6 — Advanced Features (After MVP)
+
+### 6.1 Notification Engine
+
+#### [NEW] `module-notifications`
+
+**Types:**
+| Trigger | Recipient | Message |
+|---------|-----------|---------|
+| Task assigned | Team member | "You have been assigned a new task" |
+| Tasks overdue | Team head | "3 tasks are overdue" |
+| Vendor incomplete | Event head | "Vendor XYZ has not completed assigned work" |
+| Payment due | Finance | "Client payment of ₹2,00,000 due tomorrow" |
+| Low stock | Inventory mgr | "Hamper boxes below reorder level" |
+| Follow-up due | Salesperson | "Follow-up with ABC Corp scheduled today" |
+| Quotation viewed | Salesperson | "Client viewed quotation QT-2026-042" |
+
+**Channels:** In-app (real-time via WebSocket), Email, WhatsApp (future)
+
+### 6.2 Escalation System
+
+```
+Task deadline = tomorrow        → ⚠️ Warning notification
+Deadline passed                 → 🔴 Overdue status
+Overdue > 24 hours             → 📢 Notify Team Head
+Overdue > 48 hours             → 📢 Notify Event Head
+Critical / Overdue > 72 hours  → 🚨 Notify Management
+```
+
+### 6.3 Management Reports Module
+
+#### [NEW] `module-reports`
+
+**Dashboard KPIs:**
+
+| Category | Metrics |
+|----------|---------|
+| **Sales** | Lead conversion rate, Quotation conversion, Quoted value, Confirmed value |
+| **Events** | Active count, Overall progress, Delayed events, Upcoming events |
+| **Vendors** | Performance scores, Delays, Cost overruns, Reliability index |
+| **Finance** | Revenue, Expenses, Receivables, Payables, Profit margin |
+| **Hampers** | Production volume, Stock levels, Material consumption, Wastage % |
+
+### 6.4 Document Management
+
+#### [NEW] `module-documents`
+
+- File upload to local storage (later S3-compatible)
+- Document categorization (Quotation, Contract, Invoice, Design, Photo, etc.)
+- Linked to: Event / Client / Vendor / Hamper Batch
+- Version control for important documents
+
+### 6.5 Audit Module
+
+#### [NEW] `module-audit`
+
+- Automatic audit logging for all entity changes
+- Who changed what, when, old value → new value
+- Searchable audit log with filters
+- Implements Spring Data JPA Envers or custom audit interceptor
+
+### 6.6 Future Enhancements (Post-MVP)
+
+| Feature | Description |
+|---------|-------------|
+| **Vendor Portal** | Vendors login to see assigned work, submit invoices |
+| **Client Portal** | Clients view quotations, event progress, make payments |
+| **WhatsApp Integration** | Send quotations, reminders, updates via WhatsApp Business API |
+| **Mobile/PWA** | Progressive Web App for field teams |
+| **AI Event Planner** | Auto-generate event plans, team assignments, checklists |
+| **AI Finance Assistant** | Natural language queries on financial data |
+| **AI Inventory Assistant** | Stock feasibility analysis for manufacturing |
+| **Google Calendar Sync** | Sync events and deadlines |
+| **Payment Gateway** | Online payment collection from clients |
+| **Barcode/QR** | Inventory & dispatch tracking |
+
+---
+
+## Verification Plan
+
+### Automated Tests (Per Phase)
+
+```bash
+# Phase 1: Foundation
+mvn test -pl module-identity             # JWT, auth, RBAC tests
+mvn verify -pl storyline-app             # Module architecture verification (Spring Modulith)
+
+# Phase 2: CRM + Sales
+mvn test -pl module-crm                  # Lead pipeline, client conversion
+mvn test -pl module-sales                # Quotation CRUD, versioning, PDF generation
+
+# Phase 3: Events
+mvn test -pl module-events               # Event creation from quotation, progress calculation
+mvn test -pl module-tasks                # Task lifecycle, checklist completion
+mvn test -pl module-vendors              # Vendor assignment, rating calculation
+
+# Phase 4: Hampers
+mvn test -pl module-hampers              # BOM calculation, manufacturing workflow
+mvn test -pl module-inventory            # Stock transactions, reservation system
+
+# Phase 5: Finance
+mvn test -pl module-finance              # Payment recording, P&L calculation, invoice generation
+
+# Full integration
+mvn verify                               # All modules + architecture verification
+```
+
+### Manual Verification
+
+After each phase:
+1. Start the application (`docker-compose up` + `mvn spring-boot:run`)
+2. Verify Swagger UI at `http://localhost:8080/swagger-ui.html`
+3. Test the frontend at `http://localhost:5173`
+4. Walk through the key user flows:
+   - Phase 1: Login → Dashboard → User management
+   - Phase 2: Create Lead → Follow-up → Convert to Client → Create Quotation → Revise → Accept
+   - Phase 3: Convert Quotation → Event → Assign Teams → Assign Vendors → Create Tasks → Track Progress
+   - Phase 4: Create Hamper Product → Define BOM → Create Batch → QC → Reserve for Event → Dispatch
+   - Phase 5: Create Invoice → Record Payments → Track Expenses → View Event Profitability
+
+---
+
+## Open Questions
+
+> [!IMPORTANT]
+> **GST Configuration**: Should the system support multiple GST rates (5%, 12%, 18%, 28%) per quotation item, or a single GST rate per quotation? This affects the quotation builder and invoice layout.
+
+> [!IMPORTANT]
+> **Multi-Currency**: Will the business deal only in INR (₹), or should we plan for multi-currency support from the start?
+
+> [!IMPORTANT]
+> **File Storage**: For Phase 1, I'll use local file system storage for documents and images. Should I plan for cloud storage (AWS S3 / Google Cloud Storage) from the beginning, or keep it simple and migrate later?
+
+> [!IMPORTANT]
+> **Email Integration**: Do you want automated emails (quotation PDFs, payment reminders, task notifications) from Phase 2 onwards, or should we defer email to Phase 6?
+
+> [!NOTE]
+> **Deployment**: For local development, I'll use Docker Compose. For production, we can discuss deployment options (cloud VM, Kubernetes, etc.) when you're ready.

@@ -1,0 +1,22 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://db.gfxqaoqjpvmyxvkzmlej.supabase.co:5432/postgres
+    username: postgres
+    password: "ct&8Gz%25E2Xts."
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  flyway:
+    enabled: true
+    url: jdbc:postgresql://db.gfxqaoqjpvmyxvkzmlej.supabase.co:5432/postgres
+    user: postgres
+    password: "ct&8Gz%25E2Xts."
+    baseline-on-migrate: true
+
+jwt:
+  secret: 8a3c9e7b2f4d6a1c8e5b9d3f2a7c4e1b8a3c9e7b2f4d6a1c8e5b9d3f2a7c4e1b
+  expiration: 86400000 # 24 hours
