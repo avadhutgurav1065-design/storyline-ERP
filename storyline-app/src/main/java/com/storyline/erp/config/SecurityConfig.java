@@ -58,15 +58,19 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
+        @org.springframework.beans.factory.annotation.Value("${cors.allowed-origins:*}")
+        private String allowedOrigins;
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of(
-                "http://localhost:5173",  // Vite dev server
-                "http://localhost:5174",  // Vite dev server (alt port)
-                "http://localhost:5175",  // Vite dev server (alt port)
-                "http://localhost:3000"   // Alternative frontend
-        ));
+        
+        if ("*".equals(allowedOrigins)) {
+            configuration.setAllowedOriginPatterns(List.of("*"));
+        } else {
+            configuration.setAllowedOrigins(List.of(allowedOrigins.split(",")));
+        }
+        
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
