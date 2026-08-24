@@ -4,6 +4,8 @@ import { useAuth } from '../context/AuthContext';
 interface SidebarProps {
   collapsed: boolean;
   onToggle: () => void;
+  mobileOpen: boolean;
+  onCloseMobile: () => void;
 }
 
 interface NavItem {
@@ -100,7 +102,7 @@ const navigation: NavGroup[] = [
   },
 ];
 
-export default function Sidebar({ collapsed }: SidebarProps) {
+export default function Sidebar({ collapsed, mobileOpen, onCloseMobile }: SidebarProps) {
   const { hasRole } = useAuth();
   const location = useLocation();
 
@@ -110,7 +112,7 @@ export default function Sidebar({ collapsed }: SidebarProps) {
   };
 
   return (
-    <aside className={`sidebar ${collapsed ? 'collapsed' : 'open'}`}>
+    <aside className={`sidebar ${collapsed ? 'collapsed' : ''} ${mobileOpen ? 'open' : ''}`}>
       {/* Logo */}
       <div className="sidebar-logo">
         <div className="logo-icon">S</div>
@@ -132,6 +134,7 @@ export default function Sidebar({ collapsed }: SidebarProps) {
                 <NavLink
                   key={item.path}
                   to={item.path}
+                  onClick={onCloseMobile} // Close menu when an item is clicked on mobile
                   className={`nav-item ${location.pathname === item.path ? 'active' : ''}`}
                 >
                   <span className="nav-icon">{item.icon}</span>

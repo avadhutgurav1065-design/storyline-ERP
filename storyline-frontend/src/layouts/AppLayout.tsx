@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import TopBar from './TopBar';
@@ -38,20 +38,35 @@ const pageTitles: Record<string, string> = {
 
 export default function AppLayout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [location.pathname]);
 
   const pageTitle = pageTitles[location.pathname] || 'Storyline ERP';
 
   return (
     <div className="app-layout">
+      {/* Mobile Overlay */}
+      <div 
+        className={`sidebar-overlay ${mobileMenuOpen ? 'open' : ''}`}
+        onClick={() => setMobileMenuOpen(false)}
+      />
+      
       <Sidebar
         collapsed={sidebarCollapsed}
         onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+        mobileOpen={mobileMenuOpen}
+        onCloseMobile={() => setMobileMenuOpen(false)}
       />
       <div className={`app-content ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
         <TopBar
           collapsed={sidebarCollapsed}
           onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+          onMobileToggle={() => setMobileMenuOpen(true)}
           title={pageTitle}
         />
         <main className="main-content animate-fade-in">

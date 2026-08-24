@@ -1,13 +1,22 @@
 import { useAuth } from '../context/AuthContext';
+import { useState, useEffect } from 'react';
 
 interface TopBarProps {
   collapsed: boolean;
   onToggle: () => void;
+  onMobileToggle: () => void;
   title: string;
 }
 
-export default function TopBar({ collapsed, onToggle, title }: TopBarProps) {
+export default function TopBar({ collapsed, onToggle, onMobileToggle, title }: TopBarProps) {
   const { user, logout } = useAuth();
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const initials = user?.fullName
     ?.split(' ')
@@ -19,9 +28,15 @@ export default function TopBar({ collapsed, onToggle, title }: TopBarProps) {
   return (
     <header className="topbar">
       <div className="topbar-left">
-        <button className="topbar-toggle" onClick={onToggle} title="Toggle sidebar">
-          {collapsed ? '☰' : '✕'}
-        </button>
+        {isMobile ? (
+          <button className="topbar-toggle" onClick={onMobileToggle} title="Open Menu">
+            ☰
+          </button>
+        ) : (
+          <button className="topbar-toggle" onClick={onToggle} title="Toggle sidebar">
+            {collapsed ? '☰' : '✕'}
+          </button>
+        )}
         <span className="topbar-title">{title}</span>
       </div>
 
@@ -37,7 +52,7 @@ export default function TopBar({ collapsed, onToggle, title }: TopBarProps) {
           <div className="user-avatar" title={user?.fullName}>
             {initials}
           </div>
-          <div style={{ lineHeight: 1.2 }}>
+          <div className="user-name-text" style={{ lineHeight: 1.2 }}>
             <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)' }}>
               {user?.fullName}
             </div>
