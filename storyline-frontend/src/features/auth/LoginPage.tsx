@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
@@ -7,8 +7,28 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const { login } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    window.addEventListener('beforeinstallprompt', (e) => {
+      // Prevent the mini-infobar from appearing on mobile
+      e.preventDefault();
+      // Stash the event so it can be triggered later.
+      setDeferredPrompt(e);
+    });
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        setDeferredPrompt(null);
+      }
+    }
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -84,6 +104,26 @@ export default function LoginPage() {
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
+
+        {deferredPrompt && (
+          <div style={{ marginTop: '20px', textAlign: 'center' }}>
+            <button 
+              onClick={handleInstallClick}
+              style={{
+                background: '#10B981',
+                color: 'white',
+                border: 'none',
+                padding: '10px 20px',
+                borderRadius: '8px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                width: '100%'
+              }}
+            >
+              📱 Install App on Phone
+            </button>
+          </div>
+        )}
 
         <p style={{
           textAlign: 'center',
