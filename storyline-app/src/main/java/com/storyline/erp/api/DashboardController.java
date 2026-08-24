@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -41,8 +42,13 @@ public class DashboardController {
         stats.put("totalEvents", eventRepository.count());
         stats.put("totalInvoices", invoiceRepository.count());
         
-        // Mock revenue for now (could be an aggregate query on invoices table)
-        stats.put("monthlyRevenue", 1500000); 
+        // Calculate actual revenue from paid invoices
+        BigDecimal totalRevenue = invoiceRepository.findAll().stream()
+                .filter(i -> "PAID".equals(i.getStatus()))
+                .map(i -> i.getTotalAmount() != null ? i.getTotalAmount() : BigDecimal.ZERO)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        
+        stats.put("monthlyRevenue", totalRevenue);
 
         return ApiResponse.success(stats);
     }

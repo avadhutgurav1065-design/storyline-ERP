@@ -7,9 +7,11 @@ import jakarta.persistence.*;
 @Table(name = "stock_transactions")
 public class StockTransaction extends AuditableEntity {
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "raw_material_id", nullable = false)
-    private RawMaterial rawMaterial;
+    @Column(name = "raw_material_id")
+    private Long rawMaterialId;
+
+    @Column(name = "product_id")
+    private Long productId;
 
     @Column(name = "transaction_type", nullable = false)
     private String transactionType; // IN, OUT, ADJUSTMENT
@@ -23,8 +25,10 @@ public class StockTransaction extends AuditableEntity {
     private String notes;
 
     // Getters and Setters
-    public RawMaterial getRawMaterial() { return rawMaterial; }
-    public void setRawMaterial(RawMaterial rawMaterial) { this.rawMaterial = rawMaterial; }
+    public Long getRawMaterialId() { return rawMaterialId; }
+    public void setRawMaterialId(Long rawMaterialId) { this.rawMaterialId = rawMaterialId; }
+    public Long getProductId() { return productId; }
+    public void setProductId(Long productId) { this.productId = productId; }
     public String getTransactionType() { return transactionType; }
     public void setTransactionType(String transactionType) { this.transactionType = transactionType; }
     public Double getQuantity() { return quantity; }

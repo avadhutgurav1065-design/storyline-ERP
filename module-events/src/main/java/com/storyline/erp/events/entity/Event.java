@@ -36,6 +36,12 @@ public class Event extends AuditableEntity {
     @Column(length = 2000)
     private String notes;
 
+    @Column(name = "assigned_team_id")
+    private Long assignedTeamId;
+
+    @Column(name = "event_head_id")
+    private Long eventHeadId;
+
     // Getters and Setters
 
     public String getName() { return name; }
@@ -58,4 +64,8 @@ public class Event extends AuditableEntity {
     public void setProgress(Integer progress) { this.progress = progress; }
     public String getNotes() { return notes; }
     public void setNotes(String notes) { this.notes = notes; }
+    public Long getAssignedTeamId() { return assignedTeamId; }
+    public void setAssignedTeamId(Long assignedTeamId) { this.assignedTeamId = assignedTeamId; }
+    public Long getEventHeadId() { return eventHeadId; }
+    public void setEventHeadId(Long eventHeadId) { this.eventHeadId = eventHeadId; }
 }

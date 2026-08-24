@@ -32,7 +32,7 @@ export default function DashboardPage() {
     <div>
       <div className="page-header">
         <div>
-          <h1 className="page-title">Welcome back, {user?.name || 'Admin'} 👋</h1>
+          <h1 className="page-title">Welcome back, {user?.fullName || 'Admin'} 👋</h1>
           <p className="page-subtitle">Here is what's happening with your business today.</p>
         </div>
         <button className="btn btn-primary">Download Report</button>

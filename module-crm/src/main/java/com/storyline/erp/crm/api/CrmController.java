@@ -11,7 +11,6 @@ import com.storyline.erp.crm.service.FollowUpService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -33,7 +32,6 @@ public class CrmController {
     // ==========================================
 
     @GetMapping("/leads")
-    @PreAuthorize("hasAnyAuthority('SCOPE_ALL', 'SCOPE_ASSIGNED')")
     public ApiResponse<PageResponse<LeadDto>> searchLeads(
             @RequestParam(required = false) String search,
             @RequestParam(required = false) LeadStatus status,
@@ -49,26 +47,22 @@ public class CrmController {
     }
 
     @PostMapping("/leads")
-    @PreAuthorize("hasAuthority('ACTION_CREATE')")
     public ApiResponse<LeadDto> createLead(@Valid @RequestBody LeadDto dto) {
         return ApiResponse.success("Lead created successfully", crmService.createLead(dto));
     }
 
     @PutMapping("/leads/{id}")
-    @PreAuthorize("hasAuthority('ACTION_UPDATE')")
     public ApiResponse<LeadDto> updateLead(@PathVariable Long id, @Valid @RequestBody LeadDto dto) {
         return ApiResponse.success("Lead updated successfully", crmService.updateLead(id, dto));
     }
 
     @DeleteMapping("/leads/{id}")
-    @PreAuthorize("hasAuthority('ACTION_DELETE')")
     public ApiResponse<Void> deleteLead(@PathVariable Long id) {
         crmService.deleteLead(id);
-        return ApiResponse.success("Lead deleted successfully", null);
+        return ApiResponse.success("Lead deleted successfully", (Void) null);
     }
 
     @PostMapping("/leads/{id}/convert")
-    @PreAuthorize("hasAuthority('ACTION_UPDATE')")
     public ApiResponse<ClientDto> convertLeadToClient(@PathVariable Long id, @RequestBody ClientDto dto) {
         return ApiResponse.success("Lead converted to client successfully", crmService.convertLeadToClient(id, dto));
     }
@@ -78,7 +72,6 @@ public class CrmController {
     // ==========================================
 
     @GetMapping("/clients")
-    @PreAuthorize("hasAuthority('SCOPE_ALL')")
     public ApiResponse<PageResponse<ClientDto>> searchClients(
             @RequestParam(required = false) String search,
             Pageable pageable) {
@@ -92,27 +85,29 @@ public class CrmController {
     }
 
     @PostMapping("/clients")
-    @PreAuthorize("hasAuthority('ACTION_CREATE')")
     public ApiResponse<ClientDto> createClient(@Valid @RequestBody ClientDto dto) {
         return ApiResponse.success("Client created successfully", crmService.createClient(dto));
     }
 
     @PutMapping("/clients/{id}")
-    @PreAuthorize("hasAuthority('ACTION_UPDATE')")
     public ApiResponse<ClientDto> updateClient(@PathVariable Long id, @Valid @RequestBody ClientDto dto) {
         return ApiResponse.success("Client updated successfully", crmService.updateClient(id, dto));
     }
 
     @DeleteMapping("/clients/{id}")
-    @PreAuthorize("hasAuthority('ACTION_DELETE')")
     public ApiResponse<Void> deleteClient(@PathVariable Long id) {
         crmService.deleteClient(id);
-        return ApiResponse.success("Client deleted successfully", null);
+        return ApiResponse.success("Client deleted successfully", (Void) null);
     }
 
     // ==========================================
     // Follow-ups
     // ==========================================
+
+    @GetMapping("/follow-ups")
+    public ApiResponse<List<FollowUpDto>> getAllFollowUps() {
+        return ApiResponse.success(followUpService.getAllFollowUps());
+    }
 
     @GetMapping("/leads/{leadId}/follow-ups")
     public ApiResponse<List<FollowUpDto>> getLeadFollowUps(@PathVariable Long leadId) {

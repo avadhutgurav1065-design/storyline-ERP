@@ -32,12 +32,19 @@ export default function HampersPage() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     try {
-      await api.post('/inventory/products', {
-        ...formData,
-        basePrice: parseFloat(formData.basePrice)
-      });
+      if ((formData as any).id) {
+        await api.put(`/inventory/products/${(formData as any).id}`, {
+          ...formData,
+          basePrice: parseFloat(formData.basePrice)
+        });
+      } else {
+        await api.post('/inventory/products', {
+          ...formData,
+          basePrice: parseFloat(formData.basePrice)
+        });
+      }
       setShowModal(false);
-      setFormData({ sku: '', name: '', description: '', basePrice: '' });
+      setFormData({ sku: '', name: '', description: '', basePrice: '' } as any);
       fetchProducts();
     } catch (err) {
       console.error(err);
@@ -90,7 +97,22 @@ export default function HampersPage() {
                     </td>
                     <td>
                       <div style={{ display: 'flex', gap: '6px' }}>
-                        <button className="btn btn-ghost btn-sm" title="Edit">✏️</button>
+                        <button 
+                          className="btn btn-ghost btn-sm" 
+                          title="Edit"
+                          onClick={() => {
+                            setFormData({
+                              id: product.id,
+                              sku: product.sku,
+                              name: product.name,
+                              description: product.description || '',
+                              basePrice: product.basePrice?.toString() || ''
+                            } as any);
+                            setShowModal(true);
+                          }}
+                        >
+                          ✏️
+                        </button>
                         <button className="btn btn-secondary btn-sm" style={{ padding: '4px 8px', fontSize: '0.75rem' }}>BOM</button>
                       </div>
                     </td>

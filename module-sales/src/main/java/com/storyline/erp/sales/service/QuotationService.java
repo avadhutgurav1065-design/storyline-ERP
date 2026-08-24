@@ -27,6 +27,11 @@ public class QuotationService {
         this.quotationRepository = quotationRepository;
     }
 
+    public Page<QuotationDto> getAllQuotations(Pageable pageable) {
+        return quotationRepository.findAll(pageable)
+                .map(this::mapToDto);
+    }
+
     public Page<QuotationDto> getClientQuotations(Long clientId, Pageable pageable) {
         return quotationRepository.findByClientId(clientId, pageable)
                 .map(this::mapToDto);

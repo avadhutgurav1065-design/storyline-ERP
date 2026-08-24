@@ -10,12 +10,13 @@ export default function QuotationsPage() {
   const [searchParams] = useSearchParams();
   const initialClientId = searchParams.get('clientId');
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<any>({
     clientId: initialClientId || '',
     eventName: '',
     eventDate: '',
     pax: '',
     venue: '',
+    items: [] as any[],
   });
 
   const fetchClients = async () => {
@@ -30,15 +31,11 @@ export default function QuotationsPage() {
   const fetchQuotations = async () => {
     setLoading(true);
     try {
-      // In a real app we might fetch all quotes, but API requires clientId. 
-      // If no clientId is selected, we could fetch all via a different endpoint. 
-      // For now, if initialClientId exists, fetch for that client.
       if (initialClientId) {
-        const res = await salesApi.listQuotations(Number(initialClientId));
+        const res = await salesApi.getQuotationsByClient(Number(initialClientId));
         setQuotations(res.data.data.content);
-      } else if (clients.length > 0) {
-        // Just fetch for the first client as a placeholder, or implement global search in backend
-        const res = await salesApi.listQuotations(clients[0].id);
+      } else {
+        const res = await salesApi.listQuotations();
         setQuotations(res.data.data.content);
       }
     } catch (err) {
@@ -50,24 +47,36 @@ export default function QuotationsPage() {
 
   useEffect(() => {
     fetchClients();
+    fetchQuotations();
   }, []);
-
-  useEffect(() => {
-    if (clients.length > 0) {
-      fetchQuotations();
-    }
-  }, [clients, initialClientId]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     try {
-      await salesApi.createQuotation({
-        ...formData,
-        clientId: Number(formData.clientId),
-        pax: formData.pax ? Number(formData.pax) : null,
-      });
+      if (formData.id) {
+        await salesApi.updateQuotation(formData.id, {
+          ...formData,
+          clientId: Number(formData.clientId),
+          pax: formData.pax ? Number(formData.pax) : null,
+        });
+      } else {
+        await salesApi.createQuotation({
+          ...formData,
+          clientId: Number(formData.clientId),
+          pax: formData.pax ? Number(formData.pax) : null,
+        });
+      }
       setShowModal(false);
-      setFormData({ clientId: formData.clientId, eventName: '', eventDate: '', pax: '', venue: '' });
+      setFormData({ clientId: formData.clientId, eventName: '', eventDate: '', pax: '', venue: '', items: [] });
+      fetchQuotations();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleUpdateStatus = async (id: number, status: string) => {
+    try {
+      await salesApi.updateStatus(id, status);
       fetchQuotations();
     } catch (err) {
       console.error(err);
@@ -79,6 +88,38 @@ export default function QuotationsPage() {
     SENT: 'badge-info',
     REJECTED: 'badge-danger',
     APPROVED: 'badge-success',
+  };
+
+  const handleAddTemplate = (e: any) => {
+    const val = e.target.value;
+    if (val === 'ALL') {
+      setFormData((prev: any) => ({
+        ...prev, 
+        items: [...prev.items, 
+          { description: 'Venue Setup', quantity: 1, unitPrice: 50000, taxPercent: 18 },
+          { description: 'Catering (per pax)', quantity: Number(prev.pax) || 100, unitPrice: 1500, taxPercent: 5 },
+          { description: 'Photography', quantity: 1, unitPrice: 75000, taxPercent: 18 }
+        ]
+      }));
+    } else if (val === 'DECOR_ONLY') {
+      setFormData((prev: any) => ({
+        ...prev, 
+        items: [...prev.items, { description: 'Premium Decor Package', quantity: 1, unitPrice: 150000, taxPercent: 18 }]
+      }));
+    }
+  };
+
+  const handleAddCustom = () => {
+    setFormData((prev: any) => ({
+      ...prev,
+      items: [...prev.items, { description: '', quantity: 1, unitPrice: 0, taxPercent: 0 }]
+    }));
+  };
+
+  const updateItem = (index: number, field: string, value: any) => {
+    const newItems = [...formData.items];
+    newItems[index] = { ...newItems[index], [field]: value };
+    setFormData({ ...formData, items: newItems });
   };
 
   return (
@@ -134,8 +175,40 @@ export default function QuotationsPage() {
                     </td>
                     <td>
                       <div style={{ display: 'flex', gap: '6px' }}>
-                        <button className="btn btn-ghost btn-sm" title="Edit/Build">✏️</button>
-                        <button className="btn btn-ghost btn-sm" title="Download PDF">📥</button>
+                        <button 
+                          className="btn btn-ghost btn-sm" 
+                          title="Edit Quotation"
+                          onClick={() => {
+                            setFormData({
+                              id: quote.id,
+                              clientId: quote.clientId,
+                              eventName: quote.eventName,
+                              eventDate: quote.eventDate || '',
+                              pax: quote.pax || '',
+                              venue: quote.venue || '',
+                              items: quote.items || [],
+                            });
+                            setShowModal(true);
+                          }}
+                        >
+                          ✏️
+                        </button>
+                        <button className="btn btn-ghost btn-sm" title="Download PDF" onClick={() => window.open(`/quotations/${quote.id}/pdf`, '_blank')}>📥</button>
+                        {quote.status === 'DRAFT' && (
+                          <button className="btn btn-info btn-sm" style={{ padding: '2px 6px', fontSize: '0.75rem' }} onClick={() => handleUpdateStatus(quote.id, 'SENT')}>
+                            Send
+                          </button>
+                        )}
+                        {quote.status === 'SENT' && (
+                          <>
+                            <button className="btn btn-success btn-sm" style={{ padding: '2px 6px', fontSize: '0.75rem' }} onClick={() => handleUpdateStatus(quote.id, 'APPROVED')}>
+                              Approve
+                            </button>
+                            <button className="btn btn-danger btn-sm" style={{ padding: '2px 6px', fontSize: '0.75rem' }} onClick={() => handleUpdateStatus(quote.id, 'REJECTED')}>
+                              Reject
+                            </button>
+                          </>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -180,6 +253,35 @@ export default function QuotationsPage() {
                 <label className="form-label">Venue</label>
                 <input className="form-input" value={formData.venue} onChange={e => setFormData({...formData, venue: e.target.value})} />
               </div>
+              <div className="form-group">
+                <label className="form-label">Attach Packages/Items</label>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <select className="form-select" style={{ flex: 1 }} onChange={handleAddTemplate}>
+                    <option value="">Select a template...</option>
+                    <option value="ALL">Attach All Packages</option>
+                    <option value="DECOR_ONLY">Decor Only</option>
+                    <option value="FULL_WEDDING">Full Wedding</option>
+                  </select>
+                  <button type="button" className="btn btn-outline" style={{ whiteSpace: 'nowrap' }} onClick={handleAddCustom}>+ Custom Item</button>
+                </div>
+              </div>
+
+              {formData.items.length > 0 && (
+                <div style={{ marginTop: '15px', padding: '15px', background: 'var(--bg-secondary)', borderRadius: '8px' }}>
+                  <div style={{ fontWeight: 600, marginBottom: '10px' }}>Line Items</div>
+                  {formData.items.map((item: any, idx: any) => (
+                    <div key={idx} style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+                      <input className="form-input" style={{ flex: 2 }} placeholder="Description" value={item.description} onChange={e => updateItem(idx, 'description', e.target.value)} required />
+                      <input type="number" className="form-input" style={{ flex: 1 }} placeholder="Qty" value={item.quantity} onChange={e => updateItem(idx, 'quantity', Number(e.target.value))} required />
+                      <input type="number" className="form-input" style={{ flex: 1 }} placeholder="Price" value={item.unitPrice} onChange={e => updateItem(idx, 'unitPrice', Number(e.target.value))} required />
+                      <button type="button" className="btn btn-ghost btn-sm" onClick={() => {
+                        const newItems = formData.items.filter((_: any, i: any) => i !== idx);
+                        setFormData({ ...formData, items: newItems });
+                      }}>✕</button>
+                    </div>
+                  ))}
+                </div>
+              )}
               
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '20px' }}>
                 <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>

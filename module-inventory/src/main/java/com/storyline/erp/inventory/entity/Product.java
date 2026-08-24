@@ -24,6 +24,9 @@ public class Product extends AuditableEntity {
     @Column(name = "is_active")
     private boolean active = true;
 
+    @Column(name = "current_stock")
+    private Double currentStock = 0.0;
+
     // Getters and Setters
     public String getSku() { return sku; }
     public void setSku(String sku) { this.sku = sku; }
@@ -35,4 +38,6 @@ public class Product extends AuditableEntity {
     public void setBasePrice(BigDecimal basePrice) { this.basePrice = basePrice; }
     public boolean isActive() { return active; }
     public void setActive(boolean active) { this.active = active; }
+    public Double getCurrentStock() { return currentStock; }
+    public void setCurrentStock(Double currentStock) { this.currentStock = currentStock; }
 }

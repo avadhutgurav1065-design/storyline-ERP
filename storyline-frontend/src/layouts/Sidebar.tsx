@@ -73,17 +73,11 @@ const navigation: NavGroup[] = [
   {
     title: 'Hampers',
     items: [
-      { path: '/hampers/products', label: 'Products', icon: '🎁', roles: ['ADMIN', 'INVENTORY_MANAGER'] },
-      { path: '/hampers/bom', label: 'BOM', icon: '📐', roles: ['ADMIN', 'INVENTORY_MANAGER'] },
-      { path: '/hampers/manufacturing', label: 'Manufacturing', icon: '🏭', roles: ['ADMIN', 'INVENTORY_MANAGER'] },
-      { path: '/hampers/materials', label: 'Raw Materials', icon: '📦', roles: ['ADMIN', 'INVENTORY_MANAGER'] },
-    ],
-  },
-  {
-    title: 'Inventory',
-    items: [
-      { path: '/inventory', label: 'Stock', icon: '📦', roles: ['ADMIN', 'INVENTORY_MANAGER'] },
-      { path: '/inventory/dispatch', label: 'Dispatch', icon: '🚚', roles: ['ADMIN', 'INVENTORY_MANAGER'] },
+      { path: '/hampers', label: 'Products', icon: '🎁', roles: ['ADMIN', 'INVENTORY_MANAGER'] },
+      { path: '/bom', label: 'BOM', icon: '📐', roles: ['ADMIN', 'INVENTORY_MANAGER'] },
+      { path: '/manufacturing', label: 'Manufacturing', icon: '🏭', roles: ['ADMIN', 'INVENTORY_MANAGER'] },
+      { path: '/raw-materials', label: 'Raw Materials', icon: '📦', roles: ['ADMIN', 'INVENTORY_MANAGER'] },
+      { path: '/dispatch', label: 'Dispatch', icon: '🚚', roles: ['ADMIN', 'INVENTORY_MANAGER'] },
     ],
   },
   {
@@ -116,7 +110,7 @@ export default function Sidebar({ collapsed }: SidebarProps) {
   };
 
   return (
-    <aside className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
+    <aside className={`sidebar ${collapsed ? 'collapsed' : 'open'}`}>
       {/* Logo */}
       <div className="sidebar-logo">
         <div className="logo-icon">S</div>

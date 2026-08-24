@@ -1,5 +1,5 @@
 import { useState, useEffect, type FormEvent } from 'react';
-import api from '../../api/client';
+import { financeApi } from '../../api/client';
 
 export default function InvoicesPage() {
   const [invoices, setInvoices] = useState<any[]>([]);
@@ -16,8 +16,8 @@ export default function InvoicesPage() {
   const fetchInvoices = async () => {
     setLoading(true);
     try {
-      const res = await api.get('/finance/invoices');
-      setInvoices(res.data.data.content);
+      const res = await financeApi.listInvoices();
+      setInvoices(res.data.data.content || []);
     } catch (err) {
       console.error(err);
     } finally {
@@ -32,10 +32,11 @@ export default function InvoicesPage() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     try {
-      await api.post('/finance/invoices', {
+      await financeApi.createInvoice({
         ...formData,
         clientId: Number(formData.clientId),
-        grandTotal: parseFloat(formData.grandTotal)
+        grandTotal: parseFloat(formData.grandTotal),
+        totalAmount: parseFloat(formData.grandTotal)
       });
       setShowModal(false);
       setFormData({ invoiceNumber: '', clientId: '', issueDate: '', grandTotal: '' });
@@ -101,8 +102,8 @@ export default function InvoicesPage() {
                     </td>
                     <td>
                       <div style={{ display: 'flex', gap: '6px' }}>
-                        <button className="btn btn-ghost btn-sm" title="Download PDF">📥</button>
-                        <button className="btn btn-success btn-sm" style={{ padding: '4px 8px', fontSize: '0.75rem' }}>Add Payment</button>
+                        <button className="btn btn-ghost btn-sm" title="Download PDF" onClick={() => window.print()}>📥</button>
+                        <button className="btn btn-success btn-sm" style={{ padding: '4px 8px', fontSize: '0.75rem' }} onClick={() => window.location.href = '/finance/client-payments'}>Add Payment</button>
                       </div>
                     </td>
                   </tr>

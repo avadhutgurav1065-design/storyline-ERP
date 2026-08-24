@@ -58,6 +58,6 @@ public class AuthController {
             @Valid @RequestBody ChangePasswordRequest request) {
         Long userId = (Long) authentication.getPrincipal();
         authService.changePassword(userId, request);
-        return ResponseEntity.ok(ApiResponse.success(null, "Password changed successfully"));
+        return ResponseEntity.ok(ApiResponse.success("Password changed successfully", (Void) null));
     }
 }

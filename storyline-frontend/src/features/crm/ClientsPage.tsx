@@ -8,6 +8,11 @@ export default function ClientsPage() {
   const [search, setSearch] = useState('');
   const navigate = useNavigate();
 
+  const [showModal, setShowModal] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '', email: '', phone: '', company: '', address: '', gstNumber: ''
+  });
+
   const fetchClients = async () => {
     setLoading(true);
     try {
@@ -24,6 +29,18 @@ export default function ClientsPage() {
     fetchClients();
   }, [search]);
 
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    try {
+      await crmApi.createClient(formData);
+      setShowModal(false);
+      setFormData({ name: '', email: '', phone: '', company: '', address: '', gstNumber: '' });
+      fetchClients();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   return (
     <div>
       <div className="page-header">
@@ -31,7 +48,7 @@ export default function ClientsPage() {
           <h1 className="page-title">Client Management</h1>
           <p className="page-subtitle">Manage your converted clients and billing details</p>
         </div>
-        <button className="btn btn-primary">+ New Client</button>
+        <button className="btn btn-primary" onClick={() => setShowModal(true)}>+ New Client</button>
       </div>
 
       <div className="card" style={{ marginBottom: '20px' }}>
@@ -95,6 +112,50 @@ export default function ClientsPage() {
           </table>
         </div>
       </div>
+
+      {/* Create Modal */}
+      {showModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}>
+          <div className="card animate-fade-in" style={{ width: '100%', maxWidth: '500px' }}>
+            <div className="card-header">
+              <div className="card-title">Add New Client</div>
+              <button className="btn btn-ghost btn-sm" onClick={() => setShowModal(false)}>✕</button>
+            </div>
+            <form onSubmit={handleSubmit}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div className="form-group">
+                  <label className="form-label">Name *</label>
+                  <input className="form-input" required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Phone *</label>
+                  <input className="form-input" required value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} />
+                </div>
+                <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                  <label className="form-label">Email</label>
+                  <input type="email" className="form-input" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
+                </div>
+                <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                  <label className="form-label">Company Name</label>
+                  <input className="form-input" value={formData.company} onChange={e => setFormData({...formData, company: e.target.value})} />
+                </div>
+                <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                  <label className="form-label">GST Number</label>
+                  <input className="form-input" value={formData.gstNumber} onChange={e => setFormData({...formData, gstNumber: e.target.value})} />
+                </div>
+                <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                  <label className="form-label">Address</label>
+                  <textarea className="form-input" rows={2} value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} />
+                </div>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '20px' }}>
+                <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
+                <button type="submit" className="btn btn-primary">Save Client</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

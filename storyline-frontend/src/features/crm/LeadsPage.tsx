@@ -33,12 +33,19 @@ export default function LeadsPage() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     try {
-      await crmApi.createLead({
-        ...formData,
-        budget: formData.budget ? parseFloat(formData.budget) : null,
-      });
+      if ((formData as any).id) {
+        await crmApi.updateLead((formData as any).id, {
+          ...formData,
+          budget: formData.budget ? parseFloat(formData.budget) : null,
+        });
+      } else {
+        await crmApi.createLead({
+          ...formData,
+          budget: formData.budget ? parseFloat(formData.budget) : null,
+        });
+      }
       setShowModal(false);
-      setFormData({ name: '', email: '', phone: '', company: '', eventType: '', budget: '', source: '' });
+      setFormData({ name: '', email: '', phone: '', company: '', eventType: '', budget: '', source: '' } as any);
       fetchLeads();
     } catch (err) {
       console.error(err);
@@ -137,7 +144,25 @@ export default function LeadsPage() {
                     </td>
                     <td>
                       <div style={{ display: 'flex', gap: '6px' }}>
-                        <button className="btn btn-ghost btn-sm" title="Edit">✏️</button>
+                        <button 
+                          className="btn btn-ghost btn-sm" 
+                          title="Edit"
+                          onClick={() => {
+                            setFormData({
+                              id: lead.id,
+                              name: lead.name,
+                              email: lead.email || '',
+                              phone: lead.phone,
+                              company: lead.company || '',
+                              eventType: lead.eventType || '',
+                              budget: lead.budget || '',
+                              source: lead.source || ''
+                            } as any);
+                            setShowModal(true);
+                          }}
+                        >
+                          ✏️
+                        </button>
                         {lead.status !== 'CONVERTED' && lead.status !== 'LOST' && (
                           <button
                             className="btn btn-success btn-sm"

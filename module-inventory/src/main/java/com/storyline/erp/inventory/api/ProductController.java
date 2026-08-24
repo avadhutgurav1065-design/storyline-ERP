@@ -28,4 +28,15 @@ public class ProductController {
     public ApiResponse<Product> createProduct(@RequestBody Product product) {
         return ApiResponse.success("Product created", productRepository.save(product));
     }
+
+    @PutMapping("/{id}")
+    public ApiResponse<Product> updateProduct(@PathVariable Long id, @RequestBody Product updated) {
+        Product existing = productRepository.findById(id).orElseThrow(() -> new RuntimeException("Product not found"));
+        existing.setSku(updated.getSku());
+        existing.setName(updated.getName());
+        existing.setDescription(updated.getDescription());
+        existing.setBasePrice(updated.getBasePrice());
+        existing.setActive(updated.isActive());
+        return ApiResponse.success("Product updated", productRepository.save(existing));
+    }
 }

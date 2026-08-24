@@ -849,16 +849,48 @@ tr:hover td {
    Responsive
    ==================================================== */
 @media (max-width: 768px) {
+  /* Sidebar handling */
   .sidebar {
     transform: translateX(-100%);
+    width: 260px !important;
   }
   .sidebar.open {
     transform: translateX(0);
+    box-shadow: var(--shadow-xl);
   }
-  .app-content {
-    margin-left: 0;
+  .app-content, .app-content.sidebar-collapsed {
+    margin-left: 0 !important;
   }
+  
+  /* Grids and Layouts */
   .stat-grid {
     grid-template-columns: 1fr;
+  }
+  
+  /* Make forms stack vertically */
+  .card form > div[style*="grid-template-columns: 1fr 1fr"] {
+    grid-template-columns: 1fr !important;
+  }
+  
+  /* Two Column Layouts */
+  div[style*="grid-template-columns: 2fr 1fr"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Modals */
+  .card[style*="maxWidth: '500px'"] {
+    width: 90% !important;
+    margin: 20px;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  
+  /* Page headers stack */
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .page-header button {
+    width: 100%;
   }
 }

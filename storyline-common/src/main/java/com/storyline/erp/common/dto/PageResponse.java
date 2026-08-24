@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
+import org.springframework.data.domain.Page;
 
 /**
  * Paginated response wrapper for list endpoints.
@@ -34,6 +35,18 @@ public class PageResponse<T> {
                 .totalPages(totalPages)
                 .first(page == 0)
                 .last(page >= totalPages - 1)
+                .build();
+    }
+
+    public static <T> PageResponse<T> of(Page<T> pageData) {
+        return PageResponse.<T>builder()
+                .content(pageData.getContent())
+                .page(pageData.getNumber())
+                .size(pageData.getSize())
+                .totalElements(pageData.getTotalElements())
+                .totalPages(pageData.getTotalPages())
+                .first(pageData.isFirst())
+                .last(pageData.isLast())
                 .build();
     }
 }

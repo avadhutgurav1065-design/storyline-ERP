@@ -1,19 +1,19 @@
 import axios from 'axios';
-import type { ApiResponse, LoginRequest, LoginResponse, UserResponse, PageResponse, CreateUserRequest, UpdateUserRequest } from '../types';
 
-// Axios instance with base configuration
+const API_BASE_URL = 'http://localhost:8080/api';
+
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Request interceptor — attach JWT token
+// Add a request interceptor to include the auth token
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('accessToken');
-    if (token) {
+    if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
@@ -21,111 +21,61 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response interceptor — handle token refresh
-api.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
+// Generic API response structure matches our backend ApiResponse<T>
+export interface ApiResponse<T> {
+  success: boolean;
+  message: string;
+  data: T;
+  timestamp: string;
+}
 
-    // If 401 and we haven't tried refreshing yet
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-      const refreshToken = localStorage.getItem('refreshToken');
-
-      if (refreshToken) {
-        try {
-          const response = await axios.post<ApiResponse<LoginResponse>>('/api/auth/refresh', {
-            refreshToken,
-          });
-
-          if (response.data.success) {
-            const { accessToken, refreshToken: newRefreshToken } = response.data.data;
-            localStorage.setItem('accessToken', accessToken);
-            localStorage.setItem('refreshToken', newRefreshToken);
-            originalRequest.headers.Authorization = `Bearer ${accessToken}`;
-            return api(originalRequest);
-          }
-        } catch (refreshError) {
-          // Refresh failed — clear tokens and redirect to login
-          localStorage.removeItem('accessToken');
-          localStorage.removeItem('refreshToken');
-          localStorage.removeItem('user');
-          window.location.href = '/login';
-          return Promise.reject(refreshError);
-        }
-      }
-
-      // No refresh token — redirect to login
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
-    }
-
-    return Promise.reject(error);
-  }
-);
+// Pagination structure matches our backend PageResponse<T>
+export interface PageResponse<T> {
+  content: T[];
+  pageNumber: number;
+  pageSize: number;
+  totalElements: number;
+  totalPages: number;
+  last: boolean;
+}
 
 // ====================================================
-// Auth API
+// AUTH API
 // ====================================================
 export const authApi = {
-  login: (data: LoginRequest) =>
-    api.post<ApiResponse<LoginResponse>>('/auth/login', data),
-
-  refresh: (refreshToken: string) =>
-    api.post<ApiResponse<LoginResponse>>('/auth/refresh', { refreshToken }),
-
-  me: () =>
-    api.get<ApiResponse<UserResponse>>('/auth/me'),
-
-  changePassword: (currentPassword: string, newPassword: string) =>
-    api.post<ApiResponse<void>>('/auth/change-password', { currentPassword, newPassword }),
+  login: (data: any) => api.post<ApiResponse<any>>('/auth/login', data),
+  me: () => api.get<ApiResponse<any>>('/auth/me'),
 };
 
-// ====================================================
-// Users API
-// ====================================================
 export const usersApi = {
-  list: (params?: { search?: string; active?: boolean; page?: number; size?: number }) =>
-    api.get<ApiResponse<PageResponse<UserResponse>>>('/users', { params }),
-
-  get: (id: number) =>
-    api.get<ApiResponse<UserResponse>>(`/users/${id}`),
-
-  create: (data: CreateUserRequest) =>
-    api.post<ApiResponse<UserResponse>>('/users', data),
-
-  update: (id: number, data: UpdateUserRequest) =>
-    api.put<ApiResponse<UserResponse>>(`/users/${id}`, data),
-
-  toggleStatus: (id: number) =>
-    api.patch<ApiResponse<UserResponse>>(`/users/${id}/status`),
+  list: (params?: any) => api.get<ApiResponse<any>>('/users', { params }),
+  create: (data: any) => api.post<ApiResponse<any>>('/users', data),
+  updateUserRole: (id: number, role: string) => api.put<ApiResponse<any>>(`/users/${id}/role?role=${role}`, {}),
+  toggleStatus: (id: number) => api.patch<ApiResponse<any>>(`/users/${id}/toggle-status`, {}),
 };
 
 // ====================================================
-// CRM API
+// CRM API (Phase 2)
 // ====================================================
 export const crmApi = {
   // Leads
-  listLeads: (params?: { search?: string; status?: string; page?: number; size?: number }) =>
-    api.get<ApiResponse<PageResponse<any>>>('/crm/leads', { params }),
+  listLeads: (params?: any) => api.get<ApiResponse<PageResponse<any>>>('/crm/leads', { params }),
   createLead: (data: any) => api.post<ApiResponse<any>>('/crm/leads', data),
   updateLead: (id: number, data: any) => api.put<ApiResponse<any>>(`/crm/leads/${id}`, data),
   convertLead: (id: number, data: any) => api.post<ApiResponse<any>>(`/crm/leads/${id}/convert`, data),
-
+  
   // Clients
-  listClients: (params?: { search?: string; page?: number; size?: number }) =>
-    api.get<ApiResponse<PageResponse<any>>>('/crm/clients', { params }),
+  listClients: (params?: any) => api.get<ApiResponse<PageResponse<any>>>('/crm/clients', { params }),
   createClient: (data: any) => api.post<ApiResponse<any>>('/crm/clients', data),
   updateClient: (id: number, data: any) => api.put<ApiResponse<any>>(`/crm/clients/${id}`, data),
 };
 
 // ====================================================
-// Sales API
+// SALES API (Phase 2)
 // ====================================================
 export const salesApi = {
-  listQuotations: (clientId: number, params?: { page?: number; size?: number }) =>
+  listQuotations: (params?: any) => api.get<ApiResponse<PageResponse<any>>>('/sales/quotations', { params }),
+  getQuotationsByClient: (clientId: number, params?: any) => 
     api.get<ApiResponse<PageResponse<any>>>(`/sales/quotations/client/${clientId}`, { params }),
   createQuotation: (data: any) => api.post<ApiResponse<any>>('/sales/quotations', data),
   updateQuotation: (id: number, data: any) => api.put<ApiResponse<any>>(`/sales/quotations/${id}`, data),
@@ -140,6 +90,83 @@ export const eventsApi = {
   listEvents: (params?: { page?: number; size?: number }) =>
     api.get<ApiResponse<PageResponse<any>>>('/events', { params }),
   createEvent: (data: any) => api.post<ApiResponse<any>>('/events', data),
+  updateEvent: (id: number, data: any) => api.put<ApiResponse<any>>(`/events/${id}`, data),
+  getEventDashboard: (id: number) => api.get<ApiResponse<any>>(`/events/${id}/dashboard`),
+};
+
+// ====================================================
+// VENDORS API
+// ====================================================
+export const vendorsApi = {
+  list: () => api.get<ApiResponse<any[]>>('/vendors'),
+  create: (data: any) => api.post<ApiResponse<any>>('/vendors', data),
+  update: (id: number, data: any) => api.put<ApiResponse<any>>(`/vendors/${id}`, data),
+  delete: (id: number) => api.delete<ApiResponse<void>>(`/vendors/${id}`),
+};
+
+// ====================================================
+// VENDOR ASSIGNMENTS API
+// ====================================================
+export const vendorAssignmentsApi = {
+  getByEvent: (eventId: number) => api.get<ApiResponse<any[]>>(`/vendor-assignments/event/${eventId}`),
+  assign: (data: any) => api.post<ApiResponse<any>>('/vendor-assignments', data),
+  update: (id: number, data: any) => api.put<ApiResponse<any>>(`/vendor-assignments/${id}`, data),
+  remove: (id: number) => api.delete<ApiResponse<void>>(`/vendor-assignments/${id}`),
+};
+
+// ====================================================
+// TEAM ASSIGNMENTS API
+// ====================================================
+export const teamAssignmentsApi = {
+  getByEvent: (eventId: number) => api.get<ApiResponse<any[]>>(`/team-assignments/event/${eventId}`),
+  assign: (data: any) => api.post<ApiResponse<any>>('/team-assignments', data),
+  remove: (id: number) => api.delete<ApiResponse<void>>(`/team-assignments/${id}`),
+};
+
+// ====================================================
+// TASKS API
+// ====================================================
+export const tasksApi = {
+  list: () => api.get<ApiResponse<any[]>>('/tasks'),
+  create: (data: any) => api.post<ApiResponse<any>>('/tasks', data),
+  update: (id: number, data: any) => api.put<ApiResponse<any>>(`/tasks/${id}`, data),
+  delete: (id: number) => api.delete<ApiResponse<void>>(`/tasks/${id}`),
+};
+
+// ====================================================
+// INVENTORY API (Phase 4)
+// ====================================================
+export const inventoryApi = {
+  listProducts: (params?: any) => api.get<ApiResponse<PageResponse<any>>>('/inventory/products', { params }),
+  createProduct: (data: any) => api.post<ApiResponse<any>>('/inventory/products', data),
+  updateProduct: (id: number, data: any) => api.put<ApiResponse<any>>(`/inventory/products/${id}`, data),
+  
+  listRawMaterials: (params?: any) => api.get<ApiResponse<PageResponse<any>>>('/inventory/raw-materials', { params }),
+  createRawMaterial: (data: any) => api.post<ApiResponse<any>>('/inventory/raw-materials', data),
+  updateRawMaterial: (id: number, data: any) => api.put<ApiResponse<any>>(`/inventory/raw-materials/${id}`, data),
+  deleteRawMaterial: (id: number) => api.delete<ApiResponse<void>>(`/inventory/raw-materials/${id}`),
+  
+  getProductBom: (productId: number) => api.get<ApiResponse<any[]>>(`/inventory/bom/product/${productId}`),
+  updateProductBom: (productId: number, data: any[]) => api.put<ApiResponse<any[]>>(`/inventory/bom/product/${productId}`, data),
+  
+  processManufactureBatch: (data: any) => api.post<ApiResponse<any>>('/inventory/manufacturing/batch', data)
+};
+
+// ====================================================
+// FINANCE API (Phase 5)
+// ====================================================
+export const financeApi = {
+  listInvoices: (params?: any) => api.get<ApiResponse<PageResponse<any>>>('/finance/invoices', { params }),
+  createInvoice: (data: any) => api.post<ApiResponse<any>>('/finance/invoices', data),
+  updateInvoiceStatus: (id: number, status: string) => api.patch<ApiResponse<any>>(`/finance/invoices/${id}/status?status=${status}`),
+  
+  listPayments: (params?: any) => api.get<ApiResponse<PageResponse<any>>>('/finance/payments', { params }),
+  createPayment: (data: any) => api.post<ApiResponse<any>>('/finance/payments', data),
+  
+  listExpenses: (params?: any) => api.get<ApiResponse<PageResponse<any>>>('/finance/expenses', { params }),
+  createExpense: (data: any) => api.post<ApiResponse<any>>('/finance/expenses', data),
+  
+  getProfitAndLoss: () => api.get<ApiResponse<any>>('/finance/profit-loss')
 };
 
 export default api;

@@ -36,6 +36,11 @@ public class FollowUpService {
                 .stream().map(this::mapToDto).collect(Collectors.toList());
     }
 
+    public List<FollowUpDto> getAllFollowUps() {
+        return followUpRepository.findAll()
+                .stream().map(this::mapToDto).collect(Collectors.toList());
+    }
+
     public FollowUpDto createFollowUp(FollowUpDto dto) {
         FollowUp followUp = new FollowUp();
         updateEntityFromDto(followUp, dto);

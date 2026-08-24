@@ -6,10 +6,29 @@ import DashboardPage from './features/dashboard/DashboardPage';
 import UserManagementPage from './features/users/UserManagementPage';
 import LeadsPage from './features/crm/LeadsPage';
 import ClientsPage from './features/crm/ClientsPage';
+import FollowupsPage from './features/crm/FollowupsPage';
 import QuotationsPage from './features/sales/QuotationsPage';
+import QuotationPdfView from './features/sales/QuotationPdfView';
+import QuotationHistoryPage from './features/sales/QuotationHistoryPage';
 import EventsPage from './features/events/EventsPage';
 import HampersPage from './features/inventory/HampersPage';
+import RawMaterialsPage from './features/inventory/RawMaterialsPage';
+import BomPage from './features/inventory/BomPage';
+import ManufacturingPage from './features/inventory/ManufacturingPage';
 import InvoicesPage from './features/finance/InvoicesPage';
+import ClientPaymentsPage from './features/finance/ClientPaymentsPage';
+import ExpensesPage from './features/finance/ExpensesPage';
+import ProfitLossPage from './features/finance/ProfitLossPage';
+import ReportsPage from './features/reports/ReportsPage';
+import NotificationsPage from './features/notifications/NotificationsPage';
+import ActiveEventsPage from './features/events/ActiveEventsPage';
+import EventDetailsDashboard from './features/events/EventDetailsDashboard';
+import EventCalendarPage from './features/events/EventCalendarPage';
+import VendorsPage from './features/vendors/VendorsPage';
+import VendorAssignmentsPage from './features/vendors/VendorAssignmentsPage';
+import TeamManagementPage from './features/teams/TeamManagementPage';
+import MembersPage from './features/teams/MembersPage';
+import TasksPage from './features/tasks/TasksPage';
 import PlaceholderPage from './components/PlaceholderPage';
 import './index.css';
 
@@ -61,50 +80,50 @@ function AppRoutes() {
         {/* CRM (Phase 2) */}
         <Route path="/leads" element={<LeadsPage />} />
         <Route path="/clients" element={<ClientsPage />} />
-        <Route path="/followups" element={<PlaceholderPage icon="📞" title="Follow-ups" description="Schedule and track follow-ups with leads and clients." phase="Phase 2 — Coming Soon" />} />
+        <Route path="/followups" element={<FollowupsPage />} />
 
         {/* Sales (Phase 2) */}
         <Route path="/quotations" element={<QuotationsPage />} />
-        <Route path="/quotation-history" element={<PlaceholderPage icon="📚" title="Quotation History" description="Search and browse all past quotations across clients and events." phase="Phase 2 — Coming Soon" />} />
+        <Route path="/quotations/:id/pdf" element={<QuotationPdfView />} />
+        <Route path="/quotation-history" element={<QuotationHistoryPage />} />
 
         {/* Events (Phase 3) */}
         <Route path="/events" element={<EventsPage />} />
-        <Route path="/events/active" element={<PlaceholderPage icon="🟢" title="Active Events" description="Monitor currently active events and their progress." phase="Phase 3 — Coming Soon" />} />
-        <Route path="/events/calendar" element={<PlaceholderPage icon="📅" title="Event Calendar" description="Calendar view of all upcoming events." phase="Phase 3 — Coming Soon" />} />
-        <Route path="/tasks" element={<PlaceholderPage icon="✅" title="Task Management" description="Track event-specific checklists, assign tasks to team members, and monitor deadlines." phase="Phase 3 — Coming Soon" />} />
+        <Route path="/events/active" element={<ActiveEventsPage />} />
+        <Route path="/events/:id" element={<EventDetailsDashboard />} />
+        <Route path="/events/calendar" element={<EventCalendarPage />} />
+        <Route path="/tasks" element={<TasksPage filter="all" />} />
 
         {/* Teams Placeholders (Phase 3) */}
-        <Route path="/teams" element={<PlaceholderPage icon="👷" title="Team Management" description="Manage departments, team heads, and team members." phase="Phase 3 — Coming Soon" />} />
-        <Route path="/members" element={<PlaceholderPage icon="👤" title="Members" description="View and manage team members across all departments." phase="Phase 3 — Coming Soon" />} />
+        <Route path="/teams" element={<TeamManagementPage />} />
+        <Route path="/members" element={<MembersPage />} />
 
         {/* Vendors Placeholders (Phase 3) */}
-        <Route path="/vendors" element={<PlaceholderPage icon="🤝" title="Vendor Management" description="Manage vendors, their services, rates, and performance." phase="Phase 3 — Coming Soon" />} />
-        <Route path="/vendor-assignments" element={<PlaceholderPage icon="📋" title="Vendor Assignments" description="Track vendor assignments across events." phase="Phase 3 — Coming Soon" />} />
+        <Route path="/vendors" element={<VendorsPage />} />
+        <Route path="/vendor-assignments" element={<VendorAssignmentsPage />} />
 
         {/* Tasks Placeholders (Phase 3) */}
-        <Route path="/tasks/my" element={<PlaceholderPage icon="✅" title="My Tasks" description="View and manage your assigned tasks and checklists." phase="Phase 3 — Coming Soon" />} />
-        <Route path="/tasks/team" element={<PlaceholderPage icon="📝" title="Team Tasks" description="Monitor your team's task progress." phase="Phase 3 — Coming Soon" />} />
-        <Route path="/tasks/all" element={<PlaceholderPage icon="📊" title="All Tasks" description="Overview of all tasks across all events." phase="Phase 3 — Coming Soon" />} />
+        <Route path="/tasks/my" element={<TasksPage filter="my" />} />
+        <Route path="/tasks/team" element={<TasksPage filter="team" />} />
+        <Route path="/tasks/all" element={<TasksPage filter="all" />} />
 
         {/* Inventory & Hamper Placeholders (Phase 4) */}
         <Route path="/hampers" element={<HampersPage />} />
-        <Route path="/inventory" element={<PlaceholderPage icon="📦" title="Raw Material Inventory" description="Track stock levels, set reorder points, and manage warehousing." phase="Phase 4 — Coming Soon" />} />
-        <Route path="/hampers/manufacturing" element={<PlaceholderPage icon="🏭" title="Manufacturing" description="Create and manage manufacturing batches with QC." phase="Phase 4 — Coming Soon" />} />
-        <Route path="/hampers/materials" element={<PlaceholderPage icon="📦" title="Raw Materials" description="Track raw material inventory and reorder levels." phase="Phase 4 — Coming Soon" />} />
-
-        {/* Inventory Placeholders (Phase 4) */}
-        <Route path="/inventory/dispatch" element={<PlaceholderPage icon="🚚" title="Dispatch" description="Track hamper dispatches and deliveries to events." phase="Phase 4 — Coming Soon" />} />
+        <Route path="/raw-materials" element={<RawMaterialsPage />} />
+        <Route path="/bom" element={<BomPage />} />
+        <Route path="/manufacturing" element={<ManufacturingPage />} />
+        <Route path="/dispatch" element={<PlaceholderPage icon="🚚" title="Warehousing & Dispatch" description="Track product movement and logistics." phase="Phase 4 — Coming Soon" />} />
 
         {/* Finance (Phase 5) */}
         <Route path="/finance/invoices" element={<InvoicesPage />} />
-        <Route path="/finance/client-payments" element={<PlaceholderPage icon="💳" title="Client Payments" description="Track advance, partial, and final payments from clients." phase="Phase 5 — Coming Soon" />} />
-        <Route path="/finance/vendor-payments" element={<PlaceholderPage icon="💸" title="Vendor Payments" description="Manage vendor payment schedules and settlements." phase="Phase 5 — Coming Soon" />} />
-        <Route path="/finance/expenses" element={<PlaceholderPage icon="🧮" title="Expenses" description="Track and approve expenses linked to events and batches." phase="Phase 5 — Coming Soon" />} />
-        <Route path="/finance/profit-loss" element={<PlaceholderPage icon="📊" title="Profit & Loss" description="Event-level profitability analysis and P&L statements." phase="Phase 5 — Coming Soon" />} />
+        <Route path="/finance/client-payments" element={<ClientPaymentsPage />} />
+        <Route path="/finance/vendor-payments" element={<ExpensesPage />} />
+        <Route path="/finance/expenses" element={<ExpensesPage />} />
+        <Route path="/finance/profit-loss" element={<ProfitLossPage />} />
 
-        {/* Reports & Notifications */}
-        <Route path="/reports" element={<PlaceholderPage icon="📊" title="Reports" description="Comprehensive analytics and management dashboards." phase="Phase 6 — Coming Soon" />} />
-        <Route path="/notifications" element={<PlaceholderPage icon="🔔" title="Notifications" description="Stay informed about tasks, payments, and deadlines." phase="Phase 6 — Coming Soon" />} />
+        {/* System (Phase 6) */}
+        <Route path="/reports" element={<ReportsPage />} />
+        <Route path="/notifications" element={<NotificationsPage />} />
 
         {/* Catch-all */}
         <Route path="*" element={<Navigate to="/" replace />} />

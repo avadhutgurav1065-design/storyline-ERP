@@ -35,6 +35,8 @@ export default function EventsPage() {
     try {
       await eventsApi.createEvent({
         ...formData,
+        startDate: formData.startDate || null,
+        endDate: formData.endDate || null,
         pax: formData.pax ? Number(formData.pax) : null,
       });
       setShowModal(false);

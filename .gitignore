@@ -40,3 +40,5 @@ desktop.ini
 
 # Docker
 docker-compose.override.yml
+apache-maven-3.9.6/
+maven.zip
