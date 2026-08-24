@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: jdbc:postgresql://db.gfxqaoqjpvmyxvkzmlej.supabase.co:5432/postgres
+    url: ${SUPABASE_URL:jdbc:postgresql://db.gfxqaoqjpvmyxvkzmlej.supabase.co:5432/postgres}
     username: postgres
-    password: "ct&8Gz%25E2Xts."
+    password: ${SUPABASE_DB_PASSWORD:ct&8Gz%25E2Xts.}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
@@ -14,9 +14,9 @@ spring:
     enabled: true
     clean-disabled: false
     clean-on-validation-error: true
-    url: jdbc:postgresql://db.gfxqaoqjpvmyxvkzmlej.supabase.co:5432/postgres
+    url: ${SUPABASE_URL:jdbc:postgresql://db.gfxqaoqjpvmyxvkzmlej.supabase.co:5432/postgres}
     user: postgres
-    password: "ct&8Gz%25E2Xts."
+    password: ${SUPABASE_DB_PASSWORD:ct&8Gz%25E2Xts.}
     baseline-on-migrate: true
 
 jwt:
