@@ -1,7 +1,7 @@
 spring:
   datasource:
     url: ${SUPABASE_URL:jdbc:postgresql://db.gfxqaoqjpvmyxvkzmlej.supabase.co:5432/postgres}
-    username: postgres
+    username: ${SUPABASE_DB_USERNAME:postgres}
     password: ${SUPABASE_DB_PASSWORD:ct&8Gz%25E2Xts.}
     driver-class-name: org.postgresql.Driver
   jpa:
@@ -15,7 +15,7 @@ spring:
     clean-disabled: false
     clean-on-validation-error: true
     url: ${SUPABASE_URL:jdbc:postgresql://db.gfxqaoqjpvmyxvkzmlej.supabase.co:5432/postgres}
-    user: postgres
+    user: ${SUPABASE_DB_USERNAME:postgres}
     password: ${SUPABASE_DB_PASSWORD:ct&8Gz%25E2Xts.}
     baseline-on-migrate: true
 
