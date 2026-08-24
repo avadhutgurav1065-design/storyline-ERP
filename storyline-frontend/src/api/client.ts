@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+// We hardcode the production URL so we don't have to deal with Vercel Environment Variable warnings!
+const API_BASE_URL = 'https://storyline-erp-backend.onrender.com/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
