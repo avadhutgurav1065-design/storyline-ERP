@@ -5,7 +5,7 @@ services:
     plan: free
     branch: main
     # Using maven to build the multi-module project targeting storyline-app
-    buildCommand: "./mvnw clean install -DskipTests"
+    buildCommand: "mvn clean install -DskipTests"
     startCommand: "java -jar storyline-app/target/storyline-app-0.0.1-SNAPSHOT.jar"
     envVars:
       - key: SPRING_PROFILES_ACTIVE
