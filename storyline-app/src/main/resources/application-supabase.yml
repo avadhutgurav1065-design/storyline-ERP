@@ -4,6 +4,9 @@ spring:
     username: ${SUPABASE_DB_USERNAME:postgres}
     password: ${SUPABASE_DB_PASSWORD:ct&8Gz%25E2Xts.}
     driver-class-name: org.postgresql.Driver
+    hikari:
+      data-source-properties:
+        prepareThreshold: 0
   jpa:
     hibernate:
       ddl-auto: update
@@ -18,6 +21,8 @@ spring:
     user: ${SUPABASE_DB_USERNAME:postgres}
     password: ${SUPABASE_DB_PASSWORD:ct&8Gz%25E2Xts.}
     baseline-on-migrate: true
+    jdbc-properties:
+      prepareThreshold: 0
 
 jwt:
   secret: 8a3c9e7b2f4d6a1c8e5b9d3f2a7c4e1b8a3c9e7b2f4d6a1c8e5b9d3f2a7c4e1b
