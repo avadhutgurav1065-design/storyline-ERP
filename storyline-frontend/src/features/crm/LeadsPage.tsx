@@ -1,5 +1,6 @@
-import { useState, useEffect, type FormEvent } from 'react';
+﻿import { useState, useEffect, type FormEvent } from 'react';
 import { crmApi } from '../../api/client';
+import LeadDetailsDrawer from './LeadDetailsDrawer';
 
 export default function LeadsPage() {
   const [leads, setLeads] = useState<any[]>([]);
@@ -8,6 +9,9 @@ export default function LeadsPage() {
   const [statusFilter, setStatusFilter] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [showConvertModal, setShowConvertModal] = useState<number | null>(null);
+  
+  // Drawer state
+  const [selectedLeadId, setSelectedLeadId] = useState<number | null>(null);
 
   const [formData, setFormData] = useState({
     name: '', email: '', phone: '', company: '',
@@ -49,6 +53,7 @@ export default function LeadsPage() {
       fetchLeads();
     } catch (err) {
       console.error(err);
+      alert('Failed to save lead. Please check the inputs.');
     }
   };
 
@@ -56,12 +61,40 @@ export default function LeadsPage() {
     e.preventDefault();
     if (!showConvertModal) return;
     try {
-      // Basic conversion without extra data for now
       await crmApi.convertLead(showConvertModal, {});
       setShowConvertModal(null);
       fetchLeads();
+      alert('Lead successfully converted to Client!');
     } catch (err) {
       console.error(err);
+      alert('Failed to convert lead. They might already be converted.');
+    }
+  };
+
+  const handleDelete = async (id: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (confirm('Are you sure you want to delete this lead? This action cannot be undone.')) {
+      try {
+        await crmApi.deleteLead(id);
+        fetchLeads();
+      } catch (err) {
+        console.error(err);
+        alert('Failed to delete lead.');
+      }
+    }
+  };
+
+  const handleStatusChange = async (id: number, newStatus: string, e: React.ChangeEvent<HTMLSelectElement>) => {
+    e.stopPropagation();
+    try {
+      const lead = leads.find(l => l.id === id);
+      if (lead) {
+        await crmApi.updateLead(id, { ...lead, status: newStatus });
+        fetchLeads();
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Failed to update status.');
     }
   };
 
@@ -86,7 +119,7 @@ export default function LeadsPage() {
 
       <div className="card" style={{ marginBottom: '20px', display: 'flex', gap: '16px' }}>
         <input
-          type="text" className="form-input" placeholder="Search leads..."
+          type="text" className="form-input" placeholder="Search leads by name, company, email..."
           value={search} onChange={(e) => setSearch(e.target.value)}
           style={{ flex: 1, maxWidth: '400px' }}
         />
@@ -108,15 +141,15 @@ export default function LeadsPage() {
 
       <div className="card" style={{ padding: 0 }}>
         <div className="table-container" style={{ border: 'none' }}>
-          <table>
+          <table className="interactive-table">
             <thead>
               <tr>
-                <th>Name / Company</th>
+                <th>Lead Info</th>
                 <th>Contact</th>
                 <th>Event Type</th>
                 <th>Budget</th>
-                <th>Status</th>
-                <th>Actions</th>
+                <th>Pipeline Status</th>
+                <th style={{ textAlign: 'right' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -126,28 +159,78 @@ export default function LeadsPage() {
                 <tr><td colSpan={6} style={{ textAlign: 'center', padding: '40px' }}>No leads found</td></tr>
               ) : (
                 leads.map((lead) => (
-                  <tr key={lead.id}>
-                    <td data-label="Lead Name">
-                      <div style={{ fontWeight: 600 }}>{lead.name}</div>
-                      {lead.company && <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{lead.company}</div>}
+                  <tr 
+                    key={lead.id} 
+                    onClick={() => setSelectedLeadId(lead.id)}
+                    style={{ cursor: 'pointer' }}
+                    className="hover-row"
+                  >
+                    <td data-label="Lead Info">
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div style={{ 
+                            width: '40px', height: '40px', borderRadius: '8px', 
+                            backgroundColor: 'rgba(79, 70, 229, 0.1)', color: 'var(--primary-color)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold'
+                        }}>
+                          {lead.name.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <div style={{ fontWeight: 600 }}>{lead.name}</div>
+                          {lead.company && <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{lead.company}</div>}
+                        </div>
+                      </div>
                     </td>
                     <td data-label="Contact">
-                      <div>{lead.phone}</div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{lead.email}</div>
+                      <div style={{ fontWeight: 500 }}>{lead.phone}</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{lead.email || 'No email'}</div>
                     </td>
-                    <td data-label="Event Type">{lead.eventType || '—'}</td>
-                    <td data-label="Budget">{lead.budget ? `₹${lead.budget.toLocaleString()}` : '—'}</td>
-                    <td data-label="Status">
-                      <span className={`badge ${statusColors[lead.status] || 'badge-primary'}`}>
-                        {lead.status.replace('_', ' ')}
+                    <td data-label="Event Type">
+                      <span style={{ padding: '4px 8px', backgroundColor: 'var(--bg-main)', borderRadius: '4px', fontSize: '0.8rem' }}>
+                        {lead.eventType || 'Unspecified'}
                       </span>
                     </td>
-                    <td data-label="Actions">
-                      <div style={{ display: 'flex', gap: '6px' }}>
+                    <td data-label="Budget">
+                      {lead.budget ? <strong style={{ color: 'var(--primary-color)' }}>₹{lead.budget.toLocaleString()}</strong> : <span style={{ color: 'var(--text-muted)' }}>—</span>}
+                    </td>
+                    <td data-label="Pipeline Status" onClick={e => e.stopPropagation()}>
+                       <select 
+                          className="form-select" 
+                          style={{ 
+                            padding: '4px 8px', fontSize: '0.75rem', 
+                            backgroundColor: lead.status === 'LOST' ? '#fee2e2' : lead.status === 'CONVERTED' ? '#dcfce7' : 'var(--bg-main)',
+                            border: 'none',
+                            fontWeight: 600
+                          }}
+                          value={lead.status}
+                          onChange={(e) => handleStatusChange(lead.id, e.target.value, e)}
+                       >
+                         <option value="NEW">NEW</option>
+                         <option value="CONTACTED">CONTACTED</option>
+                         <option value="QUALIFIED">QUALIFIED</option>
+                         <option value="PROPOSAL_SENT">PROPOSAL SENT</option>
+                         <option value="CONVERTED">CONVERTED (Client)</option>
+                         <option value="LOST">LOST (Rejected)</option>
+                       </select>
+                    </td>
+                    <td data-label="Actions" style={{ textAlign: 'right' }} onClick={e => e.stopPropagation()}>
+                      <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
+                        
+                        {lead.status !== 'CONVERTED' && lead.status !== 'LOST' && (
+                          <button
+                            className="btn btn-success btn-sm"
+                            title="Convert to Client"
+                            onClick={(e) => { e.stopPropagation(); setShowConvertModal(lead.id); }}
+                            style={{ padding: '4px 8px', fontSize: '0.75rem' }}
+                          >
+                            Convert
+                          </button>
+                        )}
+                        
                         <button 
                           className="btn btn-ghost btn-sm" 
                           title="Edit"
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation();
                             setFormData({
                               id: lead.id,
                               name: lead.name,
@@ -163,16 +246,16 @@ export default function LeadsPage() {
                         >
                           ✏️
                         </button>
-                        {lead.status !== 'CONVERTED' && lead.status !== 'LOST' && (
-                          <button
-                            className="btn btn-success btn-sm"
-                            title="Convert to Client"
-                            onClick={() => setShowConvertModal(lead.id)}
-                            style={{ padding: '4px 8px', fontSize: '0.75rem' }}
-                          >
-                            Convert
-                          </button>
-                        )}
+                        
+                        <button 
+                          className="btn btn-ghost btn-sm" 
+                          title="Delete"
+                          style={{ color: '#ef4444' }}
+                          onClick={(e) => handleDelete(lead.id, e)}
+                        >
+                          🗑️
+                        </button>
+                        
                       </div>
                     </td>
                   </tr>
@@ -183,12 +266,21 @@ export default function LeadsPage() {
         </div>
       </div>
 
-      {/* Create Modal */}
+      {/* Drawer */}
+      {selectedLeadId && (
+        <LeadDetailsDrawer 
+          leadId={selectedLeadId} 
+          onClose={() => setSelectedLeadId(null)} 
+          onUpdate={fetchLeads}
+        />
+      )}
+
+      {/* Create/Edit Modal */}
       {showModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}>
-          <div className="card animate-fade-in" style={{ width: '100%', maxWidth: '500px' }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }} onClick={() => setShowModal(false)}>
+          <div className="card animate-fade-in" style={{ width: '100%', maxWidth: '500px' }} onClick={e => e.stopPropagation()}>
             <div className="card-header">
-              <div className="card-title">Add New Lead</div>
+              <div className="card-title">{(formData as any).id ? 'Edit Lead' : 'Add New Lead'}</div>
               <button className="btn btn-ghost btn-sm" onClick={() => setShowModal(false)}>✕</button>
             </div>
             <form onSubmit={handleSubmit}>
@@ -214,7 +306,7 @@ export default function LeadsPage() {
                   <input className="form-input" placeholder="e.g. Corporate, Wedding" value={formData.eventType} onChange={e => setFormData({...formData, eventType: e.target.value})} />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Estimated Budget</label>
+                  <label className="form-label">Estimated Budget (₹)</label>
                   <input type="number" className="form-input" value={formData.budget} onChange={e => setFormData({...formData, budget: e.target.value})} />
                 </div>
               </div>
@@ -229,11 +321,11 @@ export default function LeadsPage() {
 
       {/* Convert Modal */}
       {showConvertModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}>
-          <div className="card animate-fade-in" style={{ width: '100%', maxWidth: '400px', textAlign: 'center' }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }} onClick={() => setShowConvertModal(null)}>
+          <div className="card animate-fade-in" style={{ width: '100%', maxWidth: '400px', textAlign: 'center' }} onClick={e => e.stopPropagation()}>
             <h3 style={{ marginBottom: '16px' }}>Convert to Client?</h3>
             <p style={{ color: 'var(--text-muted)', marginBottom: '24px', fontSize: '0.875rem' }}>
-              This will mark the lead as CONVERTED and create a new Client record. You can edit the client's GST and billing address later.
+              This will mark the lead as CONVERTED and create a new Client record. You can edit the client's GST and billing address later in the Clients tab.
             </p>
             <div style={{ display: 'flex', justifyContent: 'center', gap: '10px' }}>
               <button className="btn btn-secondary" onClick={() => setShowConvertModal(null)}>Cancel</button>

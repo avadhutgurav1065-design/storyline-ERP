@@ -61,9 +61,15 @@ export const usersApi = {
 export const crmApi = {
   // Leads
   listLeads: (params?: any) => api.get<ApiResponse<PageResponse<any>>>('/crm/leads', { params }),
+  getLead: (id: number) => api.get<ApiResponse<any>>(`/crm/leads/${id}`),
   createLead: (data: any) => api.post<ApiResponse<any>>('/crm/leads', data),
   updateLead: (id: number, data: any) => api.put<ApiResponse<any>>(`/crm/leads/${id}`, data),
+  deleteLead: (id: number) => api.delete<ApiResponse<any>>(`/crm/leads/${id}`),
   convertLead: (id: number, data: any) => api.post<ApiResponse<any>>(`/crm/leads/${id}/convert`, data),
+  
+  // Follow-ups
+  getLeadFollowUps: (leadId: number) => api.get<ApiResponse<any[]>>(`/crm/leads/${leadId}/follow-ups`),
+  createFollowUp: (data: any) => api.post<ApiResponse<any>>('/crm/follow-ups', data),
   
   // Clients
   listClients: (params?: any) => api.get<ApiResponse<PageResponse<any>>>('/crm/clients', { params }),
