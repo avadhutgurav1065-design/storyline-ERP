@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { crmApi } from '../../api/client';
 
 interface LeadDetailsDrawerProps {
@@ -104,12 +104,12 @@ export default function LeadDetailsDrawer({ leadId, onClose, onUpdate }: LeadDet
                 
                 <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
                    {lead.phone && (
-                     <a href={	el:\} className="btn btn-sm" style={{ backgroundColor: '#25D366', color: 'white' }}>
+                     <a href={`tel:${lead.phone}`} className="btn btn-sm" style={{ backgroundColor: '#25D366', color: 'white' }}>
                        📞 Call
                      </a>
                    )}
                    {lead.email && (
-                     <a href={mailto:\} className="btn btn-sm btn-secondary">
+                     <a href={`mailto:${lead.email}`} className="btn btn-sm btn-secondary">
                        ✉️ Email
                      </a>
                    )}
