@@ -7,7 +7,7 @@ export default function VendorsPage() {
   const [searchQuery, setSearchQuery] = useState('');
 
   const [showModal, setShowModal] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<number | null>(null);
   const [formData, setFormData] = useState({
     name: '', serviceType: '', phone: '', email: '', address: ''
   });
