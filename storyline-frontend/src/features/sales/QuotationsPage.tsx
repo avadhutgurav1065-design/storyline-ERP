@@ -1,6 +1,7 @@
 import { useState, useEffect, type FormEvent } from 'react';
 import { salesApi, crmApi } from '../../api/client';
 import { useSearchParams } from 'react-router-dom';
+import { generateQuotationPdf } from '../../utils/pdfGenerator';
 
 export default function QuotationsPage() {
   const [quotations, setQuotations] = useState<any[]>([]);
@@ -122,6 +123,34 @@ export default function QuotationsPage() {
     setFormData({ ...formData, items: newItems });
   };
 
+  const handleDownloadPdf = async (quote: any) => {
+    try {
+      const client = clients.find(c => c.id === quote.clientId);
+      const clientName = client ? `${client.name} (${client.company || 'Individual'})` : 'Client';
+      const doc = await generateQuotationPdf(quote, clientName);
+      doc.save(`Quotation_${quote.quoteNumber || 'Draft'}.pdf`);
+    } catch (err) {
+      console.error('Error generating PDF', err);
+    }
+  };
+
+  const handleShareWhatsApp = async (quote: any) => {
+    try {
+      const text = `Hi! Here is the quotation for ${quote.eventName}. Quote No: ${quote.quoteNumber}. Total Amount: Rs ${quote.grandTotal?.toLocaleString()}.\n\nThank you,\nStoryline Events`;
+      // Based on user feedback: "9518780272 this is whatsapp business no of me"
+      // Wait, we share TO the client. We need the client's phone number.
+      const client = clients.find(c => c.id === quote.clientId);
+      const phone = client?.phone || '9518780272';
+      window.open(`https://wa.me/${phone.replace(/\D/g, '')}?text=${encodeURIComponent(text)}`, '_blank');
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const currentSubtotal = formData.items.reduce((acc: number, item: any) => acc + (item.quantity * item.unitPrice), 0);
+  const currentTax = formData.items.reduce((acc: number, item: any) => acc + ((item.quantity * item.unitPrice) * (item.taxPercent || 0) / 100), 0);
+  const currentGrandTotal = currentSubtotal + currentTax;
+
   return (
     <div>
       <div className="page-header">
@@ -193,7 +222,8 @@ export default function QuotationsPage() {
                         >
                           ✏️
                         </button>
-                        <button className="btn btn-ghost btn-sm" title="Download PDF" onClick={() => window.open(`/quotations/${quote.id}/pdf`, '_blank')}>📥</button>
+                        <button className="btn btn-ghost btn-sm" title="Download PDF" onClick={() => handleDownloadPdf(quote)}>📥</button>
+                        <button className="btn btn-ghost btn-sm" title="Share on WhatsApp" onClick={() => handleShareWhatsApp(quote)}>💬</button>
                         {quote.status === 'DRAFT' && (
                           <button className="btn btn-info btn-sm" style={{ padding: '2px 6px', fontSize: '0.75rem' }} onClick={() => handleUpdateStatus(quote.id, 'SENT')}>
                             Send
@@ -271,15 +301,21 @@ export default function QuotationsPage() {
                   <div style={{ fontWeight: 600, marginBottom: '10px' }}>Line Items</div>
                   {formData.items.map((item: any, idx: any) => (
                     <div key={idx} style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
-                      <input className="form-input" style={{ flex: 2 }} placeholder="Description" value={item.description} onChange={e => updateItem(idx, 'description', e.target.value)} required />
+                      <input className="form-input" style={{ flex: 3 }} placeholder="Item (e.g., Staging)" value={item.description} onChange={e => updateItem(idx, 'description', e.target.value)} required />
                       <input type="number" className="form-input" style={{ flex: 1 }} placeholder="Qty" value={item.quantity} onChange={e => updateItem(idx, 'quantity', Number(e.target.value))} required />
-                      <input type="number" className="form-input" style={{ flex: 1 }} placeholder="Price" value={item.unitPrice} onChange={e => updateItem(idx, 'unitPrice', Number(e.target.value))} required />
+                      <input type="number" className="form-input" style={{ flex: 1 }} placeholder="Unit Price" value={item.unitPrice} onChange={e => updateItem(idx, 'unitPrice', Number(e.target.value))} required />
+                      <input type="number" className="form-input" style={{ flex: 1 }} placeholder="Tax %" value={item.taxPercent} onChange={e => updateItem(idx, 'taxPercent', Number(e.target.value))} required />
                       <button type="button" className="btn btn-ghost btn-sm" onClick={() => {
                         const newItems = formData.items.filter((_: any, i: any) => i !== idx);
                         setFormData({ ...formData, items: newItems });
                       }}>✕</button>
                     </div>
                   ))}
+                  <div style={{ marginTop: '15px', borderTop: '1px solid var(--border-color)', paddingTop: '10px', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', fontSize: '0.9rem' }}>
+                    <div>Subtotal: ₹{currentSubtotal.toLocaleString()}</div>
+                    <div>Tax: ₹{currentTax.toLocaleString()}</div>
+                    <div style={{ fontWeight: 600, fontSize: '1rem', marginTop: '5px' }}>Grand Total: ₹{currentGrandTotal.toLocaleString()}</div>
+                  </div>
                 </div>
               )}
               

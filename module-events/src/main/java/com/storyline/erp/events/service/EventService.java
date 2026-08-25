@@ -8,6 +8,8 @@ import com.storyline.erp.events.entity.VendorAssignment;
 import com.storyline.erp.events.repository.EventRepository;
 import com.storyline.erp.events.repository.TaskRepository;
 import com.storyline.erp.events.repository.VendorAssignmentRepository;
+import com.storyline.erp.events.repository.TeamAssignmentRepository;
+import com.storyline.erp.events.repository.EventDocumentRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
@@ -26,11 +28,18 @@ public class EventService {
     private final EventRepository eventRepository;
     private final TaskRepository taskRepository;
     private final VendorAssignmentRepository vendorAssignmentRepository;
+    private final TeamAssignmentRepository teamAssignmentRepository;
+    private final EventDocumentRepository eventDocumentRepository;
 
-    public EventService(EventRepository eventRepository, TaskRepository taskRepository, VendorAssignmentRepository vendorAssignmentRepository) {
+    public EventService(EventRepository eventRepository, TaskRepository taskRepository, 
+                        VendorAssignmentRepository vendorAssignmentRepository,
+                        TeamAssignmentRepository teamAssignmentRepository,
+                        EventDocumentRepository eventDocumentRepository) {
         this.eventRepository = eventRepository;
         this.taskRepository = taskRepository;
         this.vendorAssignmentRepository = vendorAssignmentRepository;
+        this.teamAssignmentRepository = teamAssignmentRepository;
+        this.eventDocumentRepository = eventDocumentRepository;
     }
 
     public Page<Event> listEvents(Pageable pageable) {
@@ -87,6 +96,9 @@ public class EventService {
 
         List<Task> tasks = taskRepository.findByEventId(id);
         List<VendorAssignment> vendors = vendorAssignmentRepository.findByEventId(id);
+        
+        var teamAssignments = teamAssignmentRepository.findByEventId(id);
+        var documents = eventDocumentRepository.findByEventId(id);
 
         int progress = 0;
         if (!tasks.isEmpty()) {
@@ -99,7 +111,7 @@ public class EventService {
             }
         }
 
-        return new EventDashboardDto(event, tasks, vendors, progress);
+        return new EventDashboardDto(event, tasks, vendors, teamAssignments, documents, progress);
     }
 
     private Long extractUserId(Authentication auth) {
