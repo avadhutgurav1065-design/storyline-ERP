@@ -115,7 +115,9 @@ export default function Sidebar({ collapsed, mobileOpen, onCloseMobile }: Sideba
     <aside className={`sidebar ${collapsed ? 'collapsed' : ''} ${mobileOpen ? 'open' : ''}`}>
       {/* Logo */}
       <div className="sidebar-logo">
-        <div className="logo-icon">S</div>
+        <div className="logo-icon">
+          <img src="/logo.jpg" alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+        </div>
         <span className="logo-text">Storyline ERP</span>
       </div>
 
