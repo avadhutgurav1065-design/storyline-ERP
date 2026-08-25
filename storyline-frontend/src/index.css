@@ -186,6 +186,7 @@ h4 { font-size: 1.125rem; }
 .main-content {
   padding: 24px;
   min-height: calc(100vh - var(--topbar-height));
+  padding-bottom: 24px;
 }
 
 /* ====================================================
@@ -954,5 +955,104 @@ tr:hover td {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     border-radius: var(--border-radius);
+    border: none;
+    background: transparent;
+  }
+  
+  /* Mobile App Shell Layout */
+  .app-content {
+    margin-left: 0 !important;
+  }
+  
+  .sidebar {
+    display: none;
+  }
+  
+  /* The menu drawer version of sidebar */
+  .sidebar.open {
+    display: flex;
+    z-index: 1001; /* Above BottomNav */
+  }
+
+  .main-content {
+    padding: 16px;
+    padding-bottom: 80px; /* Space for BottomNav */
+  }
+
+  .topbar {
+    left: 0;
+    width: 100%;
+  }
+
+  /* Table to Card Mobile Transformation */
+  table {
+    border: 0;
+  }
+  
+  table caption {
+    font-size: 1.3em;
+  }
+  
+  table thead {
+    border: none;
+    clip: rect(0 0 0 0);
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    padding: 0;
+    position: absolute;
+    width: 1px;
+  }
+  
+  table tr {
+    border-bottom: 1px solid var(--border-color);
+    display: block;
+    margin-bottom: .625em;
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius-lg);
+    padding: 12px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  }
+  
+  table td {
+    border-bottom: 1px solid rgba(128, 128, 128, 0.1);
+    display: block; /* changed from flex to block to allow children to stack */
+    font-size: .9em;
+    text-align: right;
+    padding: 8px 4px;
+    word-break: break-word; /* prevent text overflow */
+  }
+  
+  /* clear floats */
+  table td::after {
+    content: "";
+    display: table;
+    clear: both;
+  }
+  
+  table td::before {
+    content: attr(data-label);
+    float: left; /* float left so right-aligned text stays on right */
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    text-align: left;
+    margin-right: 16px;
+    font-size: 0.8em;
+    margin-top: 2px; /* slight alignment tweak */
+  }
+  
+  table td:last-child {
+    border-bottom: 0;
+    text-align: right; /* fallback */
+  }
+  
+  /* Action buttons row */
+  table td:last-child::before {
+    display: none;
+  }
+  
+  .topbar-toggle {
+    display: none;
   }
 }

@@ -8,9 +8,7 @@ target/
 *.iml
 
 # Maven
-.mvn/
-mvnw
-mvnw.cmd
+# (maven wrappers un-ignored for Render deployment)
 
 # IDE
 .idea/

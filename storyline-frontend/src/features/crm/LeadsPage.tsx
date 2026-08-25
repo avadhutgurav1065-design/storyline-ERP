@@ -127,22 +127,22 @@ export default function LeadsPage() {
               ) : (
                 leads.map((lead) => (
                   <tr key={lead.id}>
-                    <td>
+                    <td data-label="Lead Name">
                       <div style={{ fontWeight: 600 }}>{lead.name}</div>
                       {lead.company && <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{lead.company}</div>}
                     </td>
-                    <td>
+                    <td data-label="Contact">
                       <div>{lead.phone}</div>
                       <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{lead.email}</div>
                     </td>
-                    <td>{lead.eventType || '—'}</td>
-                    <td>{lead.budget ? `₹${lead.budget.toLocaleString()}` : '—'}</td>
-                    <td>
+                    <td data-label="Event Type">{lead.eventType || '—'}</td>
+                    <td data-label="Budget">{lead.budget ? `₹${lead.budget.toLocaleString()}` : '—'}</td>
+                    <td data-label="Status">
                       <span className={`badge ${statusColors[lead.status] || 'badge-primary'}`}>
                         {lead.status.replace('_', ' ')}
                       </span>
                     </td>
-                    <td>
+                    <td data-label="Actions">
                       <div style={{ display: 'flex', gap: '6px' }}>
                         <button 
                           className="btn btn-ghost btn-sm" 

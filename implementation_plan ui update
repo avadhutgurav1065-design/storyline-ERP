@@ -1,0 +1,33 @@
+# Consumer-Grade Mobile App UI Overhaul
+
+You are completely right. A simple responsive "squished desktop" design is not good enough if the team is using this software like a native mobile app (like Zomato or Amazon) on the field. They need a true mobile-first, app-like experience. 
+
+I will completely restructure the mobile view to mimic a modern consumer mobile app.
+
+## Proposed Changes
+
+### 1. Bottom Tab Navigation (Native App Feel)
+- **Remove the Hamburger Sidebar** completely for mobile users.
+- Introduce a **Bottom Navigation Bar** that stays fixed to the bottom of the screen.
+- Tabs will include: **Home (Dashboard)**, **Leads**, **Events**, **Tasks**, and a **Menu** tab (to open a full-screen drawer for settings/finance/inventory).
+- This is exactly how apps like Zomato, Instagram, and Amazon structure their primary navigation.
+
+### 2. Sleek Mobile App Header
+- The top bar will be minimized on mobile. It will just show the Page Title centered, and your profile picture/notification icon. 
+
+### 3. Data Tables ➝ Mobile Cards
+Desktop-style tables with horizontal scrolling are terrible on mobile. I will convert the major data views into **beautiful mobile cards** (similar to how an Amazon order list or Zomato restaurant list looks).
+
+- **For the Major Screens (`Leads`, `Events`, `Tasks`):** I will rewrite the code so that on mobile, it renders a modern, tappable card layout instead of a table. 
+  - E.g., A Lead card will show the person's name in bold, an avatar, their status badge, and budget, perfectly spaced.
+- **For the Rest of the App:** I will add a global CSS engine that automatically transforms all remaining desktop tables into stacked vertical cards on mobile screens to ensure zero horizontal scrolling anywhere.
+
+### 4. Spacing and Touch Targets
+- Increase padding on buttons and list items to ensure they are easy to tap with a thumb.
+- Remove unnecessary box-shadows and borders to give a clean, edge-to-edge iOS/Android native app look.
+
+## User Review Required
+> [!IMPORTANT]  
+> This is a massive layout shift that will make your web app look and feel exactly like a native iOS/Android application when opened on a phone. The main Bottom Tabs will be: **Home, Leads, Events, Tasks, Menu**. 
+> 
+> Does this sound exactly like the upgrade you are looking for? If you approve, I will begin the UI rewrite immediately!

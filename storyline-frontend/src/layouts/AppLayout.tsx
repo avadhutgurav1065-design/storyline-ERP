@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import TopBar from './TopBar';
+import BottomNav from './BottomNav';
 
 // Map routes to page titles
 const pageTitles: Record<string, string> = {
@@ -73,6 +74,8 @@ export default function AppLayout() {
           <Outlet />
         </main>
       </div>
+      
+      <BottomNav onOpenMenu={() => setMobileMenuOpen(true)} />
     </div>
   );
 }

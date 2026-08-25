@@ -68,13 +68,13 @@ export default function TasksPage({ filter }: { filter: 'my' | 'team' | 'all' })
               ) : (
                 tasks.map((task) => (
                   <tr key={task.id}>
-                    <td>
+                    <td data-label="Task Title">
                       <div style={{ fontWeight: 600 }}>{task.title}</div>
                       <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{task.description || '—'}</div>
                     </td>
-                    <td>{task.event?.name || '—'}</td>
-                    <td>{task.dueDate || '—'}</td>
-                    <td>
+                    <td data-label="Event">{task.event?.name || '—'}</td>
+                    <td data-label="Due Date">{task.dueDate || '—'}</td>
+                    <td data-label="Priority">
                       <span className={`badge ${
                         task.priority === 'HIGH' ? 'badge-danger' : 
                         task.priority === 'MEDIUM' ? 'badge-warning' : 'badge-info'
@@ -82,7 +82,7 @@ export default function TasksPage({ filter }: { filter: 'my' | 'team' | 'all' })
                         {task.priority}
                       </span>
                     </td>
-                    <td>
+                    <td data-label="Status">
                       <select 
                         className={`form-input badge ${
                           task.status === 'COMPLETED' ? 'badge-success' : 
