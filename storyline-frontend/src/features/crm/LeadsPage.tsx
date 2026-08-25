@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, type FormEvent } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import { crmApi } from '../../api/client';
 import LeadDetailsDrawer from './LeadDetailsDrawer';
 
@@ -22,7 +22,7 @@ export default function LeadsPage() {
     setLoading(true);
     try {
       const res = await crmApi.listLeads({ search, status: statusFilter });
-      setLeads(res.data.data.content);
+      setLeads(res.data.data.content || []);
     } catch (err) {
       console.error(err);
     } finally {

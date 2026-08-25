@@ -23,7 +23,7 @@ export default function QuotationsPage() {
   const fetchClients = async () => {
     try {
       const res = await crmApi.listClients({ size: 100 });
-      setClients(res.data.data.content);
+      setClients(res.data.data.content || []);
     } catch (err) {
       console.error(err);
     }
@@ -34,10 +34,10 @@ export default function QuotationsPage() {
     try {
       if (initialClientId) {
         const res = await salesApi.getQuotationsByClient(Number(initialClientId));
-        setQuotations(res.data.data.content);
+        setQuotations(res.data.data.content || []);
       } else {
         const res = await salesApi.listQuotations();
-        setQuotations(res.data.data.content);
+        setQuotations(res.data.data.content || []);
       }
     } catch (err) {
       console.error(err);

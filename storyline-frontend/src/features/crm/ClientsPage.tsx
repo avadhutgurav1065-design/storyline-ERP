@@ -17,7 +17,7 @@ export default function ClientsPage() {
     setLoading(true);
     try {
       const res = await crmApi.listClients({ search });
-      setClients(res.data.data.content);
+      setClients(res.data.data.content || []);
     } catch (err) {
       console.error(err);
     } finally {

@@ -17,7 +17,7 @@ export default function HampersPage() {
     setLoading(true);
     try {
       const res = await api.get('/inventory/products');
-      setProducts(res.data.data.content);
+      setProducts(res.data.data.content || []);
     } catch (err) {
       console.error(err);
     } finally {

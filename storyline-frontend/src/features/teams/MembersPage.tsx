@@ -9,7 +9,7 @@ export default function MembersPage() {
     const fetchMembers = async () => {
       try {
         const res = await usersApi.list();
-        setMembers(res.data.data.content);
+        setMembers(res.data.data.content || []);
       } catch (err) {
         console.error(err);
       } finally {

@@ -18,7 +18,7 @@ export default function EventsPage() {
     setLoading(true);
     try {
       const res = await eventsApi.listEvents();
-      setEvents(res.data.data.content);
+      setEvents(res.data.data.content || []);
     } catch (err) {
       console.error(err);
     } finally {
