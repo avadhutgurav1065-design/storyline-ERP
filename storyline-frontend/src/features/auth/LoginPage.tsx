@@ -51,7 +51,7 @@ export default function LoginPage() {
       <div className="login-card animate-fade-in">
         <div className="login-header">
           <div className="login-logo">
-            <img src="/logo.jpg" alt="Storyline ERP Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+            <img src="/logo.jpg" alt="Storyline ERP Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           </div>
           <h1>Storyline ERP</h1>
           <p>Event Management System</p>
