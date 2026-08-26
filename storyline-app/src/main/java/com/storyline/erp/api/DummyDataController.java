@@ -94,7 +94,7 @@ public class DummyDataController {
             Lead lead = new Lead();
             lead.setName(leadNames[i]);
             lead.setPhone("987654321" + i);
-            lead.setEmail("lead" + i + "@example.com");
+            lead.setEmail("lead" + i + "_" + System.currentTimeMillis() + "@example.com");
             lead.setCompany(i % 2 == 0 ? "TechCorp India" : "Innovate Solutions");
             lead.setEventType(i % 3 == 0 ? "Corporate Event" : "Wedding");
             lead.setEventDate(LocalDate.now().plusDays(15 + (i * 10)));
@@ -109,11 +109,11 @@ public class DummyDataController {
         for (int i = 0; i < 5; i++) {
             Client client = new Client();
             client.setName(clientNames[i]);
-            client.setEmail("contact@" + clientNames[i].toLowerCase().replace(" ", "") + ".com");
+            client.setEmail("contact_" + System.currentTimeMillis() + "@" + clientNames[i].toLowerCase().replace(" ", "") + ".com");
             client.setPhone("998877665" + i);
             client.setAddress("Mumbai, Maharashtra");
             client.setCompany(clientNames[i]);
-            client.setGstNumber("27AADCB2230M1Z" + i);
+            client.setGstNumber("27AADCB" + System.currentTimeMillis() % 100000 + "M1Z" + i);
             clientRepository.save(client);
         }
 
@@ -227,7 +227,7 @@ public class DummyDataController {
         for (int i = 0; i < 5; i++) {
             RawMaterial rm = new RawMaterial();
             rm.setName(materials[i]);
-            rm.setSku("RM-" + (1000 + i));
+            rm.setSku("RM-" + System.currentTimeMillis() + "-" + i);
             rm.setCurrentStock(50.0 + (i * 10));
             rm.setUnitOfMeasure("Pieces");
             rm.setMinimumStock(10.0);
@@ -238,7 +238,7 @@ public class DummyDataController {
         for (int i = 0; i < 3; i++) {
             Product p = new Product();
             p.setName(hampers[i]);
-            p.setSku("HMP-" + (200 + i));
+            p.setSku("HMP-" + System.currentTimeMillis() + "-" + i);
             p.setBasePrice(new BigDecimal(2500 + (i * 500)));
             p.setCurrentStock(20.0 + i * 5);
             productRepository.save(p);
