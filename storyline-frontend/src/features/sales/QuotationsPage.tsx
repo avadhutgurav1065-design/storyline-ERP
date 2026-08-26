@@ -91,24 +91,6 @@ export default function QuotationsPage() {
     APPROVED: 'badge-success',
   };
 
-  const handleAddTemplate = (e: any) => {
-    const val = e.target.value;
-    if (val === 'ALL') {
-      setFormData((prev: any) => ({
-        ...prev, 
-        items: [...prev.items, 
-          { description: 'Venue Setup', quantity: 1, unitPrice: 50000, taxPercent: 18 },
-          { description: 'Catering (per pax)', quantity: Number(prev.pax) || 100, unitPrice: 1500, taxPercent: 5 },
-          { description: 'Photography', quantity: 1, unitPrice: 75000, taxPercent: 18 }
-        ]
-      }));
-    } else if (val === 'DECOR_ONLY') {
-      setFormData((prev: any) => ({
-        ...prev, 
-        items: [...prev.items, { description: 'Premium Decor Package', quantity: 1, unitPrice: 150000, taxPercent: 18 }]
-      }));
-    }
-  };
 
   const handleAddCustom = () => {
     setFormData((prev: any) => ({
@@ -136,12 +118,17 @@ export default function QuotationsPage() {
 
   const handleShareWhatsApp = async (quote: any) => {
     try {
-      const text = `Hi! Here is the quotation for ${quote.eventName}. Quote No: ${quote.quoteNumber}. Total Amount: Rs ${quote.grandTotal?.toLocaleString()}.\n\nThank you,\nStoryline Events`;
-      // Based on user feedback: "9518780272 this is whatsapp business no of me"
-      // Wait, we share TO the client. We need the client's phone number.
-      const client = clients.find(c => c.id === quote.clientId);
-      const phone = client?.phone || '9518780272';
-      window.open(`https://wa.me/${phone.replace(/\D/g, '')}?text=${encodeURIComponent(text)}`, '_blank');
+      // 1. Automatically download the PDF first so the user has it ready to attach
+      await handleDownloadPdf(quote);
+
+      // 2. Prepare the WhatsApp message
+      const text = `Hi! Here is the quotation for ${quote.eventName}. Quote No: ${quote.quoteNumber || 'Draft'}. Total Amount: ₹${quote.grandTotal?.toLocaleString() || 0}.\n\n*(Please find the attached PDF Quotation)*\n\nThank you,\nStoryline Design and Events`;
+      
+      // 3. Open WhatsApp contact selector after a tiny delay so the browser doesn't block the download
+      setTimeout(() => {
+        // By omitting the 'phone' parameter, WhatsApp asks the user to select a contact from their contact book
+        window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
+      }, 500);
     } catch (err) {
       console.error(err);
     }
@@ -251,13 +238,38 @@ export default function QuotationsPage() {
 
       {/* Create Modal */}
       {showModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}>
-          <div className="card animate-fade-in" style={{ width: '100%', maxWidth: '500px', maxHeight: '90vh', overflowY: 'auto' }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: '20px' }}>
+          <div className="card animate-fade-in" style={{ width: '100%', maxWidth: '1200px', maxHeight: '90vh', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
             <div className="card-header">
               <div className="card-title">Create Quotation</div>
               <button className="btn btn-ghost btn-sm" onClick={() => setShowModal(false)}>✕</button>
             </div>
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+                <div className="form-group">
+                  <label className="form-label">Client *</label>
+                  <select className="form-select" required value={formData.clientId} onChange={e => setFormData({...formData, clientId: e.target.value})}>
+                    <option value="">Select a client...</option>
+                    {clients.map(c => <option key={c.id} value={c.id}>{c.name} ({c.company || 'Individual'})</option>)}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Event Name *</label>
+                  <input className="form-input" required value={formData.eventName} onChange={e => setFormData({...formData, eventName: e.target.value})} placeholder="e.g. Rahul & Priya Wedding" />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Event Date</label>
+                  <input type="date" className="form-input" value={formData.eventDate} onChange={e => setFormData({...formData, eventDate: e.target.value})} />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Expected Pax</label>
+                  <input type="number" className="form-input" value={formData.pax} onChange={e => setFormData({...formData, pax: e.target.value})} />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Venue</label>
+                  <input className="form-input" value={formData.venue} onChange={e => setFormData({...formData, venue: e.target.value})} />
+                </div>
+              </div>
               <div className="form-group">
                 <label className="form-label">Client *</label>
                 <select className="form-select" required value={formData.clientId} onChange={e => setFormData({...formData, clientId: e.target.value})}>
@@ -283,41 +295,97 @@ export default function QuotationsPage() {
                 <label className="form-label">Venue</label>
                 <input className="form-input" value={formData.venue} onChange={e => setFormData({...formData, venue: e.target.value})} />
               </div>
-              <div className="form-group">
-                <label className="form-label">Attach Packages/Items</label>
-                <div style={{ display: 'flex', gap: '10px' }}>
-                  <select className="form-select" style={{ flex: 1 }} onChange={handleAddTemplate}>
-                    <option value="">Select a template...</option>
-                    <option value="ALL">Attach All Packages</option>
-                    <option value="DECOR_ONLY">Decor Only</option>
-                    <option value="FULL_WEDDING">Full Wedding</option>
-                  </select>
-                  <button type="button" className="btn btn-outline" style={{ whiteSpace: 'nowrap' }} onClick={handleAddCustom}>+ Custom Item</button>
+              <div style={{ border: '1px solid var(--border-color)', borderRadius: '8px', overflow: 'hidden' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                  <thead style={{ background: 'var(--bg-secondary)', borderBottom: '2px solid var(--border-color)' }}>
+                    <tr>
+                      <th style={{ padding: '12px', width: '45%' }}>Item & Description</th>
+                      <th style={{ padding: '12px', width: '10%' }}>Qty</th>
+                      <th style={{ padding: '12px', width: '15%' }}>Rate (₹)</th>
+                      <th style={{ padding: '12px', width: '10%' }}>Tax (%)</th>
+                      <th style={{ padding: '12px', width: '15%', textAlign: 'right' }}>Amount (₹)</th>
+                      <th style={{ padding: '12px', width: '5%', textAlign: 'center' }}></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {formData.items.map((item: any, idx: any) => {
+                      const rowAmount = (item.quantity * item.unitPrice) * (1 + (item.taxPercent || 0) / 100);
+                      return (
+                        <tr key={idx} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                          <td style={{ padding: 0, borderRight: '1px solid var(--border-color)' }}>
+                            <textarea 
+                              style={{ width: '100%', border: 'none', outline: 'none', padding: '12px', background: 'transparent', resize: 'vertical', minHeight: '45px', fontFamily: 'inherit', fontSize: '0.9rem' }} 
+                              placeholder="Item description..." 
+                              value={item.description} 
+                              onChange={e => updateItem(idx, 'description', e.target.value)} 
+                              required 
+                            />
+                          </td>
+                          <td style={{ padding: 0, borderRight: '1px solid var(--border-color)' }}>
+                            <input 
+                              type="number" 
+                              style={{ width: '100%', border: 'none', outline: 'none', padding: '12px', background: 'transparent', fontFamily: 'inherit', fontSize: '0.9rem' }} 
+                              placeholder="0" 
+                              value={item.quantity} 
+                              onChange={e => updateItem(idx, 'quantity', Number(e.target.value))} 
+                              required 
+                            />
+                          </td>
+                          <td style={{ padding: 0, borderRight: '1px solid var(--border-color)' }}>
+                            <input 
+                              type="number" 
+                              style={{ width: '100%', border: 'none', outline: 'none', padding: '12px', background: 'transparent', fontFamily: 'inherit', fontSize: '0.9rem' }} 
+                              placeholder="0.00" 
+                              value={item.unitPrice} 
+                              onChange={e => updateItem(idx, 'unitPrice', Number(e.target.value))} 
+                              required 
+                            />
+                          </td>
+                          <td style={{ padding: 0, borderRight: '1px solid var(--border-color)' }}>
+                            <input 
+                              type="number" 
+                              style={{ width: '100%', border: 'none', outline: 'none', padding: '12px', background: 'transparent', fontFamily: 'inherit', fontSize: '0.9rem' }} 
+                              placeholder="0" 
+                              value={item.taxPercent} 
+                              onChange={e => updateItem(idx, 'taxPercent', Number(e.target.value))} 
+                              required 
+                            />
+                          </td>
+                          <td style={{ padding: '12px', textAlign: 'right', fontWeight: 500, fontSize: '0.95rem' }}>
+                            {rowAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </td>
+                          <td style={{ padding: '12px', textAlign: 'center' }}>
+                            <button type="button" className="btn btn-ghost btn-sm" style={{ color: 'var(--text-muted)' }} onClick={() => {
+                              const newItems = formData.items.filter((_: any, i: any) => i !== idx);
+                              setFormData({ ...formData, items: newItems });
+                            }}>✕</button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+                <div style={{ padding: '10px', background: 'var(--bg-secondary)', borderTop: '1px solid var(--border-color)' }}>
+                  <button type="button" className="btn btn-ghost btn-sm" style={{ color: 'var(--primary-color)', fontWeight: 600 }} onClick={handleAddCustom}>+ Add New Row</button>
                 </div>
               </div>
 
-              {formData.items.length > 0 && (
-                <div style={{ marginTop: '15px', padding: '15px', background: 'var(--bg-secondary)', borderRadius: '8px' }}>
-                  <div style={{ fontWeight: 600, marginBottom: '10px' }}>Line Items</div>
-                  {formData.items.map((item: any, idx: any) => (
-                    <div key={idx} style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
-                      <input className="form-input" style={{ flex: 3 }} placeholder="Item (e.g., Staging)" value={item.description} onChange={e => updateItem(idx, 'description', e.target.value)} required />
-                      <input type="number" className="form-input" style={{ flex: 1 }} placeholder="Qty" value={item.quantity} onChange={e => updateItem(idx, 'quantity', Number(e.target.value))} required />
-                      <input type="number" className="form-input" style={{ flex: 1 }} placeholder="Unit Price" value={item.unitPrice} onChange={e => updateItem(idx, 'unitPrice', Number(e.target.value))} required />
-                      <input type="number" className="form-input" style={{ flex: 1 }} placeholder="Tax %" value={item.taxPercent} onChange={e => updateItem(idx, 'taxPercent', Number(e.target.value))} required />
-                      <button type="button" className="btn btn-ghost btn-sm" onClick={() => {
-                        const newItems = formData.items.filter((_: any, i: any) => i !== idx);
-                        setFormData({ ...formData, items: newItems });
-                      }}>✕</button>
-                    </div>
-                  ))}
-                  <div style={{ marginTop: '15px', borderTop: '1px solid var(--border-color)', paddingTop: '10px', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', fontSize: '0.9rem' }}>
-                    <div>Subtotal: ₹{currentSubtotal.toLocaleString()}</div>
-                    <div>Tax: ₹{currentTax.toLocaleString()}</div>
-                    <div style={{ fontWeight: 600, fontSize: '1rem', marginTop: '5px' }}>Grand Total: ₹{currentGrandTotal.toLocaleString()}</div>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '10px' }}>
+                <div style={{ width: '300px', background: 'var(--bg-secondary)', padding: '20px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', color: 'var(--text-muted)' }}>
+                    <span>Subtotal</span>
+                    <span>₹{currentSubtotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px', color: 'var(--text-muted)' }}>
+                    <span>Tax</span>
+                    <span>₹{currentTax.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '2px solid var(--border-color)', paddingTop: '15px', fontWeight: 700, fontSize: '1.2rem' }}>
+                    <span>Grand Total</span>
+                    <span>₹{currentGrandTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                   </div>
                 </div>
-              )}
+              </div>
               
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '20px' }}>
                 <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
