@@ -60,13 +60,18 @@ export default function LeadsPage() {
   const handleConvert = async (e: FormEvent) => {
     e.preventDefault();
     if (!showConvertModal) return;
+    const targetId = showConvertModal;
+    
+    // Optimistic update
+    const previousLeads = [...leads];
+    setLeads(leads.map(l => l.id === targetId ? { ...l, status: 'CONVERTED' } : l));
+    setShowConvertModal(null);
+
     try {
-      await crmApi.convertLead(showConvertModal, {});
-      setShowConvertModal(null);
-      fetchLeads();
-      alert('Lead successfully converted to Client!');
+      await crmApi.convertLead(targetId, {});
     } catch (err) {
       console.error(err);
+      setLeads(previousLeads);
       alert('Failed to convert lead. They might already be converted.');
     }
   };
@@ -74,26 +79,35 @@ export default function LeadsPage() {
   const handleDelete = async (id: number, e: React.MouseEvent) => {
     e.stopPropagation();
     if (confirm('Are you sure you want to delete this lead? This action cannot be undone.')) {
+      const previousLeads = [...leads];
+      setLeads(leads.filter(l => l.id !== id));
       try {
         await crmApi.deleteLead(id);
-        fetchLeads();
       } catch (err) {
         console.error(err);
+        setLeads(previousLeads);
         alert('Failed to delete lead.');
       }
     }
   };
 
-  const handleStatusChange = async (id: number, newStatus: string, e: React.ChangeEvent<HTMLSelectElement>) => {
-    e.stopPropagation();
+  const handleStatusChange = async (id: number, newStatus: string, e?: React.ChangeEvent<HTMLSelectElement>) => {
+    if (e) e.stopPropagation();
+    
+    // Optimistic UI update
+    const previousLeads = [...leads];
+    setLeads(leads.map(l => l.id === id ? { ...l, status: newStatus } : l));
+
     try {
-      const lead = leads.find(l => l.id === id);
-      if (lead) {
-        await crmApi.updateLead(id, { ...lead, status: newStatus });
-        fetchLeads();
+      if (newStatus === 'CONVERTED') {
+         await crmApi.convertLead(id, {});
+      } else {
+         const lead = previousLeads.find(l => l.id === id);
+         if (lead) await crmApi.updateLead(id, { ...lead, status: newStatus });
       }
     } catch (err) {
       console.error(err);
+      setLeads(previousLeads);
       alert('Failed to update status.');
     }
   };
@@ -268,10 +282,16 @@ export default function LeadsPage() {
 
       {/* Drawer */}
       {selectedLeadId && (
-        <LeadDetailsDrawer 
-          leadId={selectedLeadId} 
-          onClose={() => setSelectedLeadId(null)} 
-          onUpdate={fetchLeads}
+        <LeadDetailsDrawer
+          leadId={selectedLeadId}
+          onClose={() => setSelectedLeadId(null)}
+          onUpdate={(id, newStatus) => {
+            if (id && newStatus) {
+               setLeads(prev => prev.map(l => l.id === id ? { ...l, status: newStatus } : l));
+            } else {
+               fetchLeads();
+            }
+          }}
         />
       )}
 

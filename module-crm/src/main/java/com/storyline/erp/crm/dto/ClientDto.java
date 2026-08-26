@@ -10,5 +10,7 @@ public record ClientDto(
         String company,
         String address,
         String gstNumber,
+        String eventType,
+        String description,
         Long convertedFromLeadId
 ) {}

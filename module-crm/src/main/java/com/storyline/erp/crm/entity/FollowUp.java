@@ -24,6 +24,9 @@ public class FollowUp extends AuditableEntity {
     @Column(name = "interaction_date", nullable = false)
     private LocalDateTime interactionDate = LocalDateTime.now();
 
+    @Column(name = "next_steps")
+    private String nextSteps;
+
     @Column(name = "next_follow_up_date")
     private LocalDateTime nextFollowUpDate;
 
@@ -42,6 +45,8 @@ public class FollowUp extends AuditableEntity {
     public void setNotes(String notes) { this.notes = notes; }
     public LocalDateTime getInteractionDate() { return interactionDate; }
     public void setInteractionDate(LocalDateTime interactionDate) { this.interactionDate = interactionDate; }
+    public String getNextSteps() { return nextSteps; }
+    public void setNextSteps(String nextSteps) { this.nextSteps = nextSteps; }
     public LocalDateTime getNextFollowUpDate() { return nextFollowUpDate; }
     public void setNextFollowUpDate(LocalDateTime nextFollowUpDate) { this.nextFollowUpDate = nextFollowUpDate; }
     public Long getPerformedByUserId() { return performedByUserId; }

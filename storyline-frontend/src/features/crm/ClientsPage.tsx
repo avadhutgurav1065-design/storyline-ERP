@@ -1,16 +1,19 @@
 import { useState, useEffect, type FormEvent } from 'react';
 import { crmApi } from '../../api/client';
 import { useNavigate } from 'react-router-dom';
+import ClientDetailsDrawer from './ClientDetailsDrawer';
 
 export default function ClientsPage() {
   const [clients, setClients] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const navigate = useNavigate();
+  
+  const [selectedClientId, setSelectedClientId] = useState<number | null>(null);
 
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({
-    name: '', email: '', phone: '', company: '', address: '', gstNumber: ''
+    name: '', email: '', phone: '', company: '', address: '', gstNumber: '', eventType: '', description: ''
   });
 
   const fetchClients = async () => {
@@ -34,7 +37,7 @@ export default function ClientsPage() {
     try {
       await crmApi.createClient(formData);
       setShowModal(false);
-      setFormData({ name: '', email: '', phone: '', company: '', address: '', gstNumber: '' });
+      setFormData({ name: '', email: '', phone: '', company: '', address: '', gstNumber: '', eventType: '', description: '' });
       fetchClients();
     } catch (err) {
       console.error(err);
@@ -66,8 +69,8 @@ export default function ClientsPage() {
               <tr>
                 <th>Client Name</th>
                 <th>Contact Details</th>
-                <th>Company</th>
-                <th>GST Number</th>
+                <th>Event Type</th>
+                <th>Description / GST</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -78,7 +81,7 @@ export default function ClientsPage() {
                 <tr><td colSpan={5} style={{ textAlign: 'center', padding: '40px' }}>No clients found</td></tr>
               ) : (
                 clients.map((client) => (
-                  <tr key={client.id}>
+                  <tr key={client.id} onClick={() => setSelectedClientId(client.id)} style={{ cursor: 'pointer' }}>
                     <td>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                         <div className="user-avatar" style={{ width: 32, height: 32, fontSize: '0.75rem', background: 'var(--success-500)' }}>
@@ -91,14 +94,23 @@ export default function ClientsPage() {
                       <div>{client.phone}</div>
                       <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{client.email || '—'}</div>
                     </td>
-                    <td>{client.company || '—'}</td>
-                    <td>{client.gstNumber || '—'}</td>
+                    <td>
+                      <div>{client.eventType || '—'}</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{client.company || ''}</div>
+                    </td>
+                    <td>
+                      <div style={{ fontSize: '0.85rem' }}>{client.description || '—'}</div>
+                      {client.gstNumber && <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>GST: {client.gstNumber}</div>}
+                    </td>
                     <td>
                       <div style={{ display: 'flex', gap: '6px' }}>
-                        <button className="btn btn-ghost btn-sm" title="Edit">✏️</button>
+                        {client.phone && (
+                           <a href={`tel:${client.phone}`} className="btn btn-ghost btn-sm" title="Call" onClick={(e) => e.stopPropagation()}>📞</a>
+                        )}
+                        <button className="btn btn-ghost btn-sm" title="Edit" onClick={(e) => e.stopPropagation()}>✏️</button>
                         <button 
                           className="btn btn-primary btn-sm"
-                          onClick={() => navigate(`/quotations?clientId=${client.id}`)}
+                          onClick={(e) => { e.stopPropagation(); navigate(`/quotations?clientId=${client.id}`); }}
                           style={{ padding: '4px 8px', fontSize: '0.75rem' }}
                         >
                           Quotations
@@ -139,9 +151,17 @@ export default function ClientsPage() {
                   <label className="form-label">Company Name</label>
                   <input className="form-input" value={formData.company} onChange={e => setFormData({...formData, company: e.target.value})} />
                 </div>
-                <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                <div className="form-group">
+                  <label className="form-label">Event Type</label>
+                  <input className="form-input" value={formData.eventType} onChange={e => setFormData({...formData, eventType: e.target.value})} placeholder="e.g. Wedding" />
+                </div>
+                <div className="form-group">
                   <label className="form-label">GST Number</label>
                   <input className="form-input" value={formData.gstNumber} onChange={e => setFormData({...formData, gstNumber: e.target.value})} />
+                </div>
+                <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                  <label className="form-label">Description / Notes</label>
+                  <textarea className="form-input" rows={2} value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} />
                 </div>
                 <div className="form-group" style={{ gridColumn: 'span 2' }}>
                   <label className="form-label">Address</label>
@@ -155,6 +175,14 @@ export default function ClientsPage() {
             </form>
           </div>
         </div>
+      )}
+
+      {selectedClientId && (
+        <ClientDetailsDrawer
+          clientId={selectedClientId}
+          onClose={() => setSelectedClientId(null)}
+          onUpdate={fetchClients}
+        />
       )}
     </div>
   );

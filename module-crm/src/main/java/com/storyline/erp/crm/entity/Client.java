@@ -24,6 +24,11 @@ public class Client extends AuditableEntity {
     @Column(name = "gst_number")
     private String gstNumber;
 
+    @Column(name = "event_type")
+    private String eventType;
+
+    private String description;
+
     @Column(name = "converted_from_lead_id")
     private Long convertedFromLeadId;
 
@@ -41,6 +46,10 @@ public class Client extends AuditableEntity {
     public void setAddress(String address) { this.address = address; }
     public String getGstNumber() { return gstNumber; }
     public void setGstNumber(String gstNumber) { this.gstNumber = gstNumber; }
+    public String getEventType() { return eventType; }
+    public void setEventType(String eventType) { this.eventType = eventType; }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
     public Long getConvertedFromLeadId() { return convertedFromLeadId; }
     public void setConvertedFromLeadId(Long convertedFromLeadId) { this.convertedFromLeadId = convertedFromLeadId; }
 }

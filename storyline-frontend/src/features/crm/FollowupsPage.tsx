@@ -3,6 +3,8 @@ import api from '../../api/client';
 
 export default function FollowupsPage() {
   const [followups, setFollowups] = useState<any[]>([]);
+  const [leads, setLeads] = useState<any[]>([]);
+  const [clients, setClients] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({
@@ -10,6 +12,7 @@ export default function FollowupsPage() {
     clientId: '',
     interactionType: 'CALL',
     notes: '',
+    nextSteps: '',
     interactionDate: '',
     nextFollowUpDate: ''
   });
@@ -17,10 +20,21 @@ export default function FollowupsPage() {
   const fetchFollowups = async () => {
     setLoading(true);
     try {
-      // The API endpoint we added
-      const res = await api.get('/crm/follow-ups');
-      if (res.data?.data) {
-        setFollowups(res.data.data);
+      // The API endpoints we need
+      const [fuRes, leadsRes, clientsRes] = await Promise.all([
+        api.get('/crm/follow-ups'),
+        api.get('/crm/leads?size=500'),
+        api.get('/crm/clients?size=500')
+      ]);
+      
+      if (fuRes.data?.data) {
+        setFollowups(fuRes.data.data);
+      }
+      if (leadsRes.data?.data?.content) {
+        setLeads(leadsRes.data.data.content);
+      }
+      if (clientsRes.data?.data?.content) {
+        setClients(clientsRes.data.data.content);
       }
     } catch (err) {
       console.error(err);
@@ -44,7 +58,7 @@ export default function FollowupsPage() {
         nextFollowUpDate: formData.nextFollowUpDate || null
       });
       setShowModal(false);
-      setFormData({ leadId: '', clientId: '', interactionType: 'CALL', notes: '', interactionDate: '', nextFollowUpDate: '' });
+      setFormData({ leadId: '', clientId: '', interactionType: 'CALL', notes: '', nextSteps: '', interactionDate: '', nextFollowUpDate: '' });
       fetchFollowups();
     } catch (err) {
       console.error(err);
@@ -77,8 +91,10 @@ export default function FollowupsPage() {
             <thead>
               <tr>
                 <th>Type</th>
-                <th>Target</th>
+                <th>Client/Lead Name</th>
+                <th>Event Type</th>
                 <th>Notes</th>
+                <th>Next Discussion Note</th>
                 <th>Interaction Date</th>
                 <th>Next Follow-up</th>
               </tr>
@@ -98,15 +114,20 @@ export default function FollowupsPage() {
                       </div>
                     </td>
                     <td>
-                      {fu.leadId ? <span className="badge badge-info">Lead #{fu.leadId}</span> : ''}
-                      {fu.clientId ? <span className="badge badge-success">Client #{fu.clientId}</span> : ''}
+                      <div style={{ fontWeight: 600 }}>{fu.targetName || '—'}</div>
+                      <div style={{ fontSize: '0.7rem', display: 'flex', gap: '4px', marginTop: '4px' }}>
+                        {fu.leadId ? <span className="badge badge-info" style={{ padding: '2px 4px' }}>LEAD</span> : ''}
+                        {fu.clientId ? <span className="badge badge-success" style={{ padding: '2px 4px' }}>CLIENT</span> : ''}
+                      </div>
                     </td>
+                    <td>{fu.eventType || '—'}</td>
                     <td>{fu.notes}</td>
-                    <td>{new Date(fu.interactionDate).toLocaleDateString()}</td>
+                    <td><div style={{ color: 'var(--text-muted)' }}>{fu.nextSteps || '—'}</div></td>
+                    <td>{new Date(fu.interactionDate).toLocaleString()}</td>
                     <td>
                       {fu.nextFollowUpDate ? (
-                        <div style={{ color: 'var(--primary)', fontWeight: 600 }}>
-                          {new Date(fu.nextFollowUpDate).toLocaleDateString()}
+                        <div style={{ color: 'var(--primary-color)', fontWeight: 600 }}>
+                          {new Date(fu.nextFollowUpDate).toLocaleString()}
                         </div>
                       ) : (
                         <span style={{ color: 'var(--text-muted)' }}>None Scheduled</span>
@@ -131,12 +152,18 @@ export default function FollowupsPage() {
               
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 <div className="form-group">
-                  <label className="form-label">Lead ID</label>
-                  <input type="number" className="form-input" value={formData.leadId} onChange={e => setFormData({...formData, leadId: e.target.value})} placeholder="Optional" />
+                  <label className="form-label">Select Lead (Optional)</label>
+                  <select className="form-select" value={formData.leadId} onChange={e => setFormData({...formData, leadId: e.target.value, clientId: ''})}>
+                    <option value="">-- None --</option>
+                    {leads.map(l => <option key={l.id} value={l.id}>{l.name} {l.eventType ? `(${l.eventType})` : ''}</option>)}
+                  </select>
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Client ID</label>
-                  <input type="number" className="form-input" value={formData.clientId} onChange={e => setFormData({...formData, clientId: e.target.value})} placeholder="Optional" />
+                  <label className="form-label">Select Client (Optional)</label>
+                  <select className="form-select" value={formData.clientId} onChange={e => setFormData({...formData, clientId: e.target.value, leadId: ''})}>
+                    <option value="">-- None --</option>
+                    {clients.map(c => <option key={c.id} value={c.id}>{c.name} {c.eventType ? `(${c.eventType})` : ''}</option>)}
+                  </select>
                 </div>
               </div>
               
@@ -153,6 +180,11 @@ export default function FollowupsPage() {
               <div className="form-group">
                 <label className="form-label">Notes / Summary *</label>
                 <textarea className="form-input" required rows={3} value={formData.notes} onChange={e => setFormData({...formData, notes: e.target.value})} placeholder="What was discussed?" />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Next Discussion Note</label>
+                <textarea className="form-input" rows={2} value={formData.nextSteps} onChange={e => setFormData({...formData, nextSteps: e.target.value})} placeholder="What to discuss next time?" />
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>

@@ -10,7 +10,10 @@ public record FollowUpDto(
         Long clientId,
         @NotNull InteractionType interactionType,
         String notes,
+        String nextSteps,
         LocalDateTime interactionDate,
         LocalDateTime nextFollowUpDate,
-        Long performedByUserId
+        Long performedByUserId,
+        String targetName,
+        String eventType
 ) {}

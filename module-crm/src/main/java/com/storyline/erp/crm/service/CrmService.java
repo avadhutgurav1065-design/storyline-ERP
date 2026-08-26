@@ -67,6 +67,8 @@ public class CrmService {
         client.setCompany(clientDto.company() != null ? clientDto.company() : lead.getCompany());
         client.setAddress(clientDto.address());
         client.setGstNumber(clientDto.gstNumber());
+        client.setEventType(clientDto.eventType() != null ? clientDto.eventType() : lead.getEventType());
+        client.setDescription(clientDto.description());
         client.setConvertedFromLeadId(lead.getId());
         
         return mapToDto(clientRepository.save(client));
@@ -137,7 +139,8 @@ public class CrmService {
 
     private ClientDto mapToDto(Client client) {
         return new ClientDto(client.getId(), client.getName(), client.getEmail(), client.getPhone(),
-                client.getCompany(), client.getAddress(), client.getGstNumber(), client.getConvertedFromLeadId());
+                client.getCompany(), client.getAddress(), client.getGstNumber(), 
+                client.getEventType(), client.getDescription(), client.getConvertedFromLeadId());
     }
 
     private void updateClientFromDto(Client client, ClientDto dto) {
@@ -147,5 +150,7 @@ public class CrmService {
         client.setCompany(dto.company());
         client.setAddress(dto.address());
         client.setGstNumber(dto.gstNumber());
+        client.setEventType(dto.eventType());
+        client.setDescription(dto.description());
     }
 }

@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react';
 import { crmApi } from '../../api/client';
 
-interface LeadDetailsDrawerProps {
-  leadId: number;
+interface ClientDetailsDrawerProps {
+  clientId: number;
   onClose: () => void;
-  onUpdate: (leadId?: number, newStatus?: string) => void;
+  onUpdate: () => void;
 }
 
-export default function LeadDetailsDrawer({ leadId, onClose, onUpdate }: LeadDetailsDrawerProps) {
-  const [lead, setLead] = useState<any>(null);
+export default function ClientDetailsDrawer({ clientId, onClose, onUpdate }: ClientDetailsDrawerProps) {
+  const [client, setClient] = useState<any>(null);
   const [followUps, setFollowUps] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   
@@ -21,50 +21,35 @@ export default function LeadDetailsDrawer({ leadId, onClose, onUpdate }: LeadDet
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    fetchLeadData();
-  }, [leadId]);
+    fetchClientData();
+  }, [clientId]);
 
-  const fetchLeadData = async () => {
+  const fetchClientData = async () => {
     setLoading(true);
     try {
-      const [leadRes, followUpsRes] = await Promise.all([
-        crmApi.getLead(leadId),
-        crmApi.getLeadFollowUps(leadId)
-      ]);
-      setLead(leadRes.data.data);
-      setFollowUps(followUpsRes.data.data || []);
+      const clientRes = await crmApi.getClient(clientId);
+      const clientData = clientRes.data.data;
+      setClient(clientData);
+
+      // Fetch client follow ups
+      const clientFollowUpsRes = await crmApi.getClientFollowUps(clientId).catch(() => ({ data: { data: [] } }));
+      let allFollowUps = clientFollowUpsRes.data.data || [];
+
+      // If converted from a lead, fetch past lead follow ups
+      if (clientData.convertedFromLeadId) {
+        const leadFollowUpsRes = await crmApi.getLeadFollowUps(clientData.convertedFromLeadId).catch(() => ({ data: { data: [] } }));
+        const leadFollowUps = leadFollowUpsRes.data.data || [];
+        allFollowUps = [...allFollowUps, ...leadFollowUps];
+      }
+
+      // Sort all follow ups by interaction date descending
+      allFollowUps.sort((a: any, b: any) => new Date(b.interactionDate).getTime() - new Date(a.interactionDate).getTime());
+      
+      setFollowUps(allFollowUps);
     } catch (err) {
       console.error(err);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleStatusChange = async (newStatus: string) => {
-    // Optimistic UI update to prevent lag
-    const updatedLead = { ...lead, status: newStatus };
-    setLead(updatedLead);
-    
-    // Tell parent to update optimistically without waiting for server
-    onUpdate(leadId, newStatus);
-    
-    try {
-      if (newStatus === 'CONVERTED') {
-        // Automatically create client record via convert API
-        await crmApi.convertLead(leadId, {
-          name: lead.name,
-          email: lead.email,
-          phone: lead.phone,
-          company: lead.company,
-          address: '',
-          gstNumber: ''
-        });
-      } else {
-        await crmApi.updateLead(leadId, updatedLead);
-      }
-    } catch (err) {
-      console.error('Failed to update status', err);
-      // If it fails, we might want to revert the state, but we'll keep it simple for now
     }
   };
 
@@ -78,7 +63,7 @@ export default function LeadDetailsDrawer({ leadId, onClose, onUpdate }: LeadDet
 
     try {
       await crmApi.createFollowUp({
-        leadId,
+        clientId,
         interactionType: newFollowUp.interactionType,
         notes: formattedNotes,
         nextSteps: newFollowUp.nextSteps.trim(),
@@ -87,10 +72,7 @@ export default function LeadDetailsDrawer({ leadId, onClose, onUpdate }: LeadDet
       });
       
       setNewFollowUp({ interactionType: 'CALL', discussion: '', nextSteps: '', nextFollowUpDate: '' });
-      
-      // Refresh follow ups
-      const followUpsRes = await crmApi.getLeadFollowUps(leadId);
-      setFollowUps(followUpsRes.data.data || []);
+      fetchClientData(); // Refresh everything
     } catch (err) {
       console.error(err);
     } finally {
@@ -98,18 +80,15 @@ export default function LeadDetailsDrawer({ leadId, onClose, onUpdate }: LeadDet
     }
   };
 
-  if (!lead && !loading) {
+  if (!client && !loading) {
     return (
       <div className="drawer-overlay" onClick={onClose}>
         <div className="drawer-content" onClick={e => e.stopPropagation()}>
-           <div className="p-6">Lead not found.</div>
+           <div className="p-6">Client not found.</div>
         </div>
       </div>
     );
   }
-
-  const pipelineStages = ['NEW', 'CONTACTED', 'QUALIFIED', 'PROPOSAL_SENT', 'CONVERTED'];
-  const isLost = lead?.status === 'LOST';
 
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 100, display: 'flex', justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.3)' }} onClick={onClose}>
@@ -125,17 +104,20 @@ export default function LeadDetailsDrawer({ leadId, onClose, onUpdate }: LeadDet
             {/* Header */}
             <div style={{ padding: '24px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
-                <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 600 }}>{lead.name}</h2>
-                {lead.company && <p style={{ margin: '4px 0 0', color: 'var(--text-muted)' }}>{lead.company}</p>}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 600 }}>{client.name}</h2>
+                  <span className="badge badge-success" style={{ fontSize: '0.7rem' }}>CLIENT</span>
+                </div>
+                {client.company && <p style={{ margin: '4px 0 0', color: 'var(--text-muted)' }}>{client.company}</p>}
                 
                 <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
-                   {lead.phone && (
-                     <a href={`tel:${lead.phone}`} className="btn btn-sm" style={{ backgroundColor: '#25D366', color: 'white' }}>
+                   {client.phone && (
+                     <a href={`tel:${client.phone}`} className="btn btn-sm" style={{ backgroundColor: '#25D366', color: 'white' }}>
                        📞 Call
                      </a>
                    )}
-                   {lead.email && (
-                     <a href={`mailto:${lead.email}`} className="btn btn-sm btn-secondary">
+                   {client.email && (
+                     <a href={`mailto:${client.email}`} className="btn btn-sm btn-secondary">
                        ✉️ Email
                      </a>
                    )}
@@ -144,103 +126,28 @@ export default function LeadDetailsDrawer({ leadId, onClose, onUpdate }: LeadDet
               <button className="btn btn-ghost btn-sm" onClick={onClose}>✕</button>
             </div>
 
-            {/* Pipeline status */}
-            <div style={{ padding: '24px', backgroundColor: 'var(--bg-main)', borderBottom: '1px solid var(--border-color)' }}>
-              <h4 style={{ margin: '0 0 16px 0', fontSize: '0.875rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Status Pipeline</h4>
-              
-              {isLost ? (
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span className="badge badge-danger" style={{ fontSize: '1rem', padding: '8px 16px' }}>LOST (Deal Rejected)</span>
-                  <button className="btn btn-sm btn-secondary" onClick={() => handleStatusChange('CONTACTED')}>Reopen Lead</button>
-                </div>
-              ) : (
-                <div style={{ display: 'flex', gap: '4px', overflowX: 'auto', paddingBottom: '8px' }}>
-                  {pipelineStages.map((stage, idx) => {
-                    const currentIndex = pipelineStages.indexOf(lead.status);
-                    const isCompleted = idx < currentIndex;
-                    const isCurrent = idx === currentIndex;
-                    
-                    let bgColor = 'var(--bg-card)';
-                    let color = 'var(--text-muted)';
-                    let border = '1px solid var(--border-color)';
-                    
-                    if (isCompleted) {
-                      bgColor = 'var(--primary-color)';
-                      color = 'white';
-                      border = '1px solid var(--primary-color)';
-                    } else if (isCurrent) {
-                      bgColor = 'rgba(79, 70, 229, 0.1)';
-                      color = 'var(--primary-color)';
-                      border = '2px solid var(--primary-color)';
-                    }
-                    
-                    return (
-                      <button 
-                        key={stage}
-                        onClick={() => handleStatusChange(stage)}
-                        style={{ 
-                          flex: 1, 
-                          padding: '10px 8px', 
-                          borderRadius: '6px', 
-                          border, 
-                          backgroundColor: bgColor, 
-                          color,
-                          fontSize: '0.75rem',
-                          fontWeight: isCurrent ? 600 : 400,
-                          cursor: 'pointer',
-                          textAlign: 'center',
-                          minWidth: '90px'
-                        }}
-                      >
-                        {stage.replace('_', ' ')}
-                      </button>
-                    )
-                  })}
-                  <button 
-                     onClick={() => handleStatusChange('LOST')}
-                     style={{ 
-                          padding: '10px 8px', 
-                          borderRadius: '6px', 
-                          border: '1px solid #ef4444', 
-                          backgroundColor: 'transparent', 
-                          color: '#ef4444',
-                          fontSize: '0.75rem',
-                          cursor: 'pointer',
-                          marginLeft: '8px'
-                     }}
-                  >
-                    MARK LOST
-                  </button>
-                </div>
-              )}
-            </div>
-
             {/* Main Content */}
             <div style={{ padding: '24px', flex: 1, display: 'flex', flexDirection: 'column', gap: '24px' }}>
               
-              {/* Lead Details Grid */}
+              {/* Client Details Grid */}
               <div>
-                <h4 style={{ margin: '0 0 12px 0', fontSize: '1rem', fontWeight: 600 }}>Lead Details</h4>
+                <h4 style={{ margin: '0 0 12px 0', fontSize: '1rem', fontWeight: 600 }}>Client Details</h4>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', backgroundColor: 'var(--bg-main)', padding: '16px', borderRadius: '8px' }}>
                    <div>
                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Phone</div>
-                     <div style={{ fontWeight: 500 }}>{lead.phone || '—'}</div>
+                     <div style={{ fontWeight: 500 }}>{client.phone || '—'}</div>
                    </div>
                    <div>
                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Email</div>
-                     <div style={{ fontWeight: 500 }}>{lead.email || '—'}</div>
+                     <div style={{ fontWeight: 500 }}>{client.email || '—'}</div>
                    </div>
-                   <div>
-                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Event Type</div>
-                     <div style={{ fontWeight: 500 }}>{lead.eventType || '—'}</div>
+                   <div style={{ gridColumn: '1 / -1' }}>
+                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Address</div>
+                     <div style={{ fontWeight: 500 }}>{client.address || '—'}</div>
                    </div>
-                   <div>
-                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Budget</div>
-                     <div style={{ fontWeight: 500 }}>{lead.budget ? '₹' + lead.budget.toLocaleString() : '—'}</div>
-                   </div>
-                   <div>
-                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Source</div>
-                     <div style={{ fontWeight: 500 }}>{lead.source || '—'}</div>
+                   <div style={{ gridColumn: '1 / -1' }}>
+                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>GST Number</div>
+                     <div style={{ fontWeight: 500 }}>{client.gstNumber || '—'}</div>
                    </div>
                 </div>
               </div>
@@ -332,7 +239,12 @@ export default function LeadDetailsDrawer({ leadId, onClose, onUpdate }: LeadDet
                          </div>
                          <div style={{ flex: 1, backgroundColor: 'var(--bg-main)', padding: '16px', borderRadius: '8px', border: '1px solid #f1f5f9' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
-                              <span style={{ fontWeight: 600, fontSize: '0.875rem' }}>{fu.interactionType}</span>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <span style={{ fontWeight: 600, fontSize: '0.875rem' }}>{fu.interactionType}</span>
+                                {fu.leadId && !fu.clientId && (
+                                  <span className="badge badge-info" style={{ fontSize: '0.6rem', padding: '2px 6px' }}>PRE-CONVERSION</span>
+                                )}
+                              </div>
                               <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                                 {new Date(fu.interactionDate).toLocaleString()}
                               </span>

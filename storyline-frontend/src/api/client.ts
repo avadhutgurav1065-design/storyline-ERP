@@ -73,8 +73,10 @@ export const crmApi = {
   
   // Clients
   listClients: (params?: any) => api.get<ApiResponse<PageResponse<any>>>('/crm/clients', { params }),
+  getClient: (id: number) => api.get<ApiResponse<any>>(`/crm/clients/${id}`),
   createClient: (data: any) => api.post<ApiResponse<any>>('/crm/clients', data),
   updateClient: (id: number, data: any) => api.put<ApiResponse<any>>(`/crm/clients/${id}`, data),
+  getClientFollowUps: (clientId: number) => api.get<ApiResponse<any[]>>(`/crm/clients/${clientId}/follow-ups`),
 };
 
 // ====================================================

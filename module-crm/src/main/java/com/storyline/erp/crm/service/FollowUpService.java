@@ -2,8 +2,12 @@ package com.storyline.erp.crm.service;
 
 import com.storyline.erp.common.exception.ResourceNotFoundException;
 import com.storyline.erp.crm.dto.FollowUpDto;
+import com.storyline.erp.crm.entity.Client;
 import com.storyline.erp.crm.entity.FollowUp;
+import com.storyline.erp.crm.entity.Lead;
+import com.storyline.erp.crm.repository.ClientRepository;
 import com.storyline.erp.crm.repository.FollowUpRepository;
+import com.storyline.erp.crm.repository.LeadRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,9 +20,13 @@ import java.util.stream.Collectors;
 public class FollowUpService {
 
     private final FollowUpRepository followUpRepository;
+    private final LeadRepository leadRepository;
+    private final ClientRepository clientRepository;
 
-    public FollowUpService(FollowUpRepository followUpRepository) {
+    public FollowUpService(FollowUpRepository followUpRepository, LeadRepository leadRepository, ClientRepository clientRepository) {
         this.followUpRepository = followUpRepository;
+        this.leadRepository = leadRepository;
+        this.clientRepository = clientRepository;
     }
 
     public List<FollowUpDto> getLeadFollowUps(Long leadId) {
@@ -62,11 +70,28 @@ public class FollowUpService {
     }
 
     private FollowUpDto mapToDto(FollowUp entity) {
+        String targetName = null;
+        String eventType = null;
+        
+        if (entity.getClientId() != null) {
+            Client client = clientRepository.findById(entity.getClientId()).orElse(null);
+            if (client != null) {
+                targetName = client.getName();
+                eventType = client.getEventType();
+            }
+        } else if (entity.getLeadId() != null) {
+            Lead lead = leadRepository.findById(entity.getLeadId()).orElse(null);
+            if (lead != null) {
+                targetName = lead.getName();
+                eventType = lead.getEventType();
+            }
+        }
+
         return new FollowUpDto(
                 entity.getId(), entity.getLeadId(), entity.getClientId(),
-                entity.getInteractionType(), entity.getNotes(),
+                entity.getInteractionType(), entity.getNotes(), entity.getNextSteps(),
                 entity.getInteractionDate(), entity.getNextFollowUpDate(),
-                entity.getPerformedByUserId());
+                entity.getPerformedByUserId(), targetName, eventType);
     }
 
     private void updateEntityFromDto(FollowUp entity, FollowUpDto dto) {
@@ -74,6 +99,7 @@ public class FollowUpService {
         entity.setClientId(dto.clientId());
         entity.setInteractionType(dto.interactionType());
         entity.setNotes(dto.notes());
+        entity.setNextSteps(dto.nextSteps());
         if (dto.interactionDate() != null) entity.setInteractionDate(dto.interactionDate());
         entity.setNextFollowUpDate(dto.nextFollowUpDate());
         entity.setPerformedByUserId(dto.performedByUserId());
