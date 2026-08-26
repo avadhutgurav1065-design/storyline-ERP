@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-// We use a relative URL to let Vite proxy handle development and standard relative paths in production
-const API_BASE_URL = '/api';
+// We hardcode the production URL so we don't have to deal with Vercel Environment Variable warnings!
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://storyline-erp-backend.onrender.com/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
