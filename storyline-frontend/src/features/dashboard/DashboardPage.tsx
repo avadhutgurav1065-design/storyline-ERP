@@ -203,8 +203,10 @@ export default function DashboardPage() {
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
-                      activeIndex={activeIndex}
-                      activeShape={renderActiveShape}
+                      {...({
+                        activeIndex: activeIndex,
+                        activeShape: renderActiveShape
+                      } as any)}
                       data={eventData}
                       cx="50%"
                       cy="50%"

@@ -96,7 +96,7 @@ export const salesApi = {
 // EVENTS API
 // ====================================================
 export const eventsApi = {
-  listEvents: (params?: { page?: number; size?: number }) =>
+  listEvents: (params?: any) =>
     api.get<ApiResponse<PageResponse<any>>>('/events', { params }),
   createEvent: (data: any) => api.post<ApiResponse<any>>('/events', data),
   updateEvent: (id: number, data: any) => api.put<ApiResponse<any>>(`/events/${id}`, data),
