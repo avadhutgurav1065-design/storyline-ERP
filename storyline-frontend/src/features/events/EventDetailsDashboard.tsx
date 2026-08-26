@@ -359,7 +359,7 @@ export default function EventDetailsDashboard() {
       {/* Modals */}
       {showAssignModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}>
-          <div className="card animate-fade-in" style={{ width: '100%', maxWidth: '400px' }}>
+          <div className="card animate-fade-in" style={{ width: '100%', maxWidth: '400px', maxHeight: '90vh', overflowY: 'auto' }}>
             <div className="card-header">
               <div className="card-title">Assign Team Member</div>
               <button className="btn btn-ghost btn-sm" onClick={() => setShowAssignModal(false)}>✕</button>
@@ -399,7 +399,7 @@ export default function EventDetailsDashboard() {
 
       {showTaskModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}>
-          <div className="card animate-fade-in" style={{ width: '100%', maxWidth: '500px' }}>
+          <div className="card animate-fade-in" style={{ width: '100%', maxWidth: '500px', maxHeight: '90vh', overflowY: 'auto' }}>
             <div className="card-header">
               <div className="card-title">Create Checklist Task</div>
               <button className="btn btn-ghost btn-sm" onClick={() => setShowTaskModal(false)}>✕</button>
@@ -442,7 +442,7 @@ export default function EventDetailsDashboard() {
 
       {showVendorModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}>
-          <div className="card animate-fade-in" style={{ width: '100%', maxWidth: '400px' }}>
+          <div className="card animate-fade-in" style={{ width: '100%', maxWidth: '400px', maxHeight: '90vh', overflowY: 'auto' }}>
             <div className="card-header">
               <div className="card-title">Assign Vendor</div>
               <button className="btn btn-ghost btn-sm" onClick={() => setShowVendorModal(false)}>✕</button>
@@ -471,7 +471,7 @@ export default function EventDetailsDashboard() {
 
       {showDocModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}>
-          <div className="card animate-fade-in" style={{ width: '100%', maxWidth: '400px' }}>
+          <div className="card animate-fade-in" style={{ width: '100%', maxWidth: '400px', maxHeight: '90vh', overflowY: 'auto' }}>
             <div className="card-header">
               <div className="card-title">Upload Event Document</div>
               <button className="btn btn-ghost btn-sm" onClick={() => setShowDocModal(false)}>✕</button>
@@ -507,3 +507,4 @@ export default function EventDetailsDashboard() {
     </div>
   );
 }
+

@@ -106,7 +106,7 @@ export default function EventsPage() {
       {/* Create Modal */}
       {showModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}>
-          <div className="card animate-fade-in" style={{ width: '100%', maxWidth: '500px' }}>
+          <div className="card animate-fade-in" style={{ width: '100%', maxWidth: '500px', maxHeight: '90vh', overflowY: 'auto' }}>
             <div className="card-header">
               <div className="card-title">Create New Event</div>
               <button className="btn btn-ghost btn-sm" onClick={() => setShowModal(false)}>✕</button>
@@ -148,3 +148,4 @@ export default function EventsPage() {
     </div>
   );
 }
+

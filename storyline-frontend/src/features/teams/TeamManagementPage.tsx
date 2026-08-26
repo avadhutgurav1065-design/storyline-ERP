@@ -18,3 +18,4 @@ export default function TeamManagementPage() {
     </div>
   );
 }
+

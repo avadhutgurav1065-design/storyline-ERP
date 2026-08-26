@@ -274,3 +274,4 @@ export default function ClientDetailsDrawer({ clientId, onClose, onUpdate }: Cli
     </div>
   );
 }
+
