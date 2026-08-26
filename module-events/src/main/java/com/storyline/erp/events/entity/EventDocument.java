@@ -14,7 +14,7 @@ public class EventDocument extends BaseEntity {
     @Column(nullable = false)
     private String name;
 
-    @Column(name = "file_url", nullable = false)
+    @Column(name = "file_url", columnDefinition = "TEXT", nullable = false)
     private String fileUrl;
 
     @Column(name = "document_type")

@@ -33,12 +33,13 @@ public class TaskService {
 
     public Task updateTask(Long id, Task taskDetails) {
         Task task = getTaskById(id);
-        task.setTitle(taskDetails.getTitle());
-        task.setDescription(taskDetails.getDescription());
-        task.setAssignedUserId(taskDetails.getAssignedUserId());
-        task.setDueDate(taskDetails.getDueDate());
-        task.setPriority(taskDetails.getPriority());
-        task.setStatus(taskDetails.getStatus());
+        if (taskDetails.getTitle() != null) task.setTitle(taskDetails.getTitle());
+        if (taskDetails.getDescription() != null) task.setDescription(taskDetails.getDescription());
+        if (taskDetails.getAssignedUserId() != null) task.setAssignedUserId(taskDetails.getAssignedUserId());
+        if (taskDetails.getDueDate() != null) task.setDueDate(taskDetails.getDueDate());
+        if (taskDetails.getPriority() != null) task.setPriority(taskDetails.getPriority());
+        if (taskDetails.getStatus() != null) task.setStatus(taskDetails.getStatus());
+        if (taskDetails.getNotes() != null) task.setNotes(taskDetails.getNotes());
         return taskRepository.save(task);
     }
 

@@ -97,8 +97,9 @@ public class UserService {
      */
     @Transactional(readOnly = true)
     public PageResponse<UserResponse> listUsers(String search, Boolean active, int page, int size) {
+        String safeSearch = (search == null) ? "" : search;
         Pageable pageable = PageRequest.of(page, size, Sort.by("fullName").ascending());
-        Page<User> userPage = userRepository.findAllWithFilters(search, active, pageable);
+        Page<User> userPage = userRepository.findAllWithFilters(safeSearch, active, pageable);
 
         List<UserResponse> users = userPage.getContent().stream()
                 .map(this::mapToUserResponse)

@@ -2,9 +2,11 @@ package com.storyline.erp.events.entity;
 
 import com.storyline.erp.common.entity.AuditableEntity;
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @Entity
 @Table(name = "vendors")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Vendor extends AuditableEntity {
 
     @Column(nullable = false)

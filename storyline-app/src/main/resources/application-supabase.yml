@@ -23,6 +23,9 @@ spring:
     baseline-on-migrate: true
     jdbc-properties:
       prepareThreshold: 0
+  jackson:
+    serialization:
+      fail-on-empty-beans: false
 
 jwt:
   secret: 8a3c9e7b2f4d6a1c8e5b9d3f2a7c4e1b8a3c9e7b2f4d6a1c8e5b9d3f2a7c4e1b

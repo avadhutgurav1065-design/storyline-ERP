@@ -28,6 +28,9 @@ public class Task extends AuditableEntity {
 
     private String status = "PENDING"; // PENDING, IN_PROGRESS, COMPLETED
 
+    @Column(length = 2000)
+    private String notes;
+
     // Getters and Setters
 
     public Event getEvent() { return event; }
@@ -44,4 +47,6 @@ public class Task extends AuditableEntity {
     public void setPriority(String priority) { this.priority = priority; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+    public String getNotes() { return notes; }
+    public void setNotes(String notes) { this.notes = notes; }
 }

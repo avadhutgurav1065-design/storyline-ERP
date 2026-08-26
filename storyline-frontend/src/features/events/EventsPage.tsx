@@ -1,7 +1,9 @@
 import { useState, useEffect, type FormEvent } from 'react';
 import { eventsApi } from '../../api/client';
+import { useNavigate } from 'react-router-dom';
 
 export default function EventsPage() {
+  const navigate = useNavigate();
   const [events, setEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -95,8 +97,8 @@ export default function EventsPage() {
               </div>
 
               <div style={{ display: 'flex', gap: '10px' }}>
-                <button className="btn btn-secondary" style={{ flex: 1, padding: '8px', fontSize: '0.875rem' }}>View Tasks</button>
-                <button className="btn btn-secondary" style={{ flex: 1, padding: '8px', fontSize: '0.875rem' }}>Team & Vendors</button>
+                <button className="btn btn-secondary" style={{ flex: 1, padding: '8px', fontSize: '0.875rem' }} onClick={() => navigate(`/events/${evt.id}?tab=CHECKLIST`)}>View Tasks</button>
+                <button className="btn btn-secondary" style={{ flex: 1, padding: '8px', fontSize: '0.875rem' }} onClick={() => navigate(`/events/${evt.id}?tab=TEAM`)}>Team & Vendors</button>
               </div>
             </div>
           ))

@@ -4,8 +4,11 @@ import com.storyline.erp.common.entity.AuditableEntity;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 @Entity
 @Table(name = "events")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Event extends AuditableEntity {
 
     @Column(nullable = false)
