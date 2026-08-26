@@ -109,7 +109,7 @@ export default function EventDetailsDashboard() {
     try {
       const { tasksApi } = await import('../../api/client');
       await tasksApi.create({
-        eventId: Number(id),
+        event: { id: Number(id) },
         ...taskForm,
         assignedUserId: taskForm.assignedUserId ? Number(taskForm.assignedUserId) : null,
       });
