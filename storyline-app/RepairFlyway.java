@@ -11,7 +11,7 @@ public class RepairFlyway {
         try (Connection conn = DriverManager.getConnection(url, user, password);
              Statement stmt = conn.createStatement()) {
             
-            int deleted = stmt.executeUpdate("DELETE FROM flyway_schema_history WHERE version = '1.6.0'");
+            int deleted = stmt.executeUpdate("DELETE FROM flyway_schema_history WHERE version = '1.14.0' AND success = false");
             System.out.println("Deleted rows: " + deleted);
         }
     }
