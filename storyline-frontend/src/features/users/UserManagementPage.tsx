@@ -4,7 +4,7 @@ import type { UserResponse, PageResponse, CreateUserRequest } from '../../types'
 
 const availableRoles = [
   'ADMIN', 'EVENT_MANAGER', 'EVENT_HEAD', 'TEAM_HEAD',
-  'TEAM_MEMBER', 'FINANCE_MANAGER', 'INVENTORY_MANAGER', 'VENDOR'
+  'TEAM_MEMBER', 'FINANCE_MANAGER', 'INVENTORY_MANAGER', 'VENDOR', 'FREELANCER'
 ];
 
 export default function UserManagementPage() {
@@ -68,8 +68,9 @@ export default function UserManagementPage() {
     TEAM_HEAD: 'badge-warning',
     TEAM_MEMBER: 'badge-success',
     FINANCE_MANAGER: 'badge-primary',
-    INVENTORY_MANAGER: 'badge-warning',
-    VENDOR: 'badge-info',
+    INVENTORY_MANAGER: 'badge-secondary',
+    VENDOR: 'badge-warning',
+    FREELANCER: 'badge-warning'
   };
 
   return (
