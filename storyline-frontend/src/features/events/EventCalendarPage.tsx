@@ -38,6 +38,10 @@ export default function EventCalendarPage() {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+  // Controlled calendar state to fix navigation buttons
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [currentView, setCurrentView] = useState<any>(Views.MONTH);
+
   // Modal state
   const [showModal, setShowModal] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -67,7 +71,7 @@ export default function EventCalendarPage() {
             id: ev.id,
             title: ev.name,
             start: new Date(ev.startDate),
-            end: ev.endDate ? new Date(ev.endDate) : new Date(ev.startDate),
+            end: new Date(ev.startDate), // Force 1-day render so it doesn't span across multiple columns
             allDay: true,
             type: 'EVENT',
             resource: ev,
@@ -124,6 +128,14 @@ export default function EventCalendarPage() {
     openDayDetails(date);
   };
 
+  const handleNavigate = (newDate: Date) => {
+    setCurrentDate(newDate);
+  };
+
+  const handleViewChange = (newView: any) => {
+    setCurrentView(newView);
+  };
+
   const eventStyleGetter = (event: any) => {
     let backgroundColor = 'var(--primary)';
     
@@ -168,9 +180,14 @@ export default function EventCalendarPage() {
             events={calendarEvents}
             startAccessor="start"
             endAccessor="end"
+            date={currentDate}
+            view={currentView}
+            onNavigate={handleNavigate}
+            onView={handleViewChange}
             onSelectSlot={handleSelectSlot}
             onSelectEvent={handleSelectEvent}
             onShowMore={handleShowMore}
+            onDrillDown={(date) => openDayDetails(date)}
             selectable={true}
             popup={false} 
             eventPropGetter={eventStyleGetter}
