@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Calendar, dateFnsLocalizer, View, Views } from 'react-big-calendar';
+import { Calendar, dateFnsLocalizer, Views } from 'react-big-calendar';
 import { format, parse, startOfWeek, getDay } from 'date-fns';
 import { enUS } from 'date-fns/locale/en-US';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
@@ -19,14 +19,24 @@ const localizer = dateFnsLocalizer({
   locales,
 });
 
+// Vibrant distinct colors for different events
+const EVENT_COLORS = [
+  '#ef4444', // Red
+  '#f97316', // Orange
+  '#f59e0b', // Amber
+  '#10b981', // Emerald
+  '#06b6d4', // Cyan
+  '#3b82f6', // Blue
+  '#6366f1', // Indigo
+  '#8b5cf6', // Violet
+  '#d946ef', // Fuchsia
+  '#e11d48', // Rose
+];
+
 export default function EventCalendarPage() {
   const [calendarEvents, setCalendarEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-
-  // Controlled calendar state
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [currentView, setCurrentView] = useState<View>(Views.MONTH);
 
   // Modal state
   const [showModal, setShowModal] = useState(false);
@@ -55,7 +65,7 @@ export default function EventCalendarPage() {
         if (ev.startDate) {
           formattedData.push({
             id: ev.id,
-            title: `[Event] ${ev.name}`,
+            title: ev.name,
             start: new Date(ev.startDate),
             end: ev.endDate ? new Date(ev.endDate) : new Date(ev.startDate),
             allDay: true,
@@ -70,7 +80,7 @@ export default function EventCalendarPage() {
         if (task.dueDate) {
           formattedData.push({
             id: `task-${task.id}`,
-            title: `[Task] ${task.title} - ${task.event?.name || 'No Event'}`,
+            title: `[Task] ${task.title}`,
             start: new Date(task.dueDate),
             end: new Date(task.dueDate),
             allDay: true,
@@ -88,17 +98,7 @@ export default function EventCalendarPage() {
     }
   };
 
-  const handleNavigate = (newDate: Date) => {
-    setCurrentDate(newDate);
-  };
-
-  const handleViewChange = (newView: View) => {
-    setCurrentView(newView);
-  };
-
   const openDayDetails = (date: Date) => {
-    // Find all events/tasks that fall on this date
-    // Normalizing dates for comparison (ignoring time)
     const targetDateStr = format(date, 'yyyy-MM-dd');
     
     const dayItems = calendarEvents.filter(ev => {
@@ -117,7 +117,6 @@ export default function EventCalendarPage() {
   };
 
   const handleSelectEvent = (event: any) => {
-    // Instead of navigating, open the modal for the start date of this event
     openDayDetails(event.start);
   };
 
@@ -129,27 +128,22 @@ export default function EventCalendarPage() {
     let backgroundColor = 'var(--primary)';
     
     if (event.type === 'EVENT') {
-      switch (event.resource.status) {
-        case 'CONFIRMED': backgroundColor = 'var(--success)'; break;
-        case 'TENTATIVE': backgroundColor = 'var(--warning)'; break;
-        case 'IN_PROGRESS': backgroundColor = 'var(--info)'; break;
-        case 'CANCELLED': backgroundColor = 'var(--danger)'; break;
-        case 'COMPLETED': backgroundColor = 'var(--text-muted)'; break;
-      }
+      // Assign a distinct vibrant color based on Event ID so events on the same day stand out
+      const colorIndex = (event.resource.id || 0) % EVENT_COLORS.length;
+      backgroundColor = EVENT_COLORS[colorIndex];
     } else if (event.type === 'TASK') {
-      switch (event.resource.status) {
-        case 'COMPLETED': backgroundColor = 'var(--success)'; break;
-        case 'ISSUE': backgroundColor = 'var(--danger)'; break;
-        case 'IN_PROGRESS': backgroundColor = 'var(--warning)'; break;
-        default: backgroundColor = 'var(--border-color)'; break; // Pending tasks
-      }
+      // Tasks are gray/subtle unless they have a status
+      backgroundColor = '#6b7280'; // Default gray
+      if (event.resource.status === 'COMPLETED') backgroundColor = '#10b981'; // Green
+      if (event.resource.status === 'ISSUE') backgroundColor = '#ef4444'; // Red
+      if (event.resource.status === 'IN_PROGRESS') backgroundColor = '#f59e0b'; // Amber
     }
 
     return {
       className: 'custom-calendar-event',
       style: {
         backgroundColor,
-        color: event.type === 'TASK' && event.resource.status === 'PENDING' ? 'var(--text-main)' : '#fff',
+        color: '#ffffff', // Always white text for contrast on vibrant blocks
       }
     };
   };
@@ -159,14 +153,14 @@ export default function EventCalendarPage() {
       <div className="page-header">
         <div>
           <h1 className="page-title">Event Calendar</h1>
-          <p className="page-subtitle">Schedule view of all upcoming events and task deadlines</p>
+          <p className="page-subtitle">Interactive schedule view. Click any date or event to see details.</p>
         </div>
       </div>
 
-      <div className="card calendar-container">
+      <div className="calendar-container">
         {loading ? (
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
-            Loading Calendar...
+            <span style={{ fontSize: '1.2rem', color: 'var(--text-muted)' }}>Loading Calendar...</span>
           </div>
         ) : (
           <Calendar
@@ -174,15 +168,11 @@ export default function EventCalendarPage() {
             events={calendarEvents}
             startAccessor="start"
             endAccessor="end"
-            date={currentDate}
-            view={currentView}
-            onNavigate={handleNavigate}
-            onView={handleViewChange}
             onSelectSlot={handleSelectSlot}
             onSelectEvent={handleSelectEvent}
             onShowMore={handleShowMore}
             selectable={true}
-            popup={false} // Disable default popup to use our custom modal
+            popup={false} 
             eventPropGetter={eventStyleGetter}
             views={[Views.MONTH, Views.WEEK, Views.DAY, Views.AGENDA]}
             tooltipAccessor={(e: any) => `${e.title}\nStatus: ${e.resource.status}`}
@@ -192,19 +182,20 @@ export default function EventCalendarPage() {
 
       {/* Day Details Modal */}
       {showModal && selectedDate && (
-        <div className="modal-overlay" onClick={() => setShowModal(false)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '600px', width: '100%' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <h2 style={{ margin: 0, fontSize: '1.25rem', color: 'var(--text-main)' }}>
-                Agenda for {format(selectedDate, 'MMMM d, yyyy')}
+        <div className="modal-overlay" onClick={() => setShowModal(false)} style={{ zIndex: 1000, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '500px', width: '90%', padding: '24px', borderRadius: '12px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
+              <h2 style={{ margin: 0, fontSize: '1.4rem', color: 'var(--text-main)', fontWeight: 700 }}>
+                {format(selectedDate, 'EEEE, MMMM d, yyyy')}
               </h2>
-              <button className="btn btn-ghost" onClick={() => setShowModal(false)}>✕</button>
+              <button className="btn btn-ghost" onClick={() => setShowModal(false)} style={{ fontSize: '1.5rem', padding: '0 8px' }}>&times;</button>
             </div>
             
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '60vh', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '60vh', overflowY: 'auto', paddingRight: '4px' }}>
               {selectedDayEvents.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
-                  No events or tasks scheduled for this day.
+                <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text-muted)' }}>
+                  <p style={{ fontSize: '1.1rem', margin: 0 }}>No events or tasks scheduled.</p>
+                  <p style={{ fontSize: '0.9rem', marginTop: '8px' }}>Enjoy your free day!</p>
                 </div>
               ) : (
                 selectedDayEvents.map((item, idx) => (
@@ -215,36 +206,37 @@ export default function EventCalendarPage() {
                     backgroundColor: 'var(--bg-main)',
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: '8px'
+                    gap: '8px',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
                   }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                      <h4 style={{ margin: 0, color: 'var(--text-main)' }}>{item.title}</h4>
-                      <span className="badge badge-primary">{item.type}</span>
+                      <h4 style={{ margin: 0, color: 'var(--text-main)', fontSize: '1.1rem' }}>{item.title}</h4>
+                      <span className={`badge ${item.type === 'EVENT' ? 'badge-primary' : 'badge-secondary'}`}>{item.type}</span>
                     </div>
                     
                     {item.type === 'EVENT' ? (
                       <>
-                        <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                          Status: <strong>{item.resource.status}</strong><br/>
-                          Location: {item.resource.location || 'TBA'}
-                        </p>
+                        <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>
+                          <strong>Status:</strong> {item.resource.status}<br/>
+                          <strong>Location:</strong> {item.resource.location || 'TBA'}
+                        </div>
                         <button 
                           className="btn btn-primary btn-sm" 
-                          style={{ alignSelf: 'flex-start', marginTop: '8px' }}
+                          style={{ alignSelf: 'flex-start', marginTop: '8px', fontWeight: 600 }}
                           onClick={() => navigate(`/events/${item.resource.id}`)}
                         >
-                          Go to Event Dashboard
+                          View Event Dashboard
                         </button>
                       </>
                     ) : (
                       <>
-                        <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                          Status: <strong>{item.resource.status}</strong><br/>
-                          Priority: {item.resource.priority}
-                        </p>
+                        <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>
+                          <strong>Status:</strong> {item.resource.status}<br/>
+                          <strong>Priority:</strong> {item.resource.priority}
+                        </div>
                         <button 
                           className="btn btn-outline btn-sm" 
-                          style={{ alignSelf: 'flex-start', marginTop: '8px' }}
+                          style={{ alignSelf: 'flex-start', marginTop: '8px', fontWeight: 600 }}
                           onClick={() => {
                             if (item.resource.event?.id) {
                               navigate(`/events/${item.resource.event.id}`);
