@@ -52,7 +52,7 @@ public class RawMaterialController {
     @PostMapping("/{id}/stock")
     public ApiResponse<RawMaterialDto> updateStock(
             @PathVariable Long id,
-            @RequestParam Double quantity,
+            @RequestParam java.math.BigDecimal quantity,
             @RequestParam String type,
             @RequestParam(required = false) String reference,
             @RequestParam(required = false) String notes) {

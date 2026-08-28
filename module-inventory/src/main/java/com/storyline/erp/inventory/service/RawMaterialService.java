@@ -67,31 +67,31 @@ public class RawMaterialService {
         rawMaterialRepository.delete(rm);
     }
 
-    public RawMaterialDto updateStock(Long id, Double quantity, String type, String reference, String notes) {
+    public RawMaterialDto updateStock(Long id, java.math.BigDecimal quantity, String type, String reference, String notes) {
         RawMaterial rm = findById(id);
         
-        if ("OUT".equalsIgnoreCase(type) && rm.getCurrentStock() < quantity) {
+        if ("OUT".equalsIgnoreCase(type) && rm.getCurrentStock().compareTo(quantity) < 0) {
             throw new RuntimeException("Insufficient stock. Available: " + rm.getCurrentStock());
         }
         
         if ("IN".equalsIgnoreCase(type)) {
-            rm.setCurrentStock(rm.getCurrentStock() + quantity);
+            rm.setCurrentStock(rm.getCurrentStock().add(quantity));
         } else if ("OUT".equalsIgnoreCase(type)) {
-            rm.setCurrentStock(rm.getCurrentStock() - quantity);
+            rm.setCurrentStock(rm.getCurrentStock().subtract(quantity));
         } else if ("ADJUSTMENT".equalsIgnoreCase(type)) {
             // quantity here is the change, e.g. -5 or +10
-            if (rm.getCurrentStock() + quantity < 0) {
+            if (rm.getCurrentStock().add(quantity).compareTo(java.math.BigDecimal.ZERO) < 0) {
                 throw new RuntimeException("Adjustment results in negative stock.");
             }
-            rm.setCurrentStock(rm.getCurrentStock() + quantity);
+            rm.setCurrentStock(rm.getCurrentStock().add(quantity));
         }
         
         rawMaterialRepository.save(rm);
         
         com.storyline.erp.inventory.entity.StockTransaction tx = new com.storyline.erp.inventory.entity.StockTransaction();
-        tx.setRawMaterialId(rm.getId());
+        tx.setRawMaterial(rm);
         tx.setTransactionType(type.toUpperCase());
-        tx.setQuantity(Math.abs(quantity));
+        tx.setQuantity(quantity.abs());
         tx.setReference(reference);
         tx.setNotes(notes);
         stockTransactionRepository.save(tx);
@@ -107,7 +107,7 @@ public class RawMaterialService {
     private RawMaterialDto mapToDto(RawMaterial rm) {
         return new RawMaterialDto(
                 rm.getId(), rm.getSku(), rm.getName(), 
-                rm.getUnitOfMeasure(), rm.getCurrentStock(), rm.getMinimumStock()
+                rm.getUnitOfMeasure(), rm.getCurrentStock(), rm.getMinimumStock(), rm.getUnitCost()
         );
     }
 
@@ -116,5 +116,6 @@ public class RawMaterialService {
         rm.setName(dto.name());
         rm.setUnitOfMeasure(dto.unitOfMeasure());
         if (dto.minimumStock() != null) rm.setMinimumStock(dto.minimumStock());
+        if (dto.unitCost() != null) rm.setUnitCost(dto.unitCost());
     }
 }
