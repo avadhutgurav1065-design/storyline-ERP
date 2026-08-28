@@ -8,4 +8,5 @@ import java.util.List;
 @Repository
 public interface BillOfMaterialRepository extends JpaRepository<BillOfMaterial, Long> {
     List<BillOfMaterial> findByProductId(Long productId);
+    void deleteByProductId(Long productId);
 }

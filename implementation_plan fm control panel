@@ -1,0 +1,31 @@
+# Final Polish: Finance Manager Full Control & Editing Capabilities
+
+Based on your CFO-level blueprint, we have successfully implemented the core structure:
+- **Quotation → Event → Invoice Pipeline**: Working with 30/40/30 auto-schedules.
+- **Client Receivables**: Aging reports and payment tracking are live.
+- **Vendor POs & Payments**: The 3-step approval system (Active -> Pending Approval -> Accounts Payable) is functioning perfectly with categories for Vendors, Logistics, Petty Cash, and Employee Reimbursements.
+- **Event P&L**: Each event now isolates its own revenue, costs, and profit margin independently.
+
+However, to ensure the Finance Manager has **full, unrestricted control over the system**, they must be able to edit and rectify any financial entry. Currently, the system allows them to *create* bills, *pay* bills, and *change status*, but lacks robust post-creation *editing*.
+
+### Proposed Additions for Full Control
+
+#### 1. Client Invoice Editing (`InvoicesPage.tsx`)
+- Add an "Edit Invoice" capability for the Finance Manager to modify:
+  - Total Amount & Tax Amount (in case of negotiations or client requests).
+  - Due Dates (for extensions).
+  - Notes & Descriptions.
+
+#### 2. Vendor PO & Expense Editing (`ExpensesPage.tsx`)
+- Add an "Edit Expense/PO" capability to modify:
+  - Agreed Vendor Amounts (if scope changes).
+  - Tax adjustments.
+  - Category changes (e.g., changing from Vendor to Material).
+  - Date changes.
+
+#### 3. Budget vs Actual (Event Level)
+- While we have Event P&L (Actual Revenue vs Actual Cost), we should add a simple "Set Budget" field in the Event details so the Finance Manager can instantly see Budget vs Actual variances on the Event Finance tab.
+
+## Open Questions
+- Do you want the "Edit" capability to be available *at any status*, or should editing be locked once an invoice/PO is marked as "Paid"? (Standard accounting practice usually locks paid invoices, requiring a Credit/Debit note instead).
+- Shall I proceed with implementing these Edit modals and the Event Budget field to complete the system?

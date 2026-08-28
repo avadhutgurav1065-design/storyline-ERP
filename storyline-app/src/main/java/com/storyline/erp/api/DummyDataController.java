@@ -228,9 +228,9 @@ public class DummyDataController {
             RawMaterial rm = new RawMaterial();
             rm.setName(materials[i]);
             rm.setSku("RM-" + System.currentTimeMillis() + "-" + i);
-            rm.setCurrentStock(50.0 + (i * 10));
+            rm.setCurrentStock(java.math.BigDecimal.valueOf(50.0 + (i * 10)));
             rm.setUnitOfMeasure("Pieces");
-            rm.setMinimumStock(10.0);
+            rm.setMinimumStock(java.math.BigDecimal.valueOf(10.0));
             rawMaterialRepository.save(rm);
         }
         
@@ -240,7 +240,7 @@ public class DummyDataController {
             p.setName(hampers[i]);
             p.setSku("HMP-" + System.currentTimeMillis() + "-" + i);
             p.setBasePrice(new BigDecimal(2500 + (i * 500)));
-            p.setCurrentStock(20.0 + i * 5);
+            p.setCurrentStock(java.math.BigDecimal.valueOf(20.0 + i * 5));
             productRepository.save(p);
         }
 

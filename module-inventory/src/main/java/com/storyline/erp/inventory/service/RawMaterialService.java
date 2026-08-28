@@ -40,7 +40,7 @@ public class RawMaterialService {
         RawMaterial rm = new RawMaterial();
         updateEntityFromDto(rm, dto);
         if (dto.currentStock() != null) rm.setCurrentStock(dto.currentStock());
-        else rm.setCurrentStock(0.0);
+        else rm.setCurrentStock(java.math.BigDecimal.ZERO);
         
         return mapToDto(rawMaterialRepository.save(rm));
     }

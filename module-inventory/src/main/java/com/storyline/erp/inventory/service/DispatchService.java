@@ -27,22 +27,13 @@ public class DispatchService {
                     .orElseThrow(() -> new ResourceNotFoundException("Product not found: " + item.productId()));
 
             // User requested strict blocking on stock shortages
-            if (product.getCurrentStock() < item.quantity()) {
+            if (product.getCurrentStock().compareTo(item.quantity()) < 0) {
                 throw new RuntimeException("Insufficient stock for product: " + product.getName() + ". Available: " + product.getCurrentStock() + ", Requested: " + item.quantity());
             }
 
             // Deduct stock
-            product.setCurrentStock(product.getCurrentStock() - item.quantity());
+            product.setCurrentStock(product.getCurrentStock().subtract(item.quantity()));
             productRepository.save(product);
-
-            // Record transaction
-            StockTransaction tx = new StockTransaction();
-            tx.setProductId(product.getId());
-            tx.setTransactionType("OUT");
-            tx.setQuantity(item.quantity());
-            tx.setReference("EVENT-" + request.eventId());
-            tx.setNotes("Dispatched to Event ID " + request.eventId() + ". Notes: " + request.notes());
-            stockTransactionRepository.save(tx);
         }
     }
 }

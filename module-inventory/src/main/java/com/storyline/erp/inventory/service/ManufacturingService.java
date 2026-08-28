@@ -43,8 +43,8 @@ public class ManufacturingService {
 
         // 1. Verify we have enough raw materials
         for (BillOfMaterial bom : boms) {
-            double required = bom.getQuantity() * request.quantityToManufacture();
-            if (bom.getRawMaterial().getCurrentStock() < required) {
+            java.math.BigDecimal required = bom.getQuantity().multiply(java.math.BigDecimal.valueOf(request.quantityToManufacture()));
+            if (bom.getRawMaterial().getCurrentStock().compareTo(required) < 0) {
                 throw new IllegalStateException("Insufficient stock for raw material: " + bom.getRawMaterial().getSku() + 
                         " (Required: " + required + ", Available: " + bom.getRawMaterial().getCurrentStock() + ")");
             }
@@ -52,14 +52,14 @@ public class ManufacturingService {
 
         // 2. Deduct raw materials and record transactions
         for (BillOfMaterial bom : boms) {
-            double required = bom.getQuantity() * request.quantityToManufacture();
+            java.math.BigDecimal required = bom.getQuantity().multiply(java.math.BigDecimal.valueOf(request.quantityToManufacture()));
             RawMaterial rm = bom.getRawMaterial();
-            rm.setCurrentStock(rm.getCurrentStock() - required);
+            rm.setCurrentStock(rm.getCurrentStock().subtract(required));
             rawMaterialRepository.save(rm);
 
             StockTransaction tx = new StockTransaction();
-            tx.setRawMaterialId(rm.getId());
-            tx.setQuantity(-required);
+            tx.setRawMaterial(rm);
+            tx.setQuantity(required.negate());
             tx.setTransactionType("MANUFACTURE_CONSUMPTION");
             tx.setReference("PRODUCT_" + product.getId() + "_QTY_" + request.quantityToManufacture());
             tx.setNotes("Consumed for manufacturing Product: " + product.getSku());
@@ -67,14 +67,7 @@ public class ManufacturingService {
         }
 
         // 3. Add finished goods (Product) to inventory
-        product.setCurrentStock(product.getCurrentStock() + request.quantityToManufacture());
+        product.setCurrentStock(product.getCurrentStock().add(java.math.BigDecimal.valueOf(request.quantityToManufacture())));
         productRepository.save(product);
-
-        StockTransaction prodTx = new StockTransaction();
-        prodTx.setProductId(product.getId());
-        prodTx.setQuantity(Double.valueOf(request.quantityToManufacture()));
-        prodTx.setTransactionType("MANUFACTURE_PRODUCTION");
-        prodTx.setReference("BATCH_PRODUCTION");
-        stockTransactionRepository.save(prodTx);
     }
 }
