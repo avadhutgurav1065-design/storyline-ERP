@@ -9,7 +9,7 @@ import java.time.LocalDate;
 @Table(name = "payments")
 public class Payment extends AuditableEntity {
 
-    @Column(name = "payment_reference", unique = true)
+    @Column(name = "payment_reference")
     private String paymentReference;
 
     @Column(name = "invoice_id")
@@ -17,6 +17,9 @@ public class Payment extends AuditableEntity {
 
     @Column(name = "client_id", nullable = false)
     private Long clientId;
+
+    @Column(name = "event_id")
+    private Long eventId;
 
     @Column(nullable = false)
     private BigDecimal amount;
@@ -32,6 +35,9 @@ public class Payment extends AuditableEntity {
 
     @Column(length = 1000)
     private String notes;
+
+    @Column(name = "received_by")
+    private String receivedBy;
 
     // Getters and Setters
     public String getPaymentReference() { return paymentReference; }
@@ -50,4 +56,8 @@ public class Payment extends AuditableEntity {
     public void setTransactionId(String transactionId) { this.transactionId = transactionId; }
     public String getNotes() { return notes; }
     public void setNotes(String notes) { this.notes = notes; }
+    public Long getEventId() { return eventId; }
+    public void setEventId(Long eventId) { this.eventId = eventId; }
+    public String getReceivedBy() { return receivedBy; }
+    public void setReceivedBy(String receivedBy) { this.receivedBy = receivedBy; }
 }

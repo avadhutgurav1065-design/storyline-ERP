@@ -135,6 +135,39 @@ export const teamAssignmentsApi = {
 // ====================================================
 // TASKS API
 // ====================================================
+export const settingsApi = {
+  getSystemSettings: () => api.get('/settings'),
+  updateSystemSettings: (data: any) => api.put('/settings', data),
+};
+
+// --- Inventory API ---
+export const inventoryApi = {
+  // Products / Hampers
+  listProducts: () => api.get<ApiResponse<any[]>>('/inventory/products'),
+  createProduct: (data: any) => api.post<ApiResponse<any>>('/inventory/products', data),
+  updateProduct: (id: number, data: any) => api.put<ApiResponse<any>>(`/inventory/products/${id}`, data),
+  
+  // Raw Materials
+  listMaterials: () => api.get<ApiResponse<any[]>>('/inventory/materials'),
+  createMaterial: (data: any) => api.post<ApiResponse<any>>('/inventory/materials', data),
+  updateMaterial: (id: number, data: any) => api.put<ApiResponse<any>>(`/inventory/materials/${id}`, data),
+  addStock: (id: number, payload: { quantity: number, reference?: string, notes?: string }) => 
+    api.post<ApiResponse<void>>(`/inventory/materials/${id}/add-stock`, payload),
+
+  // Bill of Materials (BOM)
+  getBom: (productId: number) => api.get<ApiResponse<any[]>>(`/inventory/products/${productId}/bom`),
+  addBomItem: (productId: number, payload: { rawMaterialId: number, quantity: number }) => 
+    api.post<ApiResponse<any>>(`/inventory/products/${productId}/bom`, payload),
+  removeBomItem: (bomId: number) => api.delete<ApiResponse<void>>(`/inventory/bom/${bomId}`),
+
+  // Production
+  produceHamper: (productId: number, payload: { quantity: number, reference?: string }) =>
+    api.post<ApiResponse<void>>(`/inventory/products/${productId}/produce`, payload),
+    
+  issueHamper: (productId: number, payload: { quantity: number, eventId: number, reference?: string }) =>
+    api.post<ApiResponse<void>>(`/inventory/products/${productId}/issue`, payload)
+};
+
 export const tasksApi = {
   list: () => api.get<ApiResponse<any[]>>('/tasks'),
   create: (data: any) => api.post<ApiResponse<any>>('/tasks', data),
@@ -142,31 +175,17 @@ export const tasksApi = {
   delete: (id: number) => api.delete<ApiResponse<void>>(`/tasks/${id}`),
 };
 
-// ====================================================
-// INVENTORY API (Phase 4)
-// ====================================================
-export const inventoryApi = {
-  listProducts: (params?: any) => api.get<ApiResponse<PageResponse<any>>>('/inventory/products', { params }),
-  createProduct: (data: any) => api.post<ApiResponse<any>>('/inventory/products', data),
-  updateProduct: (id: number, data: any) => api.put<ApiResponse<any>>(`/inventory/products/${id}`, data),
-  
-  listRawMaterials: (params?: any) => api.get<ApiResponse<PageResponse<any>>>('/inventory/raw-materials', { params }),
-  createRawMaterial: (data: any) => api.post<ApiResponse<any>>('/inventory/raw-materials', data),
-  updateRawMaterial: (id: number, data: any) => api.put<ApiResponse<any>>(`/inventory/raw-materials/${id}`, data),
-  deleteRawMaterial: (id: number) => api.delete<ApiResponse<void>>(`/inventory/raw-materials/${id}`),
-  
-  getProductBom: (productId: number) => api.get<ApiResponse<any[]>>(`/inventory/bom/product/${productId}`),
-  updateProductBom: (productId: number, data: any[]) => api.put<ApiResponse<any[]>>(`/inventory/bom/product/${productId}`, data),
-  
-  processManufactureBatch: (data: any) => api.post<ApiResponse<any>>('/inventory/manufacturing/batch', data)
-};
+
 
 // ====================================================
 // FINANCE API (Phase 5)
 // ====================================================
 export const financeApi = {
   listInvoices: (params?: any) => api.get<ApiResponse<PageResponse<any>>>('/finance/invoices', { params }),
+  getInvoice: (id: number) => api.get<ApiResponse<any>>(`/finance/invoices/${id}`),
   createInvoice: (data: any) => api.post<ApiResponse<any>>('/finance/invoices', data),
+  updateInvoice: (id: number, data: any) => api.put<ApiResponse<any>>(`/finance/invoices/${id}`, data),
+  createInvoiceSchedule: (data: any[]) => api.post<ApiResponse<any[]>>('/finance/invoices/schedule', data),
   updateInvoiceStatus: (id: number, status: string) => api.patch<ApiResponse<any>>(`/finance/invoices/${id}/status?status=${status}`),
   
   listPayments: (params?: any) => api.get<ApiResponse<PageResponse<any>>>('/finance/payments', { params }),
@@ -174,8 +193,25 @@ export const financeApi = {
   
   listExpenses: (params?: any) => api.get<ApiResponse<PageResponse<any>>>('/finance/expenses', { params }),
   createExpense: (data: any) => api.post<ApiResponse<any>>('/finance/expenses', data),
+  updateExpense: (id: number, data: any) => api.put<ApiResponse<any>>(`/finance/expenses/${id}`, data),
   
-  getProfitAndLoss: () => api.get<ApiResponse<any>>('/finance/profit-loss')
+  getProfitAndLoss: () => api.get<ApiResponse<any>>('/finance/profit-loss'),
+  getEventProfitAndLoss: (eventId: number) => api.get<ApiResponse<any>>(`/finance/events/${eventId}/profit-loss`),
+  
+  // Petty Cash
+  listPettyCashTransactions: (params?: any) => api.get<ApiResponse<PageResponse<any>>>('/finance/petty-cash', { params }),
+  recordPettyCashTransaction: (data: any) => api.post<ApiResponse<any>>('/finance/petty-cash', data),
+  getPettyCashBalance: () => api.get<ApiResponse<number>>('/finance/petty-cash/balance')
+};
+
+// ====================================================
+// NOTIFICATIONS API (Phase 6)
+// ====================================================
+export const notificationsApi = {
+  getMyNotifications: () => api.get<ApiResponse<any[]>>('/notifications'),
+  getUnreadNotifications: () => api.get<ApiResponse<any[]>>('/notifications/unread'),
+  markAsRead: (id: number) => api.post<ApiResponse<void>>(`/notifications/${id}/read`),
+  markAllAsRead: () => api.post<ApiResponse<void>>('/notifications/read-all'),
 };
 
 export default api;

@@ -59,7 +59,18 @@ export default function ReportsPage() {
           <h1 className="page-title">Management Reports</h1>
           <p className="page-subtitle">Comprehensive analytics across CRM, Events, and Finance</p>
         </div>
-        <button className="btn btn-primary" onClick={() => window.print()}>Export PDF</button>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button className="btn btn-outline" onClick={() => window.print()}>Print / Save PDF</button>
+          <button className="btn btn-primary" onClick={() => {
+            const csv = `Metric,Value\nTotal Leads,${stats.totalLeads}\nNew Leads,${stats.newLeads}\nConverted Clients,${stats.totalClients}\nTotal Revenue,${finance.totalRevenue}\nTotal Expenses,${finance.totalExpenses}\nNet Profit,${finance.netProfit}`;
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Storyline_Report_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+          }}>Export CSV</button>
+        </div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '24px' }}>

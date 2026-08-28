@@ -48,4 +48,14 @@ public class RawMaterialController {
         rawMaterialService.deleteRawMaterial(id);
         return ApiResponse.success((Void) null, "Raw material deleted successfully");
     }
+
+    @PostMapping("/{id}/stock")
+    public ApiResponse<RawMaterialDto> updateStock(
+            @PathVariable Long id,
+            @RequestParam Double quantity,
+            @RequestParam String type,
+            @RequestParam(required = false) String reference,
+            @RequestParam(required = false) String notes) {
+        return ApiResponse.success("Stock updated successfully", rawMaterialService.updateStock(id, quantity, type, reference, notes));
+    }
 }

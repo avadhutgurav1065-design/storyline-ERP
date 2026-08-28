@@ -46,6 +46,9 @@ public class Invoice extends AuditableEntity {
     @Column(length = 2000)
     private String notes;
 
+    @Column(length = 100)
+    private String title;
+
     // Getters and Setters
     public String getInvoiceNumber() { return invoiceNumber; }
     public void setInvoiceNumber(String invoiceNumber) { this.invoiceNumber = invoiceNumber; }
@@ -71,4 +74,6 @@ public class Invoice extends AuditableEntity {
     public void setAmountPaid(BigDecimal amountPaid) { this.amountPaid = amountPaid; }
     public String getNotes() { return notes; }
     public void setNotes(String notes) { this.notes = notes; }
+    public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
 }

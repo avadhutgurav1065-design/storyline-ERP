@@ -1,162 +1,186 @@
 import { useState, useEffect } from 'react';
 import { inventoryApi } from '../../api/client';
+import { useNotification } from '../../context/NotificationContext';
 
 export default function RawMaterialsPage() {
   const [materials, setMaterials] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const { triggerNotification } = useNotification();
 
-  const [showModal, setShowModal] = useState(false);
-  const [formData, setFormData] = useState({
-    sku: '', name: '', unitOfMeasure: '', currentStock: '', minimumStock: ''
-  });
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [formData, setFormData] = useState({ sku: '', name: '', unitOfMeasure: 'pcs', minimumStock: '0' });
 
-  const fetchMaterials = async () => {
+  const [showStockModal, setShowStockModal] = useState(false);
+  const [selectedRm, setSelectedRm] = useState<any>(null);
+  const [stockData, setStockData] = useState({ quantity: '', reference: '', notes: '' });
+
+  const fetchData = async () => {
     setLoading(true);
     try {
-      const res = await inventoryApi.listRawMaterials();
-      setMaterials(res.data.data.content || []);
+      const res = await inventoryApi.listMaterials();
+      setMaterials(res.data.data || []);
     } catch (err) {
       console.error(err);
+      triggerNotification('Error', 'Failed to fetch raw materials', 'error');
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchMaterials();
+    fetchData();
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleAddMaterial = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const payload = {
+      await inventoryApi.createMaterial({
         ...formData,
-        currentStock: Number(formData.currentStock),
-        minimumStock: Number(formData.minimumStock)
-      };
-      
-      if ((formData as any).id) {
-        await inventoryApi.updateRawMaterial((formData as any).id, payload);
-      } else {
-        await inventoryApi.createRawMaterial(payload);
-      }
-      setShowModal(false);
-      setFormData({ sku: '', name: '', unitOfMeasure: '', currentStock: '', minimumStock: '' } as any);
-      fetchMaterials();
+        minimumStock: parseFloat(formData.minimumStock)
+      });
+      triggerNotification('Success', 'Raw material added', 'success');
+      setShowAddModal(false);
+      setFormData({ sku: '', name: '', unitOfMeasure: 'pcs', minimumStock: '0' });
+      fetchData();
     } catch (err) {
       console.error(err);
+      triggerNotification('Error', 'Failed to add raw material', 'error');
     }
   };
 
+  const handleAddStock = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedRm) return;
+    try {
+      await inventoryApi.addStock(selectedRm.id, {
+        quantity: parseFloat(stockData.quantity),
+        reference: stockData.reference,
+        notes: stockData.notes
+      });
+      triggerNotification('Success', 'Stock added successfully', 'success');
+      setShowStockModal(false);
+      setStockData({ quantity: '', reference: '', notes: '' });
+      fetchData();
+    } catch (err) {
+      console.error(err);
+      triggerNotification('Error', 'Failed to add stock', 'error');
+    }
+  };
+
+  if (loading) return <div style={{ padding: '20px' }}>Loading Raw Materials...</div>;
+
   return (
-    <div>
-      <div className="page-header">
+    <div className="page-container animate-fade-in">
+      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <h1 className="page-title">Raw Materials</h1>
-          <p className="page-subtitle">Track individual components, ribbons, baskets, and perishables</p>
+          <h1 className="page-title">📦 Raw Materials</h1>
+          <p className="page-subtitle">Manage inventory items for Hamper production</p>
         </div>
-        <button className="btn btn-primary" onClick={() => setShowModal(true)}>+ Add Material</button>
+        <button className="btn btn-primary" onClick={() => setShowAddModal(true)}>+ New Material</button>
       </div>
 
-      <div className="card" style={{ padding: 0 }}>
-        <div className="table-container" style={{ border: 'none' }}>
-          <table>
-            <thead>
-              <tr>
-                <th>SKU</th>
-                <th>Material Name</th>
-                <th>Unit of Measure</th>
-                <th>Current Stock</th>
-                <th>Min Stock</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                <tr><td colSpan={7} style={{ textAlign: 'center', padding: '40px' }}>Loading materials...</td></tr>
-              ) : materials.length === 0 ? (
-                <tr><td colSpan={7} style={{ textAlign: 'center', padding: '40px' }}>No raw materials found</td></tr>
-              ) : (
-                materials.map((m) => (
-                  <tr key={m.id}>
-                    <td><div style={{ fontWeight: 600 }}>{m.sku}</div></td>
-                    <td>{m.name}</td>
-                    <td>{m.unitOfMeasure}</td>
-                    <td>
-                      <div style={{ fontWeight: 600, color: m.currentStock <= m.minimumStock ? 'var(--danger)' : 'inherit' }}>
-                        {m.currentStock}
-                      </div>
-                    </td>
-                    <td>{m.minimumStock}</td>
-                    <td>
-                      {m.currentStock <= m.minimumStock ? (
-                        <span className="badge badge-danger">Low Stock</span>
-                      ) : (
-                        <span className="badge badge-success">In Stock</span>
-                      )}
-                    </td>
-                    <td>
-                      <button 
-                        className="btn btn-ghost btn-sm" 
-                        title="Edit"
-                        onClick={() => {
-                          setFormData({
-                            id: m.id,
-                            sku: m.sku,
-                            name: m.name,
-                            unitOfMeasure: m.unitOfMeasure,
-                            currentStock: m.currentStock?.toString() || '0',
-                            minimumStock: m.minimumStock?.toString() || '0'
-                          } as any);
-                          setShowModal(true);
-                        }}
-                      >
-                        ✏️
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+      <div className="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>SKU</th>
+              <th>Name</th>
+              <th>Unit</th>
+              <th>Current Stock</th>
+              <th>Min Stock</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {materials.length === 0 ? (
+              <tr><td colSpan={7} style={{ textAlign: 'center', padding: '20px' }}>No raw materials found.</td></tr>
+            ) : (
+              materials.map(rm => (
+                <tr key={rm.id}>
+                  <td style={{ fontWeight: 600 }}>{rm.sku}</td>
+                  <td>{rm.name}</td>
+                  <td>{rm.unitOfMeasure}</td>
+                  <td style={{ fontWeight: 'bold' }}>{rm.currentStock}</td>
+                  <td>{rm.minimumStock}</td>
+                  <td>
+                    {rm.currentStock <= rm.minimumStock ? (
+                      <span className="badge badge-danger">Low Stock</span>
+                    ) : (
+                      <span className="badge badge-success">OK</span>
+                    )}
+                  </td>
+                  <td>
+                    <button className="btn btn-outline btn-sm" onClick={() => {
+                      setSelectedRm(rm);
+                      setShowStockModal(true);
+                    }}>+ Add Stock</button>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
 
-      {/* Create/Edit Modal */}
-      {showModal && (
+      {showAddModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}>
-          <div className="card animate-fade-in" style={{ width: '100%', maxWidth: '500px', maxHeight: '90vh', overflowY: 'auto' }}>
+          <div className="card animate-fade-in" style={{ width: '100%', maxWidth: '400px' }}>
             <div className="card-header">
-              <div className="card-title">{(formData as any).id ? 'Edit Material' : 'Add Raw Material'}</div>
-              <button className="btn btn-ghost btn-sm" onClick={() => setShowModal(false)}>✕</button>
+              <div className="card-title">Add Raw Material</div>
+              <button className="btn btn-ghost btn-sm" onClick={() => setShowAddModal(false)}>✕</button>
             </div>
-            <form onSubmit={handleSubmit}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <form onSubmit={handleAddMaterial}>
+              <div className="form-group">
+                <label className="form-label">SKU *</label>
+                <input className="form-input" required value={formData.sku} onChange={e => setFormData({...formData, sku: e.target.value})} placeholder="e.g. RM-BOX-001" />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Name *</label>
+                <input className="form-input" required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="e.g. Cardboard Box" />
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
                 <div className="form-group">
-                  <label className="form-label">SKU *</label>
-                  <input className="form-input" required value={formData.sku} onChange={e => setFormData({...formData, sku: e.target.value})} placeholder="e.g. MAT-001" />
+                  <label className="form-label">Unit *</label>
+                  <input className="form-input" required value={formData.unitOfMeasure} onChange={e => setFormData({...formData, unitOfMeasure: e.target.value})} placeholder="pcs, kg, m" />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Name *</label>
-                  <input className="form-input" required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="e.g. Red Ribbon" />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Unit of Measure *</label>
-                  <input className="form-input" required value={formData.unitOfMeasure} onChange={e => setFormData({...formData, unitOfMeasure: e.target.value})} placeholder="e.g. meters, pcs" />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Current Stock *</label>
-                  <input type="number" className="form-input" required value={formData.currentStock} onChange={e => setFormData({...formData, currentStock: e.target.value})} />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Minimum Stock *</label>
-                  <input type="number" className="form-input" required value={formData.minimumStock} onChange={e => setFormData({...formData, minimumStock: e.target.value})} />
+                  <label className="form-label">Min Stock *</label>
+                  <input type="number" step="0.1" className="form-input" required value={formData.minimumStock} onChange={e => setFormData({...formData, minimumStock: e.target.value})} />
                 </div>
               </div>
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '20px' }}>
-                <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
-                <button type="submit" className="btn btn-primary">Save Material</button>
+                <button type="button" className="btn btn-secondary" onClick={() => setShowAddModal(false)}>Cancel</button>
+                <button type="submit" className="btn btn-primary">Save</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showStockModal && selectedRm && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}>
+          <div className="card animate-fade-in" style={{ width: '100%', maxWidth: '400px' }}>
+            <div className="card-header">
+              <div className="card-title">Add Stock: {selectedRm.name}</div>
+              <button className="btn btn-ghost btn-sm" onClick={() => setShowStockModal(false)}>✕</button>
+            </div>
+            <form onSubmit={handleAddStock}>
+              <div className="form-group">
+                <label className="form-label">Quantity to Add ({selectedRm.unitOfMeasure}) *</label>
+                <input type="number" step="0.1" className="form-input" required value={stockData.quantity} onChange={e => setStockData({...stockData, quantity: e.target.value})} />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Vendor / Reference</label>
+                <input className="form-input" value={stockData.reference} onChange={e => setStockData({...stockData, reference: e.target.value})} placeholder="PO-1234 or Vendor Name" />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Notes</label>
+                <input className="form-input" value={stockData.notes} onChange={e => setStockData({...stockData, notes: e.target.value})} />
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '20px' }}>
+                <button type="button" className="btn btn-secondary" onClick={() => setShowStockModal(false)}>Cancel</button>
+                <button type="submit" className="btn btn-primary">Update Stock</button>
               </div>
             </form>
           </div>
@@ -166,4 +190,3 @@ export default function RawMaterialsPage() {
     </div>
   );
 }
-

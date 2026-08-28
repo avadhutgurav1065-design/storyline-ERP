@@ -45,6 +45,9 @@ public class Event extends AuditableEntity {
     @Column(name = "event_head_id")
     private Long eventHeadId;
 
+    @Column(name = "budget")
+    private java.math.BigDecimal budget = java.math.BigDecimal.ZERO;
+
     // Getters and Setters
 
     public String getName() { return name; }
@@ -71,4 +74,6 @@ public class Event extends AuditableEntity {
     public void setAssignedTeamId(Long assignedTeamId) { this.assignedTeamId = assignedTeamId; }
     public Long getEventHeadId() { return eventHeadId; }
     public void setEventHeadId(Long eventHeadId) { this.eventHeadId = eventHeadId; }
+    public java.math.BigDecimal getBudget() { return budget; }
+    public void setBudget(java.math.BigDecimal budget) { this.budget = budget; }
 }

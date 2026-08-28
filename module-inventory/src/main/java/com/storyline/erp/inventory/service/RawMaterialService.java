@@ -14,9 +14,11 @@ import org.springframework.transaction.annotation.Transactional;
 public class RawMaterialService {
 
     private final RawMaterialRepository rawMaterialRepository;
+    private final com.storyline.erp.inventory.repository.StockTransactionRepository stockTransactionRepository;
 
-    public RawMaterialService(RawMaterialRepository rawMaterialRepository) {
+    public RawMaterialService(RawMaterialRepository rawMaterialRepository, com.storyline.erp.inventory.repository.StockTransactionRepository stockTransactionRepository) {
         this.rawMaterialRepository = rawMaterialRepository;
+        this.stockTransactionRepository = stockTransactionRepository;
     }
 
     public Page<RawMaterialDto> searchRawMaterials(String search, Pageable pageable) {
@@ -63,6 +65,38 @@ public class RawMaterialService {
     public void deleteRawMaterial(Long id) {
         RawMaterial rm = findById(id);
         rawMaterialRepository.delete(rm);
+    }
+
+    public RawMaterialDto updateStock(Long id, Double quantity, String type, String reference, String notes) {
+        RawMaterial rm = findById(id);
+        
+        if ("OUT".equalsIgnoreCase(type) && rm.getCurrentStock() < quantity) {
+            throw new RuntimeException("Insufficient stock. Available: " + rm.getCurrentStock());
+        }
+        
+        if ("IN".equalsIgnoreCase(type)) {
+            rm.setCurrentStock(rm.getCurrentStock() + quantity);
+        } else if ("OUT".equalsIgnoreCase(type)) {
+            rm.setCurrentStock(rm.getCurrentStock() - quantity);
+        } else if ("ADJUSTMENT".equalsIgnoreCase(type)) {
+            // quantity here is the change, e.g. -5 or +10
+            if (rm.getCurrentStock() + quantity < 0) {
+                throw new RuntimeException("Adjustment results in negative stock.");
+            }
+            rm.setCurrentStock(rm.getCurrentStock() + quantity);
+        }
+        
+        rawMaterialRepository.save(rm);
+        
+        com.storyline.erp.inventory.entity.StockTransaction tx = new com.storyline.erp.inventory.entity.StockTransaction();
+        tx.setRawMaterialId(rm.getId());
+        tx.setTransactionType(type.toUpperCase());
+        tx.setQuantity(Math.abs(quantity));
+        tx.setReference(reference);
+        tx.setNotes(notes);
+        stockTransactionRepository.save(tx);
+        
+        return mapToDto(rm);
     }
 
     private RawMaterial findById(Long id) {

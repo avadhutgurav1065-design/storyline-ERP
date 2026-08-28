@@ -14,5 +14,7 @@ public record PaymentDto(
         @NotNull(message = "Payment Date is required") LocalDate paymentDate,
         @NotNull(message = "Payment Method is required") String paymentMethod,
         String transactionId,
-        String notes
+        String notes,
+        Long eventId,
+        String receivedBy
 ) {}

@@ -15,10 +15,13 @@ import HampersPage from './features/inventory/HampersPage';
 import RawMaterialsPage from './features/inventory/RawMaterialsPage';
 import BomPage from './features/inventory/BomPage';
 import ManufacturingPage from './features/inventory/ManufacturingPage';
+import DispatchPage from './features/inventory/DispatchPage';
 import InvoicesPage from './features/finance/InvoicesPage';
 import ClientPaymentsPage from './features/finance/ClientPaymentsPage';
 import ExpensesPage from './features/finance/ExpensesPage';
-import ProfitLossPage from './features/finance/ProfitLossPage';
+import OverheadsPage from './features/finance/OverheadsPage';
+import FinanceDashboard from './features/finance/FinanceDashboard';
+import PettyCashPage from './features/finance/PettyCashPage';
 import ReportsPage from './features/reports/ReportsPage';
 import NotificationsPage from './features/notifications/NotificationsPage';
 import ActiveEventsPage from './features/events/ActiveEventsPage';
@@ -107,19 +110,21 @@ function AppRoutes() {
         <Route path="/tasks/team" element={<TasksPage filter="team" />} />
         <Route path="/tasks/all" element={<TasksPage filter="all" />} />
 
-        {/* Inventory & Hamper Placeholders (Phase 4) */}
+        {/* Inventory & Hamper (Phase 5) */}
         <Route path="/hampers" element={<HampersPage />} />
         <Route path="/raw-materials" element={<RawMaterialsPage />} />
         <Route path="/bom" element={<BomPage />} />
         <Route path="/manufacturing" element={<ManufacturingPage />} />
-        <Route path="/dispatch" element={<PlaceholderPage icon="🚚" title="Warehousing & Dispatch" description="Track product movement and logistics." phase="Phase 4 — Coming Soon" />} />
+        <Route path="/dispatch" element={<DispatchPage />} />
 
         {/* Finance (Phase 5) */}
         <Route path="/finance/invoices" element={<InvoicesPage />} />
         <Route path="/finance/client-payments" element={<ClientPaymentsPage />} />
         <Route path="/finance/vendor-payments" element={<ExpensesPage />} />
         <Route path="/finance/expenses" element={<ExpensesPage />} />
-        <Route path="/finance/profit-loss" element={<ProfitLossPage />} />
+        <Route path="/finance/overheads" element={<OverheadsPage />} />
+        <Route path="/finance/dashboard" element={<FinanceDashboard />} />
+        <Route path="/finance/petty-cash" element={<PettyCashPage />} />
 
         {/* System (Phase 6) */}
         <Route path="/reports" element={<ReportsPage />} />

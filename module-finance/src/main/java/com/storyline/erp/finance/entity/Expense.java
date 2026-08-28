@@ -30,7 +30,22 @@ public class Expense extends AuditableEntity {
     @Column(name = "payment_method")
     private String paymentMethod;
 
-    private String status = "PAID"; // PENDING, PAID, REJECTED
+    private String status = "PAID"; // PO_GENERATED, WORK_COMPLETED, APPROVED_FOR_PAYMENT, PARTIALLY_PAID, PAID, REJECTED
+
+    @Column(name = "po_number", unique = true)
+    private String poNumber;
+
+    @Column(name = "tax_amount")
+    private BigDecimal taxAmount = BigDecimal.ZERO;
+
+    @Column(name = "amount_paid")
+    private BigDecimal amountPaid = BigDecimal.ZERO;
+
+    @Column(name = "approval_notes")
+    private String approvalNotes;
+
+    @Column(name = "client_billable")
+    private Boolean clientBillable = false;
 
     // Getters and Setters
     public String getCategory() { return category; }
@@ -49,4 +64,14 @@ public class Expense extends AuditableEntity {
     public void setPaymentMethod(String paymentMethod) { this.paymentMethod = paymentMethod; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+    public String getPoNumber() { return poNumber; }
+    public void setPoNumber(String poNumber) { this.poNumber = poNumber; }
+    public BigDecimal getTaxAmount() { return taxAmount; }
+    public void setTaxAmount(BigDecimal taxAmount) { this.taxAmount = taxAmount; }
+    public BigDecimal getAmountPaid() { return amountPaid; }
+    public void setAmountPaid(BigDecimal amountPaid) { this.amountPaid = amountPaid; }
+    public String getApprovalNotes() { return approvalNotes; }
+    public void setApprovalNotes(String approvalNotes) { this.approvalNotes = approvalNotes; }
+    public Boolean getClientBillable() { return clientBillable; }
+    public void setClientBillable(Boolean clientBillable) { this.clientBillable = clientBillable; }
 }

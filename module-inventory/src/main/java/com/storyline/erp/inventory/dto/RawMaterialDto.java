@@ -10,5 +10,6 @@ public record RawMaterialDto(
         @NotBlank(message = "Name is required") String name,
         @NotBlank(message = "Unit of measure is required") String unitOfMeasure,
         @PositiveOrZero(message = "Current stock cannot be negative") Double currentStock,
-        @PositiveOrZero(message = "Minimum stock cannot be negative") Double minimumStock
+        @PositiveOrZero(message = "Minimum stock cannot be negative") Double minimumStock,
+        @PositiveOrZero(message = "Unit cost cannot be negative") Double unitCost
 ) {}

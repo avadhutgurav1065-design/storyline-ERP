@@ -75,21 +75,18 @@ const navigation: NavGroup[] = [
   {
     title: 'Hampers',
     items: [
-      { path: '/hampers', label: 'Products', icon: '🎁', roles: ['ADMIN', 'INVENTORY_MANAGER'] },
-      { path: '/bom', label: 'BOM', icon: '📐', roles: ['ADMIN', 'INVENTORY_MANAGER'] },
-      { path: '/manufacturing', label: 'Manufacturing', icon: '🏭', roles: ['ADMIN', 'INVENTORY_MANAGER'] },
+      { path: '/hampers', label: 'Products & BOM', icon: '🎁', roles: ['ADMIN', 'INVENTORY_MANAGER'] },
       { path: '/raw-materials', label: 'Raw Materials', icon: '📦', roles: ['ADMIN', 'INVENTORY_MANAGER'] },
-      { path: '/dispatch', label: 'Dispatch', icon: '🚚', roles: ['ADMIN', 'INVENTORY_MANAGER'] },
     ],
   },
   {
     title: 'Finance',
     items: [
-      { path: '/finance/invoices', label: 'Invoices', icon: '🧾', roles: ['ADMIN', 'FINANCE_MANAGER'] },
-      { path: '/finance/client-payments', label: 'Client Payments', icon: '💳', roles: ['ADMIN', 'FINANCE_MANAGER'] },
-      { path: '/finance/vendor-payments', label: 'Vendor Payments', icon: '💸', roles: ['ADMIN', 'FINANCE_MANAGER'] },
-      { path: '/finance/expenses', label: 'Expenses', icon: '🧮', roles: ['ADMIN', 'FINANCE_MANAGER'] },
-      { path: '/finance/profit-loss', label: 'Profit & Loss', icon: '📊', roles: ['ADMIN', 'FINANCE_MANAGER'] },
+      { path: '/finance/dashboard', label: 'CFO Dashboard', icon: '📈', roles: ['ADMIN', 'FINANCE_MANAGER'] },
+      { path: '/finance/invoices', label: 'Client Invoices', icon: '🧾', roles: ['ADMIN', 'FINANCE_MANAGER'] },
+      { path: '/finance/expenses', label: 'Vendor Bills', icon: '🛒', roles: ['ADMIN', 'FINANCE_MANAGER'] },
+      { path: '/finance/petty-cash', label: 'Petty Cash', icon: '💵', roles: ['ADMIN', 'FINANCE_MANAGER'] },
+      { path: '/finance/overheads', label: 'Company Overheads', icon: '🏢', roles: ['ADMIN', 'FINANCE_MANAGER'] },
     ],
   },
   {

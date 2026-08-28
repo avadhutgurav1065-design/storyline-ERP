@@ -15,5 +15,10 @@ public record ExpenseDto(
         Long eventId,
         Long vendorId,
         String paymentMethod,
-        String status
+        String status,
+        String poNumber,
+        BigDecimal taxAmount,
+        BigDecimal amountPaid,
+        String approvalNotes,
+        Boolean clientBillable
 ) {}

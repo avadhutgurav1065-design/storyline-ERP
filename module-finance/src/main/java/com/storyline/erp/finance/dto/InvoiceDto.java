@@ -19,5 +19,6 @@ public record InvoiceDto(
         @PositiveOrZero BigDecimal taxAmount,
         @PositiveOrZero BigDecimal grandTotal,
         @PositiveOrZero BigDecimal amountPaid,
-        String notes
+        String notes,
+        String title
 ) {}

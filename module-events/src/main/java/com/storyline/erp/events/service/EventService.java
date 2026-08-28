@@ -10,6 +10,8 @@ import com.storyline.erp.events.repository.TaskRepository;
 import com.storyline.erp.events.repository.VendorAssignmentRepository;
 import com.storyline.erp.events.repository.TeamAssignmentRepository;
 import com.storyline.erp.events.repository.EventDocumentRepository;
+import com.storyline.erp.common.event.NotificationEvent;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
@@ -30,16 +32,19 @@ public class EventService {
     private final VendorAssignmentRepository vendorAssignmentRepository;
     private final TeamAssignmentRepository teamAssignmentRepository;
     private final EventDocumentRepository eventDocumentRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     public EventService(EventRepository eventRepository, TaskRepository taskRepository, 
                         VendorAssignmentRepository vendorAssignmentRepository,
                         TeamAssignmentRepository teamAssignmentRepository,
-                        EventDocumentRepository eventDocumentRepository) {
+                        EventDocumentRepository eventDocumentRepository,
+                        ApplicationEventPublisher eventPublisher) {
         this.eventRepository = eventRepository;
         this.taskRepository = taskRepository;
         this.vendorAssignmentRepository = vendorAssignmentRepository;
         this.teamAssignmentRepository = teamAssignmentRepository;
         this.eventDocumentRepository = eventDocumentRepository;
+        this.eventPublisher = eventPublisher;
     }
 
     public Page<Event> listEvents(Pageable pageable) {
@@ -77,6 +82,9 @@ public class EventService {
     
     public Event updateEvent(Long id, Event updated) {
         Event event = eventRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Event not found"));
+        
+        boolean statusChanged = updated.getStatus() != null && !updated.getStatus().equals(event.getStatus());
+        
         event.setName(updated.getName());
         event.setStartDate(updated.getStartDate());
         event.setEndDate(updated.getEndDate());
@@ -87,7 +95,26 @@ public class EventService {
         event.setAssignedTeamId(updated.getAssignedTeamId());
         event.setEventHeadId(updated.getEventHeadId());
         event.setNotes(updated.getNotes());
-        return eventRepository.save(event);
+        event.setBudget(updated.getBudget());
+        
+        Event saved = eventRepository.save(event);
+        
+        if (statusChanged && updated.getNotes() != null && !updated.getNotes().isBlank()) {
+            // Notify Head
+            if (saved.getEventHeadId() != null) {
+                eventPublisher.publishEvent(new NotificationEvent(this, saved.getEventHeadId(), 
+                    "Event Status Problem: " + saved.getName(), 
+                    updated.getNotes(), 
+                    "EVENT_PROBLEM"));
+            }
+            // Notify Admin (ID 1 for now)
+            eventPublisher.publishEvent(new NotificationEvent(this, 1L, 
+                "Event Status Problem: " + saved.getName(), 
+                updated.getNotes(), 
+                "EVENT_PROBLEM"));
+        }
+        
+        return saved;
     }
 
     public EventDashboardDto getEventDashboard(Long id) {

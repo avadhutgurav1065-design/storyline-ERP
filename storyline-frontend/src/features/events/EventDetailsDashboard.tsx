@@ -7,9 +7,16 @@ export default function EventDetailsDashboard() {
   const navigate = useNavigate();
   const location = useLocation();
   const [data, setData] = useState<any>(null);
+  const [financeData, setFinanceData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   
   const [activeTab, setActiveTab] = useState('OVERVIEW');
+  const [showBudgetModal, setShowBudgetModal] = useState(false);
+  const [budgetForm, setBudgetForm] = useState({ budget: '' });
+
+  const [showHamperModal, setShowHamperModal] = useState(false);
+  const [hamperForm, setHamperForm] = useState({ productId: '', quantity: '1', reference: '' });
+  const [products, setProducts] = useState<any[]>([]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -42,8 +49,12 @@ export default function EventDetailsDashboard() {
   const fetchDashboard = async () => {
     setLoading(true);
     try {
-      const res = await eventsApi.getEventDashboard(Number(id));
+      const [res, financeRes] = await Promise.all([
+        eventsApi.getEventDashboard(Number(id)),
+        financeApi.getEventProfitAndLoss(Number(id))
+      ]);
       setData(res.data.data);
+      setFinanceData(financeRes.data.data);
     } catch (err) {
       console.error(err);
     } finally {
@@ -64,15 +75,17 @@ export default function EventDetailsDashboard() {
     // Fetch users for the assignment modal
     const fetchUsersAndVendors = async () => {
       try {
-        const { usersApi, vendorsApi } = await import('../../api/client');
-        const [usersRes, vendorsRes] = await Promise.all([
+        const { usersApi, vendorsApi, inventoryApi } = await import('../../api/client');
+        const [usersRes, vendorsRes, productsRes] = await Promise.all([
           usersApi.list(),
-          vendorsApi.list()
+          vendorsApi.list(),
+          inventoryApi ? inventoryApi.listProducts() : Promise.resolve({ data: { data: [] } })
         ]);
         const usersData = usersRes.data.data as any;
         const vendorsData = vendorsRes.data.data as any;
         setUsers(usersData.content || usersData || []);
         setVendors(vendorsData.content || vendorsData || []);
+        setProducts(productsRes.data.data || []);
       } catch (err) {
         console.error(err);
       }
@@ -175,6 +188,22 @@ export default function EventDetailsDashboard() {
     }
   };
 
+  const handleBudgetSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    try {
+      const { eventsApi } = await import('../../api/client');
+      await eventsApi.updateEvent(Number(id), {
+        ...data.event,
+        budget: parseFloat(budgetForm.budget) || 0
+      });
+      setShowBudgetModal(false);
+      fetchDashboard();
+    } catch (err) {
+      console.error(err);
+      alert("Failed to update budget");
+    }
+  };
+
   const updateTaskStatus = async (taskId: number, newStatus: string) => {
     try {
       const { tasksApi } = await import('../../api/client');
@@ -193,6 +222,28 @@ export default function EventDetailsDashboard() {
       fetchDashboard();
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const confirmVendorAssignment = async (va: any) => {
+    try {
+      const { vendorAssignmentsApi, financeApi } = await import('../../api/client');
+      await vendorAssignmentsApi.update(va.id, { ...va, event: {id: Number(id)}, vendor: {id: va.vendorId}, status: 'CONFIRMED' });
+      
+      await financeApi.createExpense({
+        category: 'VENDOR',
+        description: `Vendor PO for ${va.task} - Event: ${data?.event?.name}`,
+        amount: va.agreedAmount,
+        expenseDate: new Date().toISOString().split('T')[0],
+        eventId: Number(id),
+        vendorId: va.vendorId,
+        paymentMethod: 'BANK_TRANSFER',
+        status: 'PO_GENERATED'
+      });
+      fetchDashboard();
+    } catch (err) {
+      console.error(err);
+      alert("Failed to confirm vendor assignment and generate PO");
     }
   };
 
@@ -217,7 +268,7 @@ export default function EventDetailsDashboard() {
       </div>
 
       <div style={{ display: 'flex', gap: '15px', borderBottom: '2px solid var(--border)', marginBottom: '20px', overflowX: 'auto', paddingBottom: '5px' }}>
-        {['OVERVIEW', 'TEAM', 'CHECKLIST', 'VENDORS', 'DOCUMENTS'].map(tab => (
+        {['OVERVIEW', 'TEAM', 'CHECKLIST', 'VENDORS', 'DOCUMENTS', 'FINANCE'].map(tab => (
           <div 
             key={tab} 
             onClick={() => setActiveTab(tab)}
@@ -460,10 +511,18 @@ export default function EventDetailsDashboard() {
                     <div style={{ fontWeight: 600, fontSize: '1.1rem', marginBottom: '5px' }}>{vendorInfo?.name || `Vendor ID: ${va.vendorId}`}</div>
                     <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '5px' }}>📞 {vendorInfo?.phone || 'No Phone'}</div>
                     <div style={{ fontSize: '0.9rem', color: 'var(--primary)', fontWeight: 500 }}>Task: {va.task}</div>
-                    <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '8px' }}>Agreed Amt: ₹{va.agreedAmount}</div>
+                    <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '8px', display: 'flex', justifyContent: 'space-between' }}>
+                      <span>Agreed Amt: ₹{va.agreedAmount}</span>
+                      <span className={`badge ${va.status === 'CONFIRMED' ? 'badge-success' : 'badge-warning'}`}>{va.status || 'PENDING'}</span>
+                    </div>
                     <div style={{ marginTop: '15px', display: 'flex', gap: '10px' }}>
-                      <a href={`tel:${vendorInfo?.phone}`} className="btn btn-primary btn-sm" style={{ flex: 1, textAlign: 'center' }}>📞 Call Now</a>
-                      <a href={`https://wa.me/${vendorInfo?.phone?.replace(/\D/g, '')}`} target="_blank" rel="noreferrer" className="btn btn-outline btn-sm" style={{ flex: 1, textAlign: 'center' }}>💬 WhatsApp</a>
+                      <a href={`tel:${vendorInfo?.phone}`} className="btn btn-primary btn-sm" style={{ flex: 1, textAlign: 'center', padding: '6px' }}>📞 Call</a>
+                      <a href={`https://wa.me/${vendorInfo?.phone?.replace(/\D/g, '')}`} target="_blank" rel="noreferrer" className="btn btn-outline btn-sm" style={{ flex: 1, textAlign: 'center', padding: '6px' }}>💬 WhatsApp</a>
+                      {(!va.status || va.status === 'PENDING' || va.status === 'ASSIGNED') && (
+                        <button className="btn btn-success btn-sm" style={{ flex: 1.5 }} onClick={() => confirmVendorAssignment(va)}>
+                          ✓ Confirm & Generate PO
+                        </button>
+                      )}
                     </div>
                   </div>
                 );
@@ -514,6 +573,70 @@ export default function EventDetailsDashboard() {
           ) : (
             <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '40px' }}>No documents uploaded yet.</div>
           )}
+        </div>
+      )}
+
+      {activeTab === 'FINANCE' && financeData && (
+        <div className="animate-fade-in">
+          <div className="card" style={{ marginBottom: '20px', padding: '20px', background: 'var(--bg-main)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h3 style={{ margin: 0 }}>📊 Event Profit & Loss</h3>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button className="btn btn-primary btn-sm" onClick={() => setShowHamperModal(true)}>
+                  🎁 Issue Hamper
+                </button>
+                <button className="btn btn-outline btn-sm" onClick={() => {
+                  setBudgetForm({ budget: event.budget?.toString() || '0' });
+                  setShowBudgetModal(true);
+                }}>
+                  ✏️ Set Budget
+                </button>
+              </div>
+            </div>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '30px' }}>
+              
+              <div className="card" style={{ padding: '20px', borderLeft: '4px solid var(--secondary)' }}>
+                <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '8px' }}>Event Budget</div>
+                <div style={{ fontSize: '1.8rem', fontWeight: 'bold' }}>₹{event.budget?.toLocaleString() || 0}</div>
+                {event.budget > 0 && (
+                  <div style={{ fontSize: '0.85rem', color: financeData.directEventCosts > event.budget ? 'var(--danger)' : 'var(--success)', marginTop: '4px' }}>
+                    Variance: ₹{(event.budget - financeData.directEventCosts).toLocaleString()}
+                  </div>
+                )}
+              </div>
+
+              <div className="card" style={{ padding: '20px', borderLeft: '4px solid var(--primary)' }}>
+                <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '8px' }}>Total Invoiced / Collected</div>
+                <div style={{ fontSize: '1.8rem', fontWeight: 'bold' }}>₹{financeData.totalRevenue?.toLocaleString()}</div>
+                {financeData.outstandingReceivables > 0 && (
+                  <div style={{ fontSize: '0.85rem', color: 'var(--danger)', marginTop: '4px' }}>
+                    Outstanding: ₹{financeData.outstandingReceivables?.toLocaleString()}
+                  </div>
+                )}
+              </div>
+              
+              <div className="card" style={{ padding: '20px', borderLeft: '4px solid var(--warning)' }}>
+                <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '8px' }}>Direct Event Costs (Actual)</div>
+                <div style={{ fontSize: '1.8rem', fontWeight: 'bold' }}>₹{financeData.directEventCosts?.toLocaleString()}</div>
+              </div>
+              
+              <div className="card" style={{ padding: '20px', borderLeft: '4px solid var(--success)', background: 'var(--bg-secondary)' }}>
+                <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '8px' }}>Event Gross Margin</div>
+                <div style={{ fontSize: '1.8rem', fontWeight: 'bold', color: financeData.grossProfit >= 0 ? 'var(--success)' : 'var(--danger)' }}>
+                  ₹{financeData.grossProfit?.toLocaleString()}
+                </div>
+                <div style={{ fontSize: '0.85rem', color: 'var(--success)', marginTop: '4px' }}>
+                  {financeData.totalRevenue > 0 ? ((financeData.grossProfit / financeData.totalRevenue) * 100).toFixed(1) : 0}% Margin
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button className="btn btn-outline" onClick={() => navigate('/finance/invoices')}>Manage Invoices</button>
+              <button className="btn btn-primary" onClick={() => navigate('/finance/expenses')}>Log Event Expense</button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -740,6 +863,59 @@ export default function EventDetailsDashboard() {
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '20px' }}>
                 <button type="button" className="btn btn-secondary" onClick={() => setShowDocModal(false)}>Cancel</button>
                 <button type="submit" className="btn btn-primary" disabled={!docForm.fileUrl}>Upload</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showHamperModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}>
+          <div className="card animate-fade-in" style={{ width: '100%', maxWidth: '400px' }}>
+            <div className="card-header">
+              <div className="card-title">Issue Hamper to Event</div>
+              <button className="btn btn-ghost btn-sm" onClick={() => setShowHamperModal(false)}>✕</button>
+            </div>
+            <form onSubmit={handleHamperSubmit}>
+              <div className="form-group">
+                <label className="form-label">Select Hamper *</label>
+                <select 
+                  className="form-input" 
+                  required 
+                  value={hamperForm.productId} 
+                  onChange={e => setHamperForm({...hamperForm, productId: e.target.value})}
+                >
+                  <option value="">-- Choose a Hamper --</option>
+                  {products.map(p => (
+                    <option key={p.id} value={p.id} style={{ color: 'black', background: 'white' }}>
+                      {p.name} (Stock: {p.currentStock})
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Quantity *</label>
+                <input 
+                  type="number" 
+                  className="form-input" 
+                  required 
+                  min="1"
+                  value={hamperForm.quantity} 
+                  onChange={e => setHamperForm({...hamperForm, quantity: e.target.value})} 
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Reference Note</label>
+                <input 
+                  className="form-input" 
+                  value={hamperForm.reference} 
+                  onChange={e => setHamperForm({...hamperForm, reference: e.target.value})} 
+                  placeholder="e.g., Client Welcome Kit" 
+                />
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '20px' }}>
+                <button type="button" className="btn btn-secondary" onClick={() => setShowHamperModal(false)}>Cancel</button>
+                <button type="submit" className="btn btn-primary">Issue & Charge Cost</button>
               </div>
             </form>
           </div>
