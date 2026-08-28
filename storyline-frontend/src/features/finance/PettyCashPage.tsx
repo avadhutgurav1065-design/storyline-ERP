@@ -46,7 +46,7 @@ export default function PettyCashPage() {
       await financeApi.recordPettyCashTransaction({
         ...formData,
         amount: parseFloat(formData.amount),
-        recordedBy: user?.name || 'Unknown'
+        recordedBy: (user as any)?.username || 'Unknown'
       });
       triggerNotification('Success', 'Transaction recorded', 'success');
       setShowModal(false);

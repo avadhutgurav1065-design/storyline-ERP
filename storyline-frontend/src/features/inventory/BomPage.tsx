@@ -14,15 +14,15 @@ export default function BomPage() {
     const fetchProducts = async () => {
       try {
         const res = await inventoryApi.listProducts();
-        setProducts(res.data.data.content || []);
+        setProducts(res.data.data?.content || res.data.data || []);
       } catch (err) {
         console.error(err);
       }
     };
     const fetchMaterials = async () => {
       try {
-        const res = await inventoryApi.listRawMaterials();
-        setMaterials(res.data.data.content || []);
+        const res = await inventoryApi.listMaterials();
+        setMaterials(res.data.data?.content || res.data.data || []);
       } catch (err) {
         console.error(err);
       }
@@ -33,7 +33,7 @@ export default function BomPage() {
 
   const fetchBom = async () => {
     try {
-      const res = await inventoryApi.getProductBom(selectedProductId!);
+      const res = await inventoryApi.getBom(selectedProductId!);
       setBomItems(res.data.data || []);
     } catch (err) {
       console.error(err);
@@ -44,14 +44,10 @@ export default function BomPage() {
     e.preventDefault();
     if (!selectedProductId) return;
     try {
-      const payload = [
-        ...bomItems,
-        {
-          rawMaterialId: Number(formData.rawMaterialId),
-          quantity: Number(formData.quantity)
-        }
-      ];
-      await inventoryApi.updateProductBom(selectedProductId, payload);
+      await inventoryApi.addBomItem(selectedProductId, {
+        rawMaterialId: Number(formData.rawMaterialId),
+        quantity: Number(formData.quantity)
+      });
       setShowModal(false);
       setFormData({ rawMaterialId: '', quantity: '' });
       fetchBom();

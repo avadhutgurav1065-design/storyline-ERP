@@ -1,6 +1,6 @@
 import { useState, useEffect, type FormEvent } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { eventsApi } from '../../api/client';
+import { eventsApi, financeApi } from '../../api/client';
 
 export default function EventDetailsDashboard() {
   const { id } = useParams<{ id: string }>();
@@ -114,6 +114,24 @@ export default function EventDetailsDashboard() {
       }
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const handleHamperSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    try {
+      const { inventoryApi } = await import('../../api/client');
+      await inventoryApi.issueHamper(Number(hamperForm.productId), { 
+        eventId: Number(id), 
+        quantity: Number(hamperForm.quantity),
+        reference: hamperForm.reference
+      });
+      setShowHamperModal(false);
+      setHamperForm({ productId: '', quantity: '1', reference: '' });
+      alert("Hamper issued to event successfully.");
+    } catch (err) {
+      console.error(err);
+      alert("Failed to issue hamper.");
     }
   };
 

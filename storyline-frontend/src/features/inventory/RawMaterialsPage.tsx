@@ -54,6 +54,7 @@ export default function RawMaterialsPage() {
     try {
       await inventoryApi.addStock(selectedRm.id, {
         quantity: parseFloat(stockData.quantity),
+        type: 'IN',
         reference: stockData.reference,
         notes: stockData.notes
       });

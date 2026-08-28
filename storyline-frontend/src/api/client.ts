@@ -143,16 +143,16 @@ export const settingsApi = {
 // --- Inventory API ---
 export const inventoryApi = {
   // Products / Hampers
-  listProducts: () => api.get<ApiResponse<any[]>>('/inventory/products'),
+  listProducts: (params?: any) => api.get<ApiResponse<any>>('/inventory/products', { params }),
   createProduct: (data: any) => api.post<ApiResponse<any>>('/inventory/products', data),
   updateProduct: (id: number, data: any) => api.put<ApiResponse<any>>(`/inventory/products/${id}`, data),
   
   // Raw Materials
-  listMaterials: () => api.get<ApiResponse<any[]>>('/inventory/materials'),
-  createMaterial: (data: any) => api.post<ApiResponse<any>>('/inventory/materials', data),
-  updateMaterial: (id: number, data: any) => api.put<ApiResponse<any>>(`/inventory/materials/${id}`, data),
-  addStock: (id: number, payload: { quantity: number, reference?: string, notes?: string }) => 
-    api.post<ApiResponse<void>>(`/inventory/materials/${id}/add-stock`, payload),
+  listMaterials: (params?: any) => api.get<ApiResponse<any>>('/inventory/raw-materials', { params }),
+  createMaterial: (data: any) => api.post<ApiResponse<any>>('/inventory/raw-materials', data),
+  updateMaterial: (id: number, data: any) => api.put<ApiResponse<any>>(`/inventory/raw-materials/${id}`, data),
+  addStock: (id: number, payload: { quantity: number, type: string, reference?: string, notes?: string }) => 
+    api.post<ApiResponse<any>>(`/inventory/raw-materials/${id}/stock`, null, { params: payload }),
 
   // Bill of Materials (BOM)
   getBom: (productId: number) => api.get<ApiResponse<any[]>>(`/inventory/products/${productId}/bom`),
@@ -162,10 +162,14 @@ export const inventoryApi = {
 
   // Production
   produceHamper: (productId: number, payload: { quantity: number, reference?: string }) =>
-    api.post<ApiResponse<void>>(`/inventory/products/${productId}/produce`, payload),
+    api.post<ApiResponse<void>>(`/inventory/products/${productId}/produce`, null, { params: payload }),
     
   issueHamper: (productId: number, payload: { quantity: number, eventId: number, reference?: string }) =>
-    api.post<ApiResponse<void>>(`/inventory/products/${productId}/issue`, payload)
+    api.post<ApiResponse<void>>(`/inventory/products/${productId}/issue`, null, { params: payload }),
+    
+  // Dispatches
+  listDispatches: (params?: any) => api.get<ApiResponse<any>>('/inventory/dispatch', { params }),
+  dispatchToEvent: (data: any) => api.post<ApiResponse<any>>('/inventory/dispatch/event', data)
 };
 
 export const tasksApi = {

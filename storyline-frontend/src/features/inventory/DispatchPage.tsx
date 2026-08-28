@@ -21,8 +21,8 @@ export default function DispatchPage() {
           eventsApi.listEvents({ size: 100 }), // Get all active events ideally
           inventoryApi.listProducts({ size: 100 })
         ]);
-        setEvents(eventsRes.data.data.content || []);
-        setProducts(productsRes.data.data.content || []);
+        setEvents(eventsRes.data.data?.content || eventsRes.data.data || []);
+        setProducts(productsRes.data.data?.content || productsRes.data.data || []);
       } catch (err) {
         console.error(err);
       }
@@ -50,7 +50,7 @@ export default function DispatchPage() {
       
       // Refresh product stock display
       const productsRes = await inventoryApi.listProducts({ size: 100 });
-      setProducts(productsRes.data.data.content || []);
+      setProducts(productsRes.data.data?.content || productsRes.data.data || []);
       
     } catch (err: any) {
       setMessage(`Error: ${err.response?.data?.message || err.message}`);

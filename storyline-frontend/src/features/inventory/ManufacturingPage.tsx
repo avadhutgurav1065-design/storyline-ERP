@@ -12,7 +12,7 @@ export default function ManufacturingPage() {
     const fetchProducts = async () => {
       try {
         const res = await inventoryApi.listProducts();
-        setProducts(res.data.data.content || []);
+        setProducts(res.data.data?.content || res.data.data || []);
       } catch (err) {
         console.error(err);
       }
@@ -25,9 +25,8 @@ export default function ManufacturingPage() {
     setLoading(true);
     setMessage('');
     try {
-      await inventoryApi.processManufactureBatch({
-        productId: Number(selectedProductId),
-        quantityToManufacture: Number(quantity)
+      await inventoryApi.produceHamper(Number(selectedProductId), {
+        quantity: Number(quantity)
       });
       setMessage('Manufacturing batch processed successfully! Raw materials deducted and product stock increased.');
       setQuantity('1');
