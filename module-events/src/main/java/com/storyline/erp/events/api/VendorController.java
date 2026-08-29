@@ -4,11 +4,13 @@ import com.storyline.erp.common.dto.ApiResponse;
 import com.storyline.erp.events.entity.Vendor;
 import com.storyline.erp.events.service.VendorService;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/vendors")
+@PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_EVENT_MANAGER')")
 public class VendorController {
 
     private final VendorService vendorService;

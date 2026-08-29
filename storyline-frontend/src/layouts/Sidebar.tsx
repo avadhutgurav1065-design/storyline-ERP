@@ -30,9 +30,10 @@ const navigation: NavGroup[] = [
   {
     title: 'CRM',
     items: [
-      { path: '/leads', label: 'Leads', icon: '📋', roles: ['ADMIN', 'EVENT_MANAGER'] },
-      { path: '/clients', label: 'Clients', icon: '👥', roles: ['ADMIN', 'EVENT_MANAGER'] },
-      { path: '/followups', label: 'Follow-ups', icon: '📞', roles: ['ADMIN', 'EVENT_MANAGER'] },
+      { path: '/crm', label: 'CRM Dashboard', icon: '📊', roles: ['ADMIN', 'EVENT_MANAGER'] },
+      { path: '/crm/leads', label: 'Leads', icon: '📋', roles: ['ADMIN', 'EVENT_MANAGER'] },
+      { path: '/crm/clients', label: 'Clients', icon: '👥', roles: ['ADMIN', 'EVENT_MANAGER'] },
+      { path: '/crm/followups', label: 'Follow-ups', icon: '📞', roles: ['ADMIN', 'EVENT_MANAGER'] },
     ],
   },
   {
@@ -45,9 +46,10 @@ const navigation: NavGroup[] = [
   {
     title: 'Events',
     items: [
-      { path: '/events', label: 'All Events', icon: '🎪' },
-      { path: '/events/active', label: 'Active Events', icon: '🟢' },
-      { path: '/events/calendar', label: 'Calendar', icon: '📅' },
+      { path: '/events', label: 'All Events', icon: '🗓️', roles: ['ADMIN', 'EVENT_MANAGER', 'EVENT_HEAD'] },
+      { path: '/events/active', label: 'Active Events', icon: '🔥', roles: ['ADMIN', 'EVENT_MANAGER', 'EVENT_HEAD'] },
+      { path: '/events/my-assignments', label: 'My Assigned Events', icon: '🎯', roles: ['TEAM_MEMBER', 'FREELANCER'] },
+      { path: '/events/calendar', icon: '📅', label: 'Calendar', roles: ['ADMIN', 'EVENT_MANAGER'] },
     ],
   },
   {

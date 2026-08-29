@@ -164,6 +164,23 @@ export default function UserManagementPage() {
                         >
                           {user.active ? '🚫' : '✅'}
                         </button>
+                        <button
+                          className="btn btn-ghost btn-sm"
+                          title="Remove User"
+                          style={{ color: '#ef4444' }}
+                          onClick={async () => {
+                            if (window.confirm(`Are you sure you want to completely remove user ${user.fullName}?`)) {
+                              try {
+                                await usersApi.delete(user.id);
+                                fetchUsers();
+                              } catch(err) {
+                                console.error('Failed to delete user:', err);
+                              }
+                            }
+                          }}
+                        >
+                          🗑️
+                        </button>
                       </div>
                     </td>
                   </tr>

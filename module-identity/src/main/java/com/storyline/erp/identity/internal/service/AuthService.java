@@ -152,6 +152,50 @@ public class AuthService {
         return mapToUserResponse(user);
     }
 
+    /**
+     * Update the current authenticated user's profile.
+     */
+    public UserResponse updateProfile(Long userId, UpdateProfileRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
+        
+        if (request.getFullName() != null) {
+            user.setFullName(request.getFullName());
+        }
+        if (request.getPhone() != null) {
+            user.setPhone(request.getPhone());
+        }
+        if (request.getAvatarUrl() != null) {
+            user.setAvatarUrl(request.getAvatarUrl());
+        }
+        if (request.getThemePreference() != null) {
+            user.setThemePreference(request.getThemePreference());
+        }
+        if (request.getEmailNotifications() != null) {
+            user.setEmailNotifications(request.getEmailNotifications());
+        }
+        if (request.getPushNotifications() != null) {
+            user.setPushNotifications(request.getPushNotifications());
+        }
+        if (request.getAddress() != null) {
+            user.setAddress(request.getAddress());
+        }
+        if (request.getEmergencyContactName() != null) {
+            user.setEmergencyContactName(request.getEmergencyContactName());
+        }
+        if (request.getEmergencyContactPhone() != null) {
+            user.setEmergencyContactPhone(request.getEmergencyContactPhone());
+        }
+        if (request.getEmployeeId() != null) {
+            user.setEmployeeId(request.getEmployeeId());
+        }
+
+        user = userRepository.save(user);
+        log.info("Profile updated for user: {}", user.getEmail());
+        
+        return mapToUserResponse(user);
+    }
+
     private UserResponse mapToUserResponse(User user) {
         Set<String> roles = user.getRoles().stream()
                 .map(Role::getName)
@@ -169,6 +213,13 @@ public class AuthService {
                 .fullName(user.getFullName())
                 .phone(user.getPhone())
                 .avatarUrl(user.getAvatarUrl())
+                .themePreference(user.getThemePreference())
+                .emailNotifications(user.isEmailNotifications())
+                .pushNotifications(user.isPushNotifications())
+                .address(user.getAddress())
+                .emergencyContactName(user.getEmergencyContactName())
+                .emergencyContactPhone(user.getEmergencyContactPhone())
+                .employeeId(user.getEmployeeId())
                 .active(user.isActive())
                 .roles(roles)
                 .permissions(permissions)

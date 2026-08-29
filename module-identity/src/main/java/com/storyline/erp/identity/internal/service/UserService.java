@@ -156,6 +156,17 @@ public class UserService {
         return mapToUserResponse(savedUser);
     }
 
+    /**
+     * Delete a user completely.
+     */
+    public void deleteUser(Long id) {
+        if (!userRepository.existsById(id)) {
+            throw new ResourceNotFoundException("User", "id", id);
+        }
+        userRepository.deleteById(id);
+        log.info("Deleted user with ID: {}", id);
+    }
+
     private UserResponse mapToUserResponse(User user) {
         Set<String> roles = user.getRoles().stream()
                 .map(Role::getName)

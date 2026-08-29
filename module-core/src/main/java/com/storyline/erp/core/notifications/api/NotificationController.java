@@ -1,6 +1,6 @@
 package com.storyline.erp.core.notifications.api;
 
-import com.storyline.erp.core.dto.ApiResponse;
+import com.storyline.erp.common.dto.ApiResponse;
 import com.storyline.erp.core.notifications.entity.Notification;
 import com.storyline.erp.core.notifications.service.NotificationService;
 import lombok.RequiredArgsConstructor;

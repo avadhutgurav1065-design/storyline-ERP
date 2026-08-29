@@ -105,17 +105,17 @@ export default function TasksPage({ filter }: { filter: 'my' | 'team' | 'all' })
         </button>
       </div>
 
-      <div className="card" style={{ padding: 0 }}>
-        <div className="table-container" style={{ border: 'none' }}>
-          <table>
+      <div className="card" style={{ padding: 0, border: 'none', background: 'transparent' }}>
+        <div style={{ overflowX: 'auto' }}>
+          <table className="interactive-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr>
-                <th>Task Title</th>
-                <th>Assignee</th>
-                <th>Event</th>
-                <th>Priority</th>
-                <th>Status</th>
-                <th>Actions</th>
+                <th style={{ padding: '16px', textAlign: 'left', color: 'var(--text-secondary)', fontWeight: 600, borderBottom: '1px solid var(--border-color)' }}>Task Title</th>
+                <th style={{ padding: '16px', textAlign: 'left', color: 'var(--text-secondary)', fontWeight: 600, borderBottom: '1px solid var(--border-color)' }}>Assignee</th>
+                <th style={{ padding: '16px', textAlign: 'left', color: 'var(--text-secondary)', fontWeight: 600, borderBottom: '1px solid var(--border-color)' }}>Event</th>
+                <th style={{ padding: '16px', textAlign: 'left', color: 'var(--text-secondary)', fontWeight: 600, borderBottom: '1px solid var(--border-color)' }}>Priority</th>
+                <th style={{ padding: '16px', textAlign: 'left', color: 'var(--text-secondary)', fontWeight: 600, borderBottom: '1px solid var(--border-color)' }}>Status</th>
+                <th style={{ padding: '16px', textAlign: 'right', color: 'var(--text-secondary)', fontWeight: 600, borderBottom: '1px solid var(--border-color)' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -126,41 +126,44 @@ export default function TasksPage({ filter }: { filter: 'my' | 'team' | 'all' })
               ) : (
                 tasks.map((task) => {
                   const assignee = usersMap[task.assigneeId];
+                  const avatarColor = assignee ? ['#E0F2FE', '#FEF08A', '#BBF7D0', '#FCE7F3'][assignee.id % 4] : '#F3F4F6';
+                  const textColor = assignee ? ['#0284C7', '#854D0E', '#166534', '#DB2777'][assignee.id % 4] : '#9CA3AF';
+
                   return (
-                  <tr key={task.id} style={{ borderLeft: task.status === 'BLOCKED' ? '4px solid #ef4444' : 'none' }}>
-                    <td data-label="Task Title">
-                      <div style={{ fontWeight: 600 }}>{task.title}</div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{task.description || '—'}</div>
+                  <tr key={task.id} className="hover-row" style={{ background: 'var(--bg-card)', borderBottom: '1px solid var(--border-color)' }}>
+                    <td style={{ padding: '16px' }} data-label="Task Title">
+                      <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{task.title}</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>{task.description || '—'}</div>
                     </td>
-                    <td data-label="Assignee">
+                    <td style={{ padding: '16px' }} data-label="Assignee">
                       {assignee ? (
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--primary-500)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 600 }}>
+                          <div className="avatar" style={{ background: avatarColor, color: textColor }}>
                             {getInitials(assignee.fullName)}
                           </div>
-                          <span style={{ fontSize: '0.85rem' }}>{assignee.fullName}</span>
+                          <span style={{ fontSize: '0.85rem', fontWeight: 500 }}>{assignee.fullName}</span>
                         </div>
                       ) : (
                         <span style={{ color: 'var(--text-muted)', fontStyle: 'italic', fontSize: '0.85rem' }}>Unassigned</span>
                       )}
                     </td>
-                    <td data-label="Event">{task.event?.name || '—'}</td>
-                    <td data-label="Priority">
-                      <span className={`badge ${
-                        task.priority === 'HIGH' ? 'badge-danger' : 
-                        task.priority === 'MEDIUM' ? 'badge-warning' : 'badge-info'
+                    <td style={{ padding: '16px', color: 'var(--text-secondary)', fontSize: '0.9rem' }} data-label="Event">{task.event?.name || '—'}</td>
+                    <td style={{ padding: '16px' }} data-label="Priority">
+                      <span className={`badge-pastel ${
+                        task.priority === 'HIGH' ? 'red' : 
+                        task.priority === 'MEDIUM' ? 'orange' : 'blue'
                       }`}>
                         {task.priority}
                       </span>
                     </td>
-                    <td data-label="Status">
+                    <td style={{ padding: '16px' }} data-label="Status">
                       <select 
-                        className={`form-input badge ${
-                          task.status === 'COMPLETED' ? 'badge-success' : 
-                          task.status === 'BLOCKED' ? 'badge-danger' :
-                          task.status === 'IN_PROGRESS' ? 'badge-warning' : 'badge-secondary'
+                        className={`badge-pastel ${
+                          task.status === 'COMPLETED' ? 'green' : 
+                          task.status === 'BLOCKED' ? 'red' :
+                          task.status === 'IN_PROGRESS' ? 'orange' : 'gray'
                         }`}
-                        style={{ padding: '4px 24px 4px 8px', fontSize: '0.75rem', height: 'auto' }}
+                        style={{ padding: '4px 12px', fontSize: '0.75rem', border: 'none', cursor: 'pointer', appearance: 'none' }}
                         value={task.status}
                         onChange={(e) => handleStatusChange(task.id, e.target.value)}
                       >
@@ -170,9 +173,9 @@ export default function TasksPage({ filter }: { filter: 'my' | 'team' | 'all' })
                         <option value="BLOCKED">BLOCKED</option>
                       </select>
                     </td>
-                    <td data-label="Actions">
-                      <button className="btn btn-outline" style={{ padding: '4px 8px', fontSize: '0.75rem' }} onClick={() => openTaskModal(task)}>
-                        Details & Updates
+                    <td style={{ padding: '16px', textAlign: 'right' }} data-label="Actions">
+                      <button className="btn btn-ghost btn-sm" onClick={() => openTaskModal(task)}>
+                        Details
                       </button>
                     </td>
                   </tr>
@@ -186,13 +189,13 @@ export default function TasksPage({ filter }: { filter: 'my' | 'team' | 'all' })
       {/* Task Details & Update Modal */}
       {selectedTask && (
         <div className="modal-overlay" onClick={() => setSelectedTask(null)} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ backgroundColor: '#ffffff', maxWidth: '500px', width: '90%', padding: '32px', borderRadius: '16px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
-            <h2 style={{ marginTop: 0, marginBottom: '8px', color: '#111827', fontSize: '1.25rem' }}>{selectedTask.title}</h2>
+          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ backgroundColor: 'var(--bg-card)', maxWidth: '500px', width: '90%', padding: '32px', borderRadius: '16px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
+            <h2 style={{ marginTop: 0, marginBottom: '8px', color: 'var(--text-primary)', fontSize: '1.25rem' }}>{selectedTask.title}</h2>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '24px' }}>{selectedTask.description}</p>
             
             <form onSubmit={submitTaskUpdate}>
               <div className="form-group" style={{ marginBottom: '16px' }}>
-                <label className="form-label" style={{ display: 'block', marginBottom: '8px', fontWeight: 500, color: '#374151' }}>Task Status</label>
+                <label className="form-label" style={{ display: 'block', marginBottom: '8px', fontWeight: 500, color: 'var(--text-secondary)' }}>Task Status</label>
                 <select 
                   className="form-input"
                   value={statusUpdate}
@@ -207,7 +210,7 @@ export default function TasksPage({ filter }: { filter: 'my' | 'team' | 'all' })
               </div>
 
               <div className="form-group" style={{ marginBottom: '24px' }}>
-                <label className="form-label" style={{ display: 'block', marginBottom: '8px', fontWeight: 500, color: '#374151' }}>
+                <label className="form-label" style={{ display: 'block', marginBottom: '8px', fontWeight: 500, color: 'var(--text-secondary)' }}>
                   Problem Details / Updates
                 </label>
                 <textarea 

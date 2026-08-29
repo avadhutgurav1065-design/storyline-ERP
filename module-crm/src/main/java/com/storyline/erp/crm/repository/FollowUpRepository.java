@@ -11,6 +11,8 @@ public interface FollowUpRepository extends JpaRepository<FollowUp, Long> {
     
     List<FollowUp> findByClientIdOrderByInteractionDateDesc(Long clientId);
     
+    List<FollowUp> findByClientIdOrLeadIdOrderByInteractionDateDesc(Long clientId, Long leadId);
+    
     List<FollowUp> findByNextFollowUpDateBetweenAndPerformedByUserId(
             LocalDateTime start, LocalDateTime end, Long userId);
 }

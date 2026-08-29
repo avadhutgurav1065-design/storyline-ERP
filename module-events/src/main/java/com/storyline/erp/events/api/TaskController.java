@@ -4,11 +4,13 @@ import com.storyline.erp.common.dto.ApiResponse;
 import com.storyline.erp.events.entity.Task;
 import com.storyline.erp.events.service.TaskService;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/tasks")
+@PreAuthorize("isAuthenticated()") // Service layer handles specific access
 public class TaskController {
 
     private final TaskService taskService;

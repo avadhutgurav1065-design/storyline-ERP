@@ -16,5 +16,9 @@ public record LeadDto(
         BigDecimal budget,
         LeadStatus status,
         String source,
-        Long assignedToUserId
+        Long assignedToUserId,
+        String requirements,
+        String eventLocation,
+        String lostReason,
+        Long existingClientId
 ) {}

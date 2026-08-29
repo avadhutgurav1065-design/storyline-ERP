@@ -32,6 +32,9 @@ public class Client extends AuditableEntity {
     @Column(name = "converted_from_lead_id")
     private Long convertedFromLeadId;
 
+    @Column(name = "assigned_to_user_id")
+    private Long assignedToUserId;
+
     // Getters and Setters
 
     public String getName() { return name; }
@@ -52,4 +55,6 @@ public class Client extends AuditableEntity {
     public void setDescription(String description) { this.description = description; }
     public Long getConvertedFromLeadId() { return convertedFromLeadId; }
     public void setConvertedFromLeadId(Long convertedFromLeadId) { this.convertedFromLeadId = convertedFromLeadId; }
+    public Long getAssignedToUserId() { return assignedToUserId; }
+    public void setAssignedToUserId(Long assignedToUserId) { this.assignedToUserId = assignedToUserId; }
 }

@@ -8,6 +8,7 @@ interface AuthContextType {
   isLoading: boolean;
   login: (credentials: LoginRequest) => Promise<void>;
   logout: () => void;
+  refreshUser: () => Promise<void>;
   hasRole: (role: string) => boolean;
   hasPermission: (permission: string) => boolean;
 }
@@ -33,6 +34,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(false);
   }, []);
 
+  // Apply theme when user data changes
+  useEffect(() => {
+    if (user?.themePreference) {
+      if (user.themePreference === 'dark' || (user.themePreference === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      } else {
+        document.documentElement.removeAttribute('data-theme');
+      }
+    }
+  }, [user?.themePreference]);
+
   const login = async (credentials: LoginRequest) => {
     const response = await authApi.login(credentials);
     const { accessToken, refreshToken, user: userData } = response.data.data;
@@ -51,6 +63,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   };
 
+  const refreshUser = async () => {
+    try {
+      const response = await authApi.me();
+      const userData = response.data.data;
+      localStorage.setItem('user', JSON.stringify(userData));
+      setUser(userData);
+    } catch (error) {
+      console.error("Failed to refresh user data", error);
+    }
+  };
+
   const hasRole = (role: string): boolean => {
     return user?.roles?.includes(role) ?? false;
   };
@@ -67,6 +90,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isLoading,
         login,
         logout,
+        refreshUser,
         hasRole,
         hasPermission,
       }}

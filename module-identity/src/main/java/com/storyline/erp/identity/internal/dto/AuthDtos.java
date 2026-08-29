@@ -96,6 +96,29 @@ public class AuthDtos {
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
+    public static class UpdateProfileRequest {
+        @Size(max = 100, message = "Full name must not exceed 100 characters")
+        private String fullName;
+
+        @Size(max = 20, message = "Phone must not exceed 20 characters")
+        private String phone;
+
+        private String avatarUrl;
+        
+        private String themePreference;
+        private Boolean emailNotifications;
+        private Boolean pushNotifications;
+        
+        private String address;
+        private String emergencyContactName;
+        private String emergencyContactPhone;
+        private String employeeId;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class ChangePasswordRequest {
         @NotBlank(message = "Current password is required")
         private String currentPassword;
@@ -116,6 +139,13 @@ public class AuthDtos {
         private String fullName;
         private String phone;
         private String avatarUrl;
+        private String themePreference;
+        private boolean emailNotifications;
+        private boolean pushNotifications;
+        private String address;
+        private String emergencyContactName;
+        private String emergencyContactPhone;
+        private String employeeId;
         private boolean active;
         private Set<String> roles;
         private Set<String> permissions;

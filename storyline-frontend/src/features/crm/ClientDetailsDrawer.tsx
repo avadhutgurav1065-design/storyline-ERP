@@ -19,6 +19,7 @@ export default function ClientDetailsDrawer({ clientId, onClose, onUpdate }: Cli
     nextFollowUpDate: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCreatingOpportunity, setIsCreatingOpportunity] = useState(false);
 
   useEffect(() => {
     fetchClientData();
@@ -31,21 +32,9 @@ export default function ClientDetailsDrawer({ clientId, onClose, onUpdate }: Cli
       const clientData = clientRes.data.data;
       setClient(clientData);
 
-      // Fetch client follow ups
+      // Fetch client follow ups (Backend now merges lead history natively)
       const clientFollowUpsRes = await crmApi.getClientFollowUps(clientId).catch(() => ({ data: { data: [] } }));
-      let allFollowUps = clientFollowUpsRes.data.data || [];
-
-      // If converted from a lead, fetch past lead follow ups
-      if (clientData.convertedFromLeadId) {
-        const leadFollowUpsRes = await crmApi.getLeadFollowUps(clientData.convertedFromLeadId).catch(() => ({ data: { data: [] } }));
-        const leadFollowUps = leadFollowUpsRes.data.data || [];
-        allFollowUps = [...allFollowUps, ...leadFollowUps];
-      }
-
-      // Sort all follow ups by interaction date descending
-      allFollowUps.sort((a: any, b: any) => new Date(b.interactionDate).getTime() - new Date(a.interactionDate).getTime());
-      
-      setFollowUps(allFollowUps);
+      setFollowUps(clientFollowUpsRes.data.data || []);
     } catch (err) {
       console.error(err);
     } finally {
@@ -77,6 +66,26 @@ export default function ClientDetailsDrawer({ clientId, onClose, onUpdate }: Cli
       console.error(err);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleCreateOpportunity = async () => {
+    setIsCreatingOpportunity(true);
+    try {
+      await crmApi.createLead({
+        name: client.name,
+        email: client.email,
+        phone: client.phone,
+        company: client.company,
+        existingClientId: client.id,
+        requirements: 'New Inquiry from existing client'
+      });
+      alert('New opportunity (Lead) successfully created on the Kanban board!');
+    } catch (err) {
+      console.error('Failed to create opportunity', err);
+      alert('Failed to create opportunity.');
+    } finally {
+      setIsCreatingOpportunity(false);
     }
   };
 
@@ -121,6 +130,9 @@ export default function ClientDetailsDrawer({ clientId, onClose, onUpdate }: Cli
                        ✉️ Email
                      </a>
                    )}
+                   <button className="btn btn-sm btn-primary" onClick={handleCreateOpportunity} disabled={isCreatingOpportunity}>
+                     {isCreatingOpportunity ? 'Creating...' : '+ New Opportunity'}
+                   </button>
                 </div>
               </div>
               <button className="btn btn-ghost btn-sm" onClick={onClose}>✕</button>

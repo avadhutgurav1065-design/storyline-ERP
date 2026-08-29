@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/inventory/raw-materials")
+@PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_INVENTORY_MANAGER')")
 public class RawMaterialController {
 
     private final RawMaterialService rawMaterialService;

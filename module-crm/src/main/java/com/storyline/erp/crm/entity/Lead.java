@@ -36,6 +36,18 @@ public class Lead extends AuditableEntity {
     @Column(name = "assigned_to_user_id")
     private Long assignedToUserId;
 
+    @Column(columnDefinition = "TEXT")
+    private String requirements;
+
+    @Column(name = "event_location")
+    private String eventLocation;
+
+    @Column(name = "lost_reason")
+    private String lostReason;
+
+    @Column(name = "existing_client_id")
+    private Long existingClientId;
+
     // Getters and Setters
 
     public String getName() { return name; }
@@ -58,4 +70,12 @@ public class Lead extends AuditableEntity {
     public void setSource(String source) { this.source = source; }
     public Long getAssignedToUserId() { return assignedToUserId; }
     public void setAssignedToUserId(Long assignedToUserId) { this.assignedToUserId = assignedToUserId; }
+    public String getRequirements() { return requirements; }
+    public void setRequirements(String requirements) { this.requirements = requirements; }
+    public String getEventLocation() { return eventLocation; }
+    public void setEventLocation(String eventLocation) { this.eventLocation = eventLocation; }
+    public String getLostReason() { return lostReason; }
+    public void setLostReason(String lostReason) { this.lostReason = lostReason; }
+    public Long getExistingClientId() { return existingClientId; }
+    public void setExistingClientId(Long existingClientId) { this.existingClientId = existingClientId; }
 }

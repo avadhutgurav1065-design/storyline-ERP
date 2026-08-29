@@ -8,9 +8,11 @@ import com.storyline.erp.finance.service.FinanceService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("/api/finance")
+@PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_FINANCE_MANAGER')")
 public class FinanceController {
 
     private final FinanceService financeService;

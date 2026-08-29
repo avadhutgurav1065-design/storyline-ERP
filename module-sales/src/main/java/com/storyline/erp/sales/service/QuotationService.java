@@ -17,14 +17,19 @@ import java.math.RoundingMode;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.context.ApplicationEventPublisher;
+import com.storyline.erp.common.event.QuotationApprovedEvent;
+
 @Service
 @Transactional
 public class QuotationService {
 
     private final QuotationRepository quotationRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
-    public QuotationService(QuotationRepository quotationRepository) {
+    public QuotationService(QuotationRepository quotationRepository, ApplicationEventPublisher eventPublisher) {
         this.quotationRepository = quotationRepository;
+        this.eventPublisher = eventPublisher;
     }
 
     public Page<QuotationDto> getAllQuotations(Pageable pageable) {
@@ -97,7 +102,24 @@ public class QuotationService {
     public QuotationDto updateStatus(Long id, QuotationStatus status) {
         Quotation quotation = findById(id);
         quotation.setStatus(status);
-        return mapToDto(quotationRepository.save(quotation));
+        
+        Quotation saved = quotationRepository.save(quotation);
+        
+        if (status == QuotationStatus.APPROVED) {
+            eventPublisher.publishEvent(new QuotationApprovedEvent(
+                saved.getId(),
+                saved.getClientId(),
+                saved.getEventName(),
+                saved.getEventDate(),
+                saved.getPax(),
+                saved.getVenue(),
+                saved.getTotalAmount(),
+                saved.getTaxAmount(),
+                saved.getGrandTotal()
+            ));
+        }
+        
+        return mapToDto(saved);
     }
 
     private Quotation findById(Long id) {

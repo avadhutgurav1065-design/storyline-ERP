@@ -4,20 +4,28 @@ import api, { crmApi, eventsApi, salesApi } from '../../api/client';
 import { useNavigate } from 'react-router-dom';
 import { 
   PieChart, Pie, Cell, 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, Sector 
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, Sector,
+  LineChart, Line
 } from 'recharts';
 
 export default function DashboardPage() {
-  const { user } = useAuth();
+  const { user, hasRole } = useAuth();
   const navigate = useNavigate();
+  
+  const hasFinanceAccess = hasRole('ADMIN') || hasRole('FINANCE_MANAGER');
+  const hasCrmAccess = hasRole('ADMIN') || hasRole('EVENT_MANAGER');
   
   const [stats, setStats] = useState<any>({
     totalLeads: 0,
     totalClients: 0,
     totalEvents: 0,
     monthlyRevenue: 0,
+    revenueGrowth: 0,
+    leadsGrowth: 0,
+    clientsGrowth: 0,
+    revenueTrend: [],
     eventCharts: { PLANNING: 0, IN_PROGRESS: 0, COMPLETED: 0 },
-    taskCharts: { PENDING: 0, IN_PROGRESS: 0, COMPLETED: 0 }
+    taskCharts: { PENDING: 0, IN_PROGRESS: 0, COMPLETED: 0, OVERDUE: 0 }
   });
   
   const [recentLeads, setRecentLeads] = useState<any[]>([]);
@@ -61,6 +69,7 @@ export default function DashboardPage() {
   ];
 
   const taskData = [
+    { name: 'Overdue', Tasks: stats.taskCharts?.OVERDUE || 0 },
     { name: 'Pending', Tasks: stats.taskCharts?.PENDING || 0 },
     { name: 'In Progress', Tasks: stats.taskCharts?.IN_PROGRESS || 0 },
     { name: 'Completed', Tasks: stats.taskCharts?.COMPLETED || 0 }
@@ -89,6 +98,10 @@ export default function DashboardPage() {
   };
 
   const today = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  const hour = new Date().getHours();
+  let greeting = 'Good morning';
+  if (hour >= 12 && hour < 17) greeting = 'Good afternoon';
+  else if (hour >= 17 || hour < 4) greeting = 'Good evening';
 
   return (
     <div style={{ paddingBottom: '40px' }}>
@@ -101,11 +114,11 @@ export default function DashboardPage() {
         <div>
           <p style={{ color: 'var(--text-muted)', margin: '0 0 8px 0', fontSize: '0.9rem', fontWeight: 500 }}>{today}</p>
           <h1 style={{ margin: 0, fontSize: '2rem', fontWeight: 700, letterSpacing: '-0.5px' }}>
-            Good morning, {user?.fullName?.split(' ')[0] || 'Admin'}.
+            {greeting}, {user?.fullName?.split(' ')[0] || 'Admin'}.
           </h1>
         </div>
         <div style={{ display: 'flex', gap: '12px' }}>
-          <button className="btn btn-secondary" onClick={() => window.print()} style={{ background: 'white' }}>
+          <button className="btn btn-secondary" onClick={() => window.print()} style={{ background: 'var(--bg-card)', color: 'var(--text-primary)' }}>
             Print Report
           </button>
         </div>
@@ -118,6 +131,8 @@ export default function DashboardPage() {
         </div>
       ) : (
         <>
+          {(hasRole('ADMIN') || hasRole('EVENT_MANAGER') || hasRole('FINANCE_MANAGER') || hasRole('EVENT_HEAD')) && (
+            <>
           {/* 2. Quick Actions */}
           <div style={{ marginBottom: '32px' }}>
             <div style={{ display: 'flex', gap: '16px', overflowX: 'auto', paddingBottom: '8px' }}>
@@ -153,45 +168,84 @@ export default function DashboardPage() {
           </div>
 
           {/* 3. Premium Stat Cards */}
-          <div style={{ 
-            display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 240px), 1fr))', gap: '20px', marginBottom: '32px' 
-          }}>
-            <div className="stat-card premium-card">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <div className="stat-label">Monthly Revenue</div>
-                <div style={{ background: '#ecfdf5', color: '#10b981', padding: '6px', borderRadius: '8px' }}>💸</div>
+        <div className="animate-fade-in" style={{ 
+            display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))', gap: '20px', marginBottom: '32px' 
+        }}>
+            {hasFinanceAccess && (
+              <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-secondary)' }}>
+                  <span>Monthly Revenue</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'flex-end', gap: '12px' }}>
+                  <div style={{ fontSize: '2rem', fontWeight: 800, lineHeight: 1 }}>₹{((stats.monthlyRevenue || 0)/1000).toFixed(1)}k</div>
+                  <span className={`badge-pastel ${stats.revenueGrowth >= 0 ? 'green' : 'red'}`} style={{ marginBottom: '4px' }}>
+                    {stats.revenueGrowth > 0 ? '+' : ''}{stats.revenueGrowth?.toFixed(1) || 0}% {stats.revenueGrowth >= 0 ? '↑' : '↓'}
+                  </span>
+                </div>
               </div>
-              <div className="stat-value">₹{stats.monthlyRevenue?.toLocaleString() || 0}</div>
-              <div className="stat-trend trend-up">Current Month Billings</div>
-            </div>
+            )}
             
-            <div className="stat-card premium-card">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <div className="stat-label">Active Events</div>
-                <div style={{ background: '#fef3c7', color: '#d97706', padding: '6px', borderRadius: '8px' }}>🎪</div>
+            <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-secondary)' }}>
+                <span>Active Events</span>
               </div>
-              <div className="stat-value">{stats.totalEvents || 0}</div>
-              <div className="stat-trend">Across all stages</div>
+              <div style={{ display: 'flex', alignItems: 'flex-end', gap: '12px' }}>
+                <div style={{ fontSize: '2.5rem', fontWeight: 800, lineHeight: 1 }}>{stats.totalEvents || 0}</div>
+                <span className="badge-pastel orange" style={{ marginBottom: '4px' }}>Ongoing</span>
+              </div>
             </div>
 
-            <div className="stat-card premium-card">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <div className="stat-label">Total Leads</div>
-                <div style={{ background: '#e0e7ff', color: '#4f46e5', padding: '6px', borderRadius: '8px' }}>🎯</div>
-              </div>
-              <div className="stat-value">{stats.totalLeads || 0}</div>
-              <div className="stat-trend trend-up">Potential deals in pipeline</div>
-            </div>
+            {hasCrmAccess && (
+              <>
+                <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-secondary)' }}>
+                    <span>Total Leads</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'flex-end', gap: '12px' }}>
+                    <div style={{ fontSize: '2.5rem', fontWeight: 800, lineHeight: 1 }}>{stats.totalLeads || 0}</div>
+                    <span className={`badge-pastel ${stats.leadsGrowth >= 0 ? 'blue' : 'gray'}`} style={{ marginBottom: '4px' }}>
+                      {stats.leadsGrowth > 0 ? '+' : ''}{stats.leadsGrowth?.toFixed(1) || 0}% {stats.leadsGrowth >= 0 ? '↑' : '↓'}
+                    </span>
+                  </div>
+                </div>
 
-            <div className="stat-card premium-card">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <div className="stat-label">Converted Clients</div>
-                <div style={{ background: '#f3e8ff', color: '#9333ea', padding: '6px', borderRadius: '8px' }}>🤝</div>
-              </div>
-              <div className="stat-value">{stats.totalClients || 0}</div>
-              <div className="stat-trend trend-up">Secured accounts</div>
-            </div>
+                <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-secondary)' }}>
+                    <span>Converted Clients</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'flex-end', gap: '12px' }}>
+                    <div style={{ fontSize: '2.5rem', fontWeight: 800, lineHeight: 1 }}>{stats.totalClients || 0}</div>
+                    <span className={`badge-pastel ${stats.clientsGrowth >= 0 ? 'green' : 'red'}`} style={{ marginBottom: '4px' }}>
+                      {stats.clientsGrowth > 0 ? '+' : ''}{stats.clientsGrowth?.toFixed(1) || 0}% {stats.clientsGrowth >= 0 ? '↑' : '↓'}
+                    </span>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
+
+          {/* New Line Chart for Revenue Trend */}
+          {hasFinanceAccess && stats.revenueTrend && stats.revenueTrend.length > 0 && (
+            <div className="card premium-card" style={{ marginBottom: '32px', padding: '24px' }}>
+              <h3 style={{ marginBottom: '4px', fontSize: '1.1rem' }}>Revenue vs Expenses (Last 6 Months)</h3>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '24px' }}>Month-over-month financial trend</p>
+              <div style={{ width: '100%', height: 300 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={stats.revenueTrend} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} dy={10} />
+                    <YAxis axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} />
+                    <RechartsTooltip 
+                      contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                    />
+                    <Legend iconType="circle" />
+                    <Line type="monotone" dataKey="Revenue" stroke="#10b981" strokeWidth={3} dot={{ r: 4, fill: '#10b981' }} activeDot={{ r: 6 }} />
+                    <Line type="monotone" dataKey="Expenses" stroke="#ef4444" strokeWidth={3} dot={{ r: 4, fill: '#ef4444' }} activeDot={{ r: 6 }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          )}
 
           {/* 4. Interactive Charts */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 400px), 1fr))', gap: '20px', marginBottom: '32px' }}>
@@ -245,11 +299,14 @@ export default function DashboardPage() {
               </div>
             </div>
           </div>
+            </>
+          )}
 
           {/* 5. Real-time Activity Panels */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))', gap: '20px' }}>
             
             {/* Recent Leads */}
+            {(hasRole('ADMIN') || hasRole('EVENT_MANAGER') || hasRole('FINANCE_MANAGER') || hasRole('EVENT_HEAD')) && (
             <div className="card premium-card" style={{ padding: '24px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                 <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Newest Leads</h3>
@@ -259,20 +316,33 @@ export default function DashboardPage() {
                 {recentLeads.length === 0 ? (
                    <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>No leads found.</div>
                 ) : (
-                  recentLeads.map(lead => (
-                    <div key={lead.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '8px 0', borderBottom: '1px solid #f1f5f9' }}>
-                       <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#e0e7ff', color: '#4f46e5', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600 }}>
-                          {lead.name.charAt(0)}
-                       </div>
-                       <div style={{ flex: 1 }}>
-                         <div style={{ fontWeight: 500, fontSize: '0.95rem' }}>{lead.name}</div>
-                         <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{lead.eventType || 'Unknown Event'} • {lead.status}</div>
-                       </div>
-                    </div>
-                  ))
+                  recentLeads.map(lead => {
+                    const getAvatarColor = (name: string) => {
+                      const colors = [{ bg: '#E0F2FE', text: '#0284C7' }, { bg: '#FEF08A', text: '#854D0E' }, { bg: '#BBF7D0', text: '#166534' }, { bg: '#FCE7F3', text: '#DB2777' }];
+                      const index = name.length % colors.length;
+                      return colors[index];
+                    };
+                    const avatarStyle = getAvatarColor(lead.name || '');
+                    
+                    return (
+                      <div key={lead.id} className="hover-row" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', borderBottom: '1px solid var(--border-color)', borderRadius: '8px' }}>
+                        <div className="avatar" style={{ background: avatarStyle.bg, color: avatarStyle.text }}>
+                            {lead.name.charAt(0).toUpperCase()}
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontWeight: 600, fontSize: '0.95rem' }}>{lead.name}</div>
+                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{lead.company || lead.email}</div>
+                        </div>
+                        <span className={`badge-pastel ${lead.eventType?.toLowerCase().includes('wedding') ? 'purple' : 'blue'}`}>
+                          {lead.status}
+                        </span>
+                      </div>
+                    );
+                  })
                 )}
               </div>
             </div>
+            )}
 
             {/* Upcoming Events */}
             <div className="card premium-card" style={{ padding: '24px' }}>
@@ -285,19 +355,20 @@ export default function DashboardPage() {
                    <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>No upcoming events in planning.</div>
                 ) : (
                   upcomingEvents.map(event => (
-                    <div key={event.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '8px 0', borderBottom: '1px solid #f1f5f9' }}>
-                       <div style={{ background: '#fef3c7', padding: '8px', borderRadius: '8px', textAlign: 'center', minWidth: '45px' }}>
-                          <div style={{ fontSize: '0.7rem', color: '#d97706', textTransform: 'uppercase', fontWeight: 700 }}>
+                    <div key={event.id} className="hover-row" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', borderBottom: '1px solid var(--border-color)', borderRadius: '8px' }}>
+                       <div style={{ background: '#FEF9C3', padding: '8px', borderRadius: '8px', textAlign: 'center', minWidth: '45px', border: '1px solid #FEF08A' }}>
+                          <div style={{ fontSize: '0.7rem', color: '#B45309', textTransform: 'uppercase', fontWeight: 700 }}>
                              {new Date(event.startDate).toLocaleString('default', { month: 'short' })}
                           </div>
-                          <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#92400e', lineHeight: 1 }}>
+                          <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#92400E', lineHeight: 1 }}>
                              {new Date(event.startDate).getDate()}
                           </div>
                        </div>
                        <div style={{ flex: 1 }}>
-                         <div style={{ fontWeight: 500, fontSize: '0.95rem' }}>{event.name}</div>
+                         <div style={{ fontWeight: 600, fontSize: '0.95rem' }}>{event.name}</div>
                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{event.venue || 'No venue'}</div>
                        </div>
+                       <span className="badge-pastel orange">{event.status || 'Planning'}</span>
                     </div>
                   ))
                 )}
@@ -315,14 +386,14 @@ export default function DashboardPage() {
                    <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>No recent quotations.</div>
                 ) : (
                   recentQuotes.map(quote => (
-                    <div key={quote.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '8px 0', borderBottom: '1px solid #f1f5f9' }}>
+                    <div key={quote.id} className="hover-row" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', borderBottom: '1px solid var(--border-color)', borderRadius: '8px' }}>
                        <div style={{ flex: 1 }}>
-                         <div style={{ fontWeight: 500, fontSize: '0.95rem', display: 'flex', justifyContent: 'space-between' }}>
+                         <div style={{ fontWeight: 600, fontSize: '0.95rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <span>{quote.referenceNumber}</span>
-                            <span style={{ color: '#10b981' }}>₹{quote.totalAmount?.toLocaleString() || 0}</span>
+                            <span style={{ color: '#16A34A', fontWeight: 700 }}>₹{quote.totalAmount?.toLocaleString() || 0}</span>
                          </div>
-                         <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Status: {quote.status}</div>
                        </div>
+                       <span className={`badge-pastel ${quote.status === 'ACCEPTED' ? 'green' : quote.status === 'SENT' ? 'blue' : 'gray'}`}>{quote.status}</span>
                     </div>
                   ))
                 )}
@@ -336,21 +407,23 @@ export default function DashboardPage() {
       {/* Global CSS for this dashboard only (injected safely via styled approach or global class) */}
       <style>{`
         .premium-card {
-          background: white;
-          border: 1px solid #e2e8f0;
+          background: var(--bg-card);
+          border: 1px solid var(--border-color);
           box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
           transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .premium-card:hover {
           transform: translateY(-4px);
           box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+          border-color: var(--primary-500);
         }
         .quick-action-btn {
           display: flex;
           align-items: center;
           gap: 16px;
-          background: white;
-          border: 1px solid #e2e8f0;
+          background: var(--bg-card);
+          border: 1px solid var(--border-color);
+          color: var(--text-primary);
           padding: 16px 20px;
           border-radius: 16px;
           min-width: 240px;
@@ -359,8 +432,8 @@ export default function DashboardPage() {
           box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
         }
         .quick-action-btn:hover {
-          background: #f8fafc;
-          border-color: #cbd5e1;
+          background: var(--bg-hover);
+          border-color: var(--primary-500);
           transform: scale(1.02);
         }
       `}</style>

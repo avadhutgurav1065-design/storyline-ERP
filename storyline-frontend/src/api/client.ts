@@ -46,13 +46,16 @@ export interface PageResponse<T> {
 export const authApi = {
   login: (data: any) => api.post<ApiResponse<any>>('/auth/login', data),
   me: () => api.get<ApiResponse<any>>('/auth/me'),
+  updateProfile: (data: any) => api.put<ApiResponse<any>>('/auth/me', data),
+  changePassword: (data: any) => api.post<ApiResponse<any>>('/auth/change-password', data),
+  getRecentActivities: () => api.get<ApiResponse<any[]>>('/auth/me/activities'),
 };
 
 export const usersApi = {
   list: (params?: any) => api.get<ApiResponse<any>>('/users', { params }),
   create: (data: any) => api.post<ApiResponse<any>>('/users', data),
-  updateUserRole: (id: number, role: string) => api.put<ApiResponse<any>>(`/users/${id}/role?role=${role}`, {}),
-  toggleStatus: (id: number) => api.patch<ApiResponse<any>>(`/users/${id}/toggle-status`, {}),
+  toggleStatus: (id: number) => api.patch<ApiResponse<any>>(`/users/${id}/status`, {}),
+  delete: (id: number) => api.delete<ApiResponse<any>>(`/users/${id}`),
 };
 
 // ====================================================
@@ -107,7 +110,7 @@ export const eventsApi = {
 // VENDORS API
 // ====================================================
 export const vendorsApi = {
-  list: () => api.get<ApiResponse<any[]>>('/vendors'),
+  list: () => api.get<ApiResponse<any>>('/vendors'),
   create: (data: any) => api.post<ApiResponse<any>>('/vendors', data),
   update: (id: number, data: any) => api.put<ApiResponse<any>>(`/vendors/${id}`, data),
   delete: (id: number) => api.delete<ApiResponse<void>>(`/vendors/${id}`),
@@ -135,10 +138,6 @@ export const teamAssignmentsApi = {
 // ====================================================
 // TASKS API
 // ====================================================
-export const settingsApi = {
-  getSystemSettings: () => api.get('/settings'),
-  updateSystemSettings: (data: any) => api.put('/settings', data),
-};
 
 // --- Inventory API ---
 export const inventoryApi = {
@@ -168,8 +167,8 @@ export const inventoryApi = {
     api.post<ApiResponse<void>>(`/inventory/products/${productId}/issue`, null, { params: payload }),
     
   // Dispatches
-  listDispatches: (params?: any) => api.get<ApiResponse<any>>('/inventory/dispatch', { params }),
-  dispatchToEvent: (data: any) => api.post<ApiResponse<any>>('/inventory/dispatch/event', data)
+  dispatchToEvent: (data: any) => api.post<ApiResponse<any>>('/inventory/dispatch', data),
+  getDispatchLogsByEventId: (eventId: number) => api.get<ApiResponse<any>>(`/inventory/dispatch/event/${eventId}`)
 };
 
 export const tasksApi = {
@@ -216,6 +215,10 @@ export const notificationsApi = {
   getUnreadNotifications: () => api.get<ApiResponse<any[]>>('/notifications/unread'),
   markAsRead: (id: number) => api.post<ApiResponse<void>>(`/notifications/${id}/read`),
   markAllAsRead: () => api.post<ApiResponse<void>>('/notifications/read-all'),
+};
+
+export const dashboardApi = {
+  getStats: () => api.get<ApiResponse<any>>('/dashboard/stats'),
 };
 
 export default api;

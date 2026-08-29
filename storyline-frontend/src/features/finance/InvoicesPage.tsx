@@ -1,10 +1,11 @@
 import { useState, useEffect, type FormEvent } from 'react';
-import { financeApi, crmApi } from '../../api/client';
+import { financeApi, crmApi, eventsApi } from '../../api/client';
 import { useNotification } from '../../context/NotificationContext';
 
 export default function InvoicesPage() {
   const [invoices, setInvoices] = useState<any[]>([]);
   const [clientsMap, setClientsMap] = useState<Record<number, any>>({});
+  const [events, setEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -18,6 +19,7 @@ export default function InvoicesPage() {
     id: '',
     invoiceNumber: '',
     title: '',
+    eventId: '',
     issueDate: '',
     dueDate: '',
     grandTotal: '',
@@ -28,6 +30,7 @@ export default function InvoicesPage() {
   const [formData, setFormData] = useState({
     invoiceNumber: '',
     clientId: '',
+    eventId: '',
     issueDate: '',
     grandTotal: '',
     taxAmount: '0',
@@ -52,14 +55,17 @@ export default function InvoicesPage() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [invRes, cliRes] = await Promise.all([
+      const [invRes, cliRes, eventsRes] = await Promise.all([
         financeApi.listInvoices(),
-        crmApi.listClients()
+        crmApi.listClients(),
+        eventsApi.listEvents()
       ]);
-      setInvoices(invRes.data.data.content || []);
+      setInvoices(Array.isArray(invRes.data.data) ? invRes.data.data : (invRes.data.data?.content || []));
+      setEvents(Array.isArray(eventsRes.data.data) ? eventsRes.data.data : (eventsRes.data.data?.content || []));
       
       const cMap: Record<number, any> = {};
-      (cliRes.data.data.content || []).forEach((c: any) => { cMap[c.id] = c; });
+      const clientList = Array.isArray(cliRes.data.data) ? cliRes.data.data : (cliRes.data.data?.content || []);
+      clientList.forEach((c: any) => { cMap[c.id] = c; });
       setClientsMap(cMap);
     } catch (err) {
       console.error(err);
@@ -80,6 +86,7 @@ export default function InvoicesPage() {
       await financeApi.createInvoice({
         ...formData,
         clientId: Number(formData.clientId),
+        eventId: formData.eventId ? Number(formData.eventId) : null,
         grandTotal: gTotal,
         taxAmount: tax,
         totalAmount: gTotal - tax,
@@ -87,7 +94,7 @@ export default function InvoicesPage() {
         title: 'Manual Invoice'
       });
       setShowModal(false);
-      setFormData({ invoiceNumber: '', clientId: '', issueDate: '', grandTotal: '', taxAmount: '0' });
+      setFormData({ invoiceNumber: '', clientId: '', eventId: '', issueDate: '', grandTotal: '', taxAmount: '0' });
       triggerNotification('Invoice Created', 'New invoice added successfully.', 'success');
       fetchData();
     } catch (err) {
@@ -105,6 +112,7 @@ export default function InvoicesPage() {
         ...selectedInvoice, // preserve non-edited fields
         invoiceNumber: editData.invoiceNumber,
         title: editData.title,
+        eventId: editData.eventId ? Number(editData.eventId) : null,
         issueDate: editData.issueDate,
         dueDate: editData.dueDate,
         grandTotal: gTotal,
@@ -131,6 +139,7 @@ export default function InvoicesPage() {
       id: inv.id,
       invoiceNumber: inv.invoiceNumber || '',
       title: inv.title || '',
+      eventId: inv.eventId ? inv.eventId.toString() : '',
       issueDate: inv.issueDate || '',
       dueDate: inv.dueDate || '',
       grandTotal: inv.grandTotal ? inv.grandTotal.toString() : '',
@@ -196,7 +205,8 @@ export default function InvoicesPage() {
         paymentDate: paymentData.paymentDate,
         paymentMethod: paymentData.paymentMethod,
         transactionId: paymentData.transactionId,
-        notes: paymentData.notes
+        notes: paymentData.notes,
+        eventId: selectedInvoice.eventId
       });
       setShowPaymentModal(false);
       triggerNotification('Payment Recorded', `Recorded ₹${paymentData.amount} for ${selectedInvoice.invoiceNumber}`, 'success');
@@ -327,6 +337,17 @@ export default function InvoicesPage() {
                   </select>
                 </div>
               </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px', marginBottom: '16px' }}>
+                <div className="form-group">
+                  <label className="form-label">Event (Optional)</label>
+                  <select className="form-input" value={formData.eventId} onChange={e => setFormData({...formData, eventId: e.target.value})}>
+                    <option value="">Select Event...</option>
+                    {events.map(ev => (
+                      <option key={ev.id} value={ev.id}>{ev.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
                 <div className="form-group">
                   <label className="form-label">Issue Date *</label>
@@ -367,6 +388,17 @@ export default function InvoicesPage() {
                 <div className="form-group">
                   <label className="form-label">Title / Description</label>
                   <input className="form-input" value={editData.title} onChange={e => setEditData({...editData, title: e.target.value})} />
+                </div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px', marginBottom: '16px' }}>
+                <div className="form-group">
+                  <label className="form-label">Event (Optional)</label>
+                  <select className="form-input" value={editData.eventId} onChange={e => setEditData({...editData, eventId: e.target.value})}>
+                    <option value="">Select Event...</option>
+                    {events.map(ev => (
+                      <option key={ev.id} value={ev.id}>{ev.name}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>

@@ -9,7 +9,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/inventory/bom")
+@RequestMapping("/api/inventory")
+@PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_INVENTORY_MANAGER')")
 public class BomController {
 
     private final BomService bomService;
@@ -18,15 +19,19 @@ public class BomController {
         this.bomService = bomService;
     }
 
-    @GetMapping("/product/{productId}")
+    @GetMapping("/products/{productId}/bom")
     public ApiResponse<List<BillOfMaterialDto>> getProductBom(@PathVariable Long productId) {
         return ApiResponse.success(bomService.getProductBom(productId));
     }
 
-    @PutMapping("/product/{productId}")
-    public ApiResponse<List<BillOfMaterialDto>> updateProductBom(
-            @PathVariable Long productId,
-            @RequestBody List<BillOfMaterialDto> bomItems) {
-        return ApiResponse.success("BOM updated successfully", bomService.updateProductBom(productId, bomItems));
+    @PostMapping("/products/{productId}/bom")
+    public ApiResponse<BillOfMaterialDto> addBomItem(@PathVariable Long productId, @RequestBody BillOfMaterialDto dto) {
+        return ApiResponse.success("BOM item added successfully", bomService.addBomItem(productId, dto));
+    }
+
+    @DeleteMapping("/bom/{bomId}")
+    public ApiResponse<Void> removeBomItem(@PathVariable Long bomId) {
+        bomService.removeBomItem(bomId);
+        return ApiResponse.success((Void) null, "BOM item removed successfully");
     }
 }

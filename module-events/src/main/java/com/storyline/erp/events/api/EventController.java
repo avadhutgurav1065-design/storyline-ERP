@@ -7,24 +7,27 @@ import com.storyline.erp.events.entity.TeamAssignment;
 import com.storyline.erp.events.entity.EventDocument;
 import com.storyline.erp.events.dto.EventDashboardDto;
 import com.storyline.erp.events.service.EventService;
-import com.storyline.erp.events.repository.TeamAssignmentRepository;
 import com.storyline.erp.events.repository.EventDocumentRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.context.ApplicationEventPublisher;
+import com.storyline.erp.common.event.NotificationEvent;
 
 @RestController
 @RequestMapping("/api/events")
 public class EventController {
     
     private final EventService eventService;
-    private final TeamAssignmentRepository teamAssignmentRepository;
     private final EventDocumentRepository eventDocumentRepository;
-    
-    public EventController(EventService eventService, TeamAssignmentRepository teamAssignmentRepository, EventDocumentRepository eventDocumentRepository) {
+    private final ApplicationEventPublisher eventPublisher;
+
+    public EventController(EventService eventService, 
+                           EventDocumentRepository eventDocumentRepository,
+                           ApplicationEventPublisher eventPublisher) {
         this.eventService = eventService;
-        this.teamAssignmentRepository = teamAssignmentRepository;
         this.eventDocumentRepository = eventDocumentRepository;
+        this.eventPublisher = eventPublisher;
     }
     
     @GetMapping
@@ -45,20 +48,6 @@ public class EventController {
     @GetMapping("/{id}/dashboard")
     public ApiResponse<EventDashboardDto> getEventDashboard(@PathVariable Long id) {
         return ApiResponse.success(eventService.getEventDashboard(id));
-    }
-
-    @PostMapping("/{id}/team")
-    public ApiResponse<TeamAssignment> addTeamAssignment(@PathVariable Long id, @RequestBody TeamAssignment assignment) {
-        Event event = new Event();
-        event.setId(id);
-        assignment.setEvent(event);
-        return ApiResponse.success("Team member assigned", teamAssignmentRepository.save(assignment));
-    }
-    
-    @DeleteMapping("/team/{assignmentId}")
-    public ApiResponse<Void> removeTeamAssignment(@PathVariable Long assignmentId) {
-        teamAssignmentRepository.deleteById(assignmentId);
-        return ApiResponse.success("Team member removed", (Void) null);
     }
 
     @PostMapping("/{id}/documents")

@@ -21,6 +21,7 @@
 
     <modules>
         <module>storyline-common</module>
+        <module>module-core</module>
         <module>module-identity</module>
         <module>module-crm</module>
         <module>module-sales</module>
@@ -59,6 +60,11 @@
             <dependency>
                 <groupId>com.storyline</groupId>
                 <artifactId>storyline-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.storyline</groupId>
+                <artifactId>module-core</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

@@ -80,4 +80,14 @@ public class UserController {
         UserResponse user = userService.toggleUserStatus(id);
         return ResponseEntity.ok(ApiResponse.success(user, "User status updated"));
     }
+
+    /**
+     * Delete user permanently.
+     */
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<Void>> deleteUser(@PathVariable Long id) {
+        userService.deleteUser(id);
+        return ResponseEntity.ok(ApiResponse.<Void>success(null, "User deleted successfully"));
+    }
 }

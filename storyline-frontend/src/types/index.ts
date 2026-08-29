@@ -40,8 +40,28 @@ export interface UserResponse {
   phone?: string;
   avatarUrl?: string;
   active: boolean;
+  themePreference?: string;
+  emailNotifications?: boolean;
+  pushNotifications?: boolean;
+  address?: string;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+  employeeId?: string;
   roles: string[];
   permissions: string[];
+}
+
+export interface UpdateProfileRequest {
+  fullName?: string;
+  phone?: string;
+  avatarUrl?: string;
+  themePreference?: string;
+  emailNotifications?: boolean;
+  pushNotifications?: boolean;
+  address?: string;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+  employeeId?: string;
 }
 
 export interface CreateUserRequest {

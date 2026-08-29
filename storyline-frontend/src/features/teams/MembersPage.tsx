@@ -192,11 +192,11 @@ export default function MembersPage() {
       {/* Quick Assign Task Modal */}
       {showAssignModal && selectedMember && (
         <div className="modal-overlay" onClick={() => setShowAssignModal(false)} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ backgroundColor: '#ffffff', maxWidth: '500px', width: '90%', padding: '32px', borderRadius: '16px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)' }}>
-            <h2 style={{ marginTop: 0, marginBottom: '24px', color: '#111827', fontSize: '1.5rem', fontWeight: 600 }}>Assign Task to {selectedMember.fullName}</h2>
+          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ backgroundColor: 'var(--bg-card)', maxWidth: '500px', width: '90%', padding: '32px', borderRadius: '16px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)' }}>
+            <h2 style={{ marginTop: 0, marginBottom: '24px', color: 'var(--text-primary)', fontSize: '1.5rem', fontWeight: 600 }}>Assign Task to {selectedMember.fullName}</h2>
             <form onSubmit={submitAssignTask}>
               <div className="form-group" style={{ marginBottom: '16px' }}>
-                <label className="form-label" style={{ display: 'block', marginBottom: '8px', fontWeight: 500, color: '#374151' }}>Task Title *</label>
+                <label className="form-label" style={{ display: 'block', marginBottom: '8px', fontWeight: 500, color: 'var(--text-secondary)' }}>Task Title *</label>
                 <input 
                   type="text" 
                   className="form-input" 
@@ -209,7 +209,7 @@ export default function MembersPage() {
               </div>
 
               <div className="form-group" style={{ marginBottom: '16px' }}>
-                <label className="form-label" style={{ display: 'block', marginBottom: '8px', fontWeight: 500, color: '#374151' }}>Description</label>
+                <label className="form-label" style={{ display: 'block', marginBottom: '8px', fontWeight: 500, color: 'var(--text-secondary)' }}>Description</label>
                 <textarea 
                   className="form-input" 
                   value={taskDescription}
@@ -222,12 +222,12 @@ export default function MembersPage() {
 
               <div style={{ display: 'flex', gap: '16px', marginBottom: '24px' }}>
                 <div className="form-group" style={{ flex: 1 }}>
-                  <label className="form-label" style={{ display: 'block', marginBottom: '8px', fontWeight: 500, color: '#374151' }}>Priority</label>
+                  <label className="form-label" style={{ display: 'block', marginBottom: '8px', fontWeight: 500, color: 'var(--text-secondary)' }}>Priority</label>
                   <select 
                     className="form-input"
                     value={taskPriority}
                     onChange={e => setTaskPriority(e.target.value)}
-                    style={{ width: '100%', padding: '10px 12px', border: '1px solid #d1d5db', borderRadius: '8px', fontSize: '0.95rem', backgroundColor: '#fff' }}
+                    style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--border-color)', borderRadius: '8px', fontSize: '0.95rem', backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)' }}
                   >
                     <option value="LOW">Low</option>
                     <option value="MEDIUM">Medium</option>
@@ -236,7 +236,7 @@ export default function MembersPage() {
                 </div>
                 
                 <div className="form-group" style={{ flex: 1 }}>
-                  <label className="form-label" style={{ display: 'block', marginBottom: '8px', fontWeight: 500, color: '#374151' }}>Due Date</label>
+                  <label className="form-label" style={{ display: 'block', marginBottom: '8px', fontWeight: 500, color: 'var(--text-secondary)' }}>Due Date</label>
                   <input 
                     type="date" 
                     className="form-input" 

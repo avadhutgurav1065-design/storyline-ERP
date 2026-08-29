@@ -1,14 +1,16 @@
 import { useState, useEffect, type FormEvent } from 'react';
-import { financeApi } from '../../api/client';
+import { financeApi, eventsApi } from '../../api/client';
 
 export default function ClientPaymentsPage() {
   const [payments, setPayments] = useState<any[]>([]);
+  const [events, setEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
 
   const [formData, setFormData] = useState({
     invoiceId: '',
     clientId: '',
+    eventId: '',
     amount: '',
     paymentDate: new Date().toISOString().split('T')[0],
     paymentMethod: 'BANK_TRANSFER',
@@ -18,8 +20,12 @@ export default function ClientPaymentsPage() {
   const fetchPayments = async () => {
     setLoading(true);
     try {
-      const res = await financeApi.listPayments();
+      const [res, eventsRes] = await Promise.all([
+        financeApi.listPayments(),
+        eventsApi.listEvents()
+      ]);
       setPayments(res.data.data.content || []);
+      setEvents(eventsRes.data.data.content || []);
     } catch (err) {
       console.error(err);
     } finally {
@@ -38,10 +44,11 @@ export default function ClientPaymentsPage() {
         ...formData,
         invoiceId: formData.invoiceId ? Number(formData.invoiceId) : null,
         clientId: Number(formData.clientId),
+        eventId: formData.eventId ? Number(formData.eventId) : null,
         amount: parseFloat(formData.amount)
       });
       setShowModal(false);
-      setFormData({ ...formData, amount: '', transactionId: '', invoiceId: '' });
+      setFormData({ ...formData, amount: '', transactionId: '', invoiceId: '', eventId: '' });
       fetchPayments();
     } catch (err) {
       console.error(err);
@@ -66,6 +73,7 @@ export default function ClientPaymentsPage() {
                 <th>Ref ID</th>
                 <th>Date</th>
                 <th>Client ID</th>
+                <th>Event ID</th>
                 <th>Invoice ID</th>
                 <th>Amount</th>
                 <th>Method</th>
@@ -83,6 +91,7 @@ export default function ClientPaymentsPage() {
                     <td><div style={{ fontWeight: 600 }}>{p.paymentReference}</div></td>
                     <td>{p.paymentDate}</td>
                     <td>{p.clientId}</td>
+                    <td>{p.eventId || '-'}</td>
                     <td>{p.invoiceId || '-'}</td>
                     <td><div style={{ fontWeight: 600, color: 'var(--success)' }}>₹{p.amount?.toLocaleString()}</div></td>
                     <td>{p.paymentMethod}</td>
@@ -113,7 +122,18 @@ export default function ClientPaymentsPage() {
                   <input type="number" className="form-input" value={formData.invoiceId} onChange={e => setFormData({...formData, invoiceId: e.target.value})} />
                 </div>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px', marginBottom: '16px' }}>
+                <div className="form-group">
+                  <label className="form-label">Event (Optional)</label>
+                  <select className="form-input" value={formData.eventId} onChange={e => setFormData({...formData, eventId: e.target.value})}>
+                    <option value="">Select Event...</option>
+                    {events.map(ev => (
+                      <option key={ev.id} value={ev.id}>{ev.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
                 <div className="form-group">
                   <label className="form-label">Amount Received (₹) *</label>
                   <input type="number" step="0.01" className="form-input" required value={formData.amount} onChange={e => setFormData({...formData, amount: e.target.value})} />

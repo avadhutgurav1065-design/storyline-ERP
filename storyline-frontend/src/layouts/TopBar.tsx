@@ -1,5 +1,6 @@
 import { useAuth } from '../context/AuthContext';
 import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { notificationsApi } from '../api/client';
 import { useNotification } from '../context/NotificationContext';
 
@@ -12,9 +13,11 @@ interface TopBarProps {
 
 export default function TopBar({ collapsed, onToggle, onMobileToggle, title }: TopBarProps) {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const { triggerNotification } = useNotification();
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [unreadNotifications, setUnreadNotifications] = useState<any[]>([]);
   
   // Keep track of IDs we have already "rung" the bell for
@@ -113,7 +116,7 @@ export default function TopBar({ collapsed, onToggle, onMobileToggle, title }: T
           
           {showNotifications && (
             <div style={{
-              position: 'absolute', top: '100%', right: 0, width: '320px', backgroundColor: 'var(--card-bg)',
+              position: 'absolute', top: '100%', right: isMobile ? '-60px' : 0, width: isMobile ? '300px' : '320px', backgroundColor: 'var(--bg-card)',
               boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', borderRadius: '8px', zIndex: 1000, marginTop: '8px', border: '1px solid var(--border-color)',
               maxHeight: '400px', overflowY: 'auto'
             }}>
@@ -151,21 +154,47 @@ export default function TopBar({ collapsed, onToggle, onMobileToggle, title }: T
         </div>
 
         {/* User */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div className="user-avatar" title={user?.fullName}>
-            {initials}
-          </div>
-          <div className="user-name-text" style={{ lineHeight: 1.2 }}>
-            <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)' }}>
-              {user?.fullName}
+        <div style={{ position: 'relative' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }} onClick={() => setShowProfileMenu(!showProfileMenu)}>
+            <div className="user-avatar" title={user?.fullName}>
+              {initials}
             </div>
-            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
-              {user?.roles?.[0]?.replace('_', ' ')}
+            <div className="user-name-text" style={{ lineHeight: 1.2 }}>
+              <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+                {user?.fullName}
+              </div>
+              <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+                {user?.roles?.[0]?.replace('_', ' ')}
+              </div>
             </div>
+            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', transform: showProfileMenu ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>▼</span>
           </div>
-          <button className="topbar-btn" onClick={logout} title="Logout">
-            🚪
-          </button>
+
+          {showProfileMenu && (
+            <div style={{
+              position: 'absolute', top: '100%', right: 0, width: '200px', backgroundColor: 'var(--bg-card)',
+              boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', borderRadius: '8px', zIndex: 1000, marginTop: '12px', border: '1px solid var(--border-color)',
+              display: 'flex', flexDirection: 'column', padding: '8px'
+            }}>
+              <button 
+                onClick={() => { setShowProfileMenu(false); navigate('/profile'); }}
+                style={{ textAlign: 'left', padding: '10px', background: 'none', border: 'none', cursor: 'pointer', borderRadius: '4px', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px' }}
+                onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-color)'}
+                onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+              >
+                👤 My Profile
+              </button>
+              <div style={{ height: '1px', backgroundColor: 'var(--border-color)', margin: '4px 0' }}></div>
+              <button 
+                onClick={logout}
+                style={{ textAlign: 'left', padding: '10px', background: 'none', border: 'none', cursor: 'pointer', borderRadius: '4px', fontSize: '0.9rem', color: '#ef4444', display: 'flex', alignItems: 'center', gap: '8px' }}
+                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#fef2f2'}
+                onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+              >
+                🚪 Logout
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </header>

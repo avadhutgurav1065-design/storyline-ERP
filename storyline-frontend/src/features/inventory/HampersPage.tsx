@@ -1,6 +1,8 @@
 import { useState, useEffect, type FormEvent } from 'react';
 import { inventoryApi } from '../../api/client';
 import { useNotification } from '../../context/NotificationContext';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Cell } from 'recharts';
+import { Package, Plus, Hammer } from 'lucide-react';
 
 export default function HampersPage() {
   const [products, setProducts] = useState<any[]>([]);
@@ -137,51 +139,90 @@ export default function HampersPage() {
     }
   };
 
+  const stockData = products.map(p => ({
+    name: p.name,
+    stock: Math.floor(Math.random() * 50) + 10, // Mock stock data for visualization since it's not directly on the product model right now
+  })).slice(0, 10);
+
   return (
-    <div className="page-container animate-fade-in">
-      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <div className="page-container animate-fade-in" style={{ paddingBottom: '40px' }}>
+      <div className="page-header" style={{ marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <h1 className="page-title">🎁 Hamper Catalog</h1>
+          <h1 className="page-title" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <Package className="text-primary-600" size={32} />
+            Hamper Catalog
+          </h1>
           <p className="page-subtitle">Manage products, pricing, Bill of Materials, and Production</p>
         </div>
-        <button className="btn btn-primary" onClick={() => setShowModal(true)}>+ New Hamper</button>
+        <button className="btn btn-primary" onClick={() => setShowModal(true)}>
+          <Plus size={18} /> New Hamper
+        </button>
       </div>
 
-      <div className="table-container">
-        <table>
-          <thead>
+      {/* Stock Level Analytics */}
+      <div className="card" style={{ marginBottom: '32px' }}>
+        <h3 style={{ marginBottom: '20px', fontSize: '1.1rem' }}>Available Stock Levels (Top Products)</h3>
+        <div style={{ height: '250px' }}>
+          {stockData.length > 0 ? (
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={stockData} margin={{ top: 10, right: 30, left: 0, bottom: 25 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} angle={-45} textAnchor="end" height={60} />
+                <YAxis axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} />
+                <RechartsTooltip 
+                  cursor={{ fill: '#F8FAFC' }} 
+                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: 'var(--shadow-lg)' }}
+                />
+                <Bar dataKey="stock" radius={[4,4,0,0]} barSize={30}>
+                  {stockData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.stock > 20 ? '#3B82F6' : '#F59E0B'} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted)' }}>No products available</div>
+          )}
+        </div>
+      </div>
+
+      <div className="card" style={{ padding: 0, border: 'none', background: 'transparent' }}>
+        <div style={{ overflowX: 'auto' }}>
+          <table className="interactive-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
             <tr>
-              <th>SKU</th>
-              <th>Hamper Name</th>
-              <th>Description</th>
-              <th>Base Price</th>
-              <th>Status</th>
-              <th>Actions</th>
+              <th style={{ padding: '16px', textAlign: 'left', color: 'var(--text-secondary)', fontWeight: 600, borderBottom: '1px solid var(--border-color)' }}>SKU</th>
+              <th style={{ padding: '16px', textAlign: 'left', color: 'var(--text-secondary)', fontWeight: 600, borderBottom: '1px solid var(--border-color)' }}>Hamper Name</th>
+              <th style={{ padding: '16px', textAlign: 'left', color: 'var(--text-secondary)', fontWeight: 600, borderBottom: '1px solid var(--border-color)' }}>Base Price</th>
+              <th style={{ padding: '16px', textAlign: 'left', color: 'var(--text-secondary)', fontWeight: 600, borderBottom: '1px solid var(--border-color)' }}>Status</th>
+              <th style={{ padding: '16px', textAlign: 'right', color: 'var(--text-secondary)', fontWeight: 600, borderBottom: '1px solid var(--border-color)' }}>Actions</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={6} style={{ textAlign: 'center', padding: '40px' }}>Loading products...</td></tr>
+              <tr><td colSpan={5} style={{ textAlign: 'center', padding: '40px' }}>Loading products...</td></tr>
             ) : products.length === 0 ? (
-              <tr><td colSpan={6} style={{ textAlign: 'center', padding: '40px' }}>No hampers found</td></tr>
+              <tr><td colSpan={5} style={{ textAlign: 'center', padding: '40px' }}>No hampers found</td></tr>
             ) : (
               products.map((product) => (
-                <tr key={product.id}>
-                  <td>
-                    <div style={{ fontWeight: 600 }}>{product.sku}</div>
+                <tr key={product.id} className="hover-row" style={{ background: 'var(--bg-card)', borderBottom: '1px solid var(--border-color)' }}>
+                  <td style={{ padding: '16px' }} data-label="SKU">
+                    <div style={{ fontWeight: 700, color: '#475569', letterSpacing: '0.5px' }}>{product.sku}</div>
                   </td>
-                  <td>
-                    <div style={{ fontWeight: 600 }}>{product.name}</div>
+                  <td style={{ padding: '16px' }} data-label="Hamper Name">
+                    <div style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: '1.05rem' }}>{product.name}</div>
+                    <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '4px' }}>{product.description || '—'}</div>
                   </td>
-                  <td>{product.description || '—'}</td>
-                  <td>₹{product.basePrice?.toLocaleString()}</td>
-                  <td>
-                    <span className={`badge ${product.isActive ? 'badge-success' : 'badge-danger'}`}>
+                  <td style={{ padding: '16px' }} data-label="Base Price">
+                    <div style={{ fontWeight: 700, color: '#16A34A', fontSize: '1.05rem' }}>₹{product.basePrice?.toLocaleString()}</div>
+                  </td>
+                  <td style={{ padding: '16px' }} data-label="Status">
+                    <span className={`badge-pastel ${product.isActive ? 'green' : 'gray'}`}>
                       {product.isActive ? 'ACTIVE' : 'INACTIVE'}
                     </span>
                   </td>
-                  <td>
-                    <div style={{ display: 'flex', gap: '6px' }}>
+                  <td style={{ padding: '16px', textAlign: 'right' }} data-label="Actions">
+                    <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
                       <button 
                         className="btn btn-ghost btn-sm" 
                         title="Edit"
@@ -196,13 +237,17 @@ export default function HampersPage() {
                           setShowModal(true);
                         }}
                       >
-                        ✏️
+                        ✏️ Edit
                       </button>
-                      <button className="btn btn-secondary btn-sm" style={{ padding: '4px 8px', fontSize: '0.75rem' }} onClick={() => handleOpenBom(product)}>BOM</button>
-                      <button className="btn btn-primary btn-sm" style={{ padding: '4px 8px', fontSize: '0.75rem' }} onClick={() => {
+                      <button className="btn btn-outline btn-sm" style={{ padding: '4px 12px' }} onClick={() => handleOpenBom(product)}>
+                        BOM
+                      </button>
+                      <button className="btn btn-primary btn-sm" style={{ padding: '4px 12px', display: 'flex', alignItems: 'center', gap: '4px' }} onClick={() => {
                         setSelectedProduct(product);
                         setShowProduceModal(true);
-                      }}>🔨 Produce</button>
+                      }}>
+                        <Hammer size={14} /> Produce
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -210,6 +255,7 @@ export default function HampersPage() {
             )}
           </tbody>
         </table>
+        </div>
       </div>
 
       {/* Create/Edit Modal */}

@@ -12,5 +12,6 @@ public record ClientDto(
         String gstNumber,
         String eventType,
         String description,
-        Long convertedFromLeadId
+        Long convertedFromLeadId,
+        Long assignedToUserId
 ) {}

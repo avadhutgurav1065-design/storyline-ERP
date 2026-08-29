@@ -57,6 +57,24 @@ public class BomService {
         return saved.stream().map(this::mapToDto).collect(Collectors.toList());
     }
 
+    public BillOfMaterialDto addBomItem(Long productId, BillOfMaterialDto dto) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+        RawMaterial rm = rawMaterialRepository.findById(dto.rawMaterialId())
+                .orElseThrow(() -> new ResourceNotFoundException("Raw material not found"));
+        
+        BillOfMaterial bom = new BillOfMaterial();
+        bom.setProduct(product);
+        bom.setRawMaterial(rm);
+        bom.setQuantity(dto.quantity());
+        
+        return mapToDto(bomRepository.save(bom));
+    }
+
+    public void removeBomItem(Long bomId) {
+        bomRepository.deleteById(bomId);
+    }
+
     private BillOfMaterialDto mapToDto(BillOfMaterial bom) {
         return new BillOfMaterialDto(
                 bom.getId(),
@@ -69,3 +87,4 @@ public class BomService {
         );
     }
 }
+

@@ -69,11 +69,19 @@ public class EventService {
 
         Long currentUserId = extractUserId(auth);
         if (currentUserId != null) {
-            return eventRepository.findByEventHeadId(currentUserId, pageable);
+            // Check if they are an event head (from auth or just checking the query)
+            // But actually finding by assigned user covers both if we want to be safe, or we can combine.
+            // Let's return events where they are assigned. Event Heads are also assigned via TeamAssignment in most properly built systems,
+            // but just in case they aren't, we can fall back to checking if they are assigned.
+            Page<Event> headEvents = eventRepository.findByEventHeadId(currentUserId, pageable);
+            if (headEvents.getTotalElements() > 0) {
+                return headEvents;
+            }
+            
+            return eventRepository.findEventsByAssignedUserId(currentUserId, pageable);
         }
 
-        // Default to returning all for now to avoid the UI looking broken
-        return eventRepository.findAll(pageable);
+        throw new org.springframework.security.access.AccessDeniedException("Unauthorized to view events.");
     }
 
     public Event createEvent(Event event) {
@@ -120,6 +128,28 @@ public class EventService {
     public EventDashboardDto getEventDashboard(Long id) {
         Event event = eventRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Event not found"));
+
+        // Validate access
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null) {
+            boolean isAdminOrStaff = auth.getAuthorities().stream()
+                    .map(GrantedAuthority::getAuthority)
+                    .anyMatch(a -> a.equals("ROLE_ADMIN") || a.equals("ROLE_EVENT_MANAGER") || a.equals("SCOPE_ALL"));
+            
+            if (!isAdminOrStaff) {
+                Long currentUserId = extractUserId(auth);
+                if (currentUserId != null) {
+                    if (event.getEventHeadId() != null && !event.getEventHeadId().equals(currentUserId)) {
+                        // Check if they are in team assignments
+                        boolean isAssigned = teamAssignmentRepository.findByEventId(id).stream()
+                                .anyMatch(ta -> ta.getUserId().equals(currentUserId));
+                        if (!isAssigned) {
+                            throw new org.springframework.security.access.AccessDeniedException("Unauthorized to view this event's dashboard.");
+                        }
+                    }
+                }
+            }
+        }
 
         List<Task> tasks = taskRepository.findByEventId(id);
         List<VendorAssignment> vendors = vendorAssignmentRepository.findByEventId(id);

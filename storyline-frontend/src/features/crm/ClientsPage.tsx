@@ -20,7 +20,7 @@ export default function ClientsPage() {
     setLoading(true);
     try {
       const res = await crmApi.listClients({ search });
-      setClients(res.data.data.content || []);
+      setClients(Array.isArray(res.data.data) ? res.data.data : (res.data.data?.content || []));
     } catch (err) {
       console.error(err);
     } finally {
@@ -64,61 +64,73 @@ export default function ClientsPage() {
 
       <div className="card" style={{ padding: 0 }}>
         <div className="table-container" style={{ border: 'none' }}>
-          <table>
+          <table className="interactive-table">
             <thead>
-              <tr>
-                <th>Client Name</th>
-                <th>Contact Details</th>
-                <th>Event Type</th>
-                <th>Description / GST</th>
-                <th>Actions</th>
+              <tr style={{ background: 'transparent' }}>
+                <th style={{ color: 'var(--text-muted)', fontWeight: 500 }}>Client Name</th>
+                <th style={{ color: 'var(--text-muted)', fontWeight: 500 }}>Contact Details</th>
+                <th style={{ color: 'var(--text-muted)', fontWeight: 500 }}>Event Type</th>
+                <th style={{ color: 'var(--text-muted)', fontWeight: 500 }}>Description / GST</th>
+                <th style={{ color: 'var(--text-muted)', fontWeight: 500, textAlign: 'right' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={5} style={{ textAlign: 'center', padding: '40px' }}>Loading clients...</td></tr>
+                <tr><td colSpan={5} style={{ textAlign: 'center', padding: '40px', border: 'none' }}>Loading clients...</td></tr>
               ) : clients.length === 0 ? (
-                <tr><td colSpan={5} style={{ textAlign: 'center', padding: '40px' }}>No clients found</td></tr>
+                <tr><td colSpan={5} style={{ textAlign: 'center', padding: '40px', border: 'none' }}>No clients found</td></tr>
               ) : (
-                clients.map((client) => (
-                  <tr key={client.id} onClick={() => setSelectedClientId(client.id)} style={{ cursor: 'pointer' }}>
-                    <td>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <div className="user-avatar" style={{ width: 32, height: 32, fontSize: '0.75rem', background: 'var(--success-500)' }}>
+                clients.map((client) => {
+                  const getAvatarColor = (name: string) => {
+                    const colors = [{ bg: '#E0F2FE', text: '#0284C7' }, { bg: '#FEF08A', text: '#854D0E' }, { bg: '#BBF7D0', text: '#166534' }, { bg: '#FCE7F3', text: '#DB2777' }];
+                    const index = name.length % colors.length;
+                    return colors[index];
+                  };
+                  const avatarStyle = getAvatarColor(client.name || '');
+
+                  return (
+                    <tr key={client.id} className="hover-row" onClick={() => setSelectedClientId(client.id)} style={{ cursor: 'pointer' }}>
+                      <td style={{ display: 'flex', alignItems: 'center', gap: '12px', border: 'none' }}>
+                        <div className="avatar" style={{ background: avatarStyle.bg, color: avatarStyle.text, width: 40, height: 40, fontSize: '0.875rem' }}>
                           {client.name?.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase()}
                         </div>
-                        <div style={{ fontWeight: 600 }}>{client.name}</div>
-                      </div>
-                    </td>
-                    <td>
-                      <div>{client.phone}</div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{client.email || '—'}</div>
-                    </td>
-                    <td>
-                      <div>{client.eventType || '—'}</div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{client.company || ''}</div>
-                    </td>
-                    <td>
-                      <div style={{ fontSize: '0.85rem' }}>{client.description || '—'}</div>
-                      {client.gstNumber && <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>GST: {client.gstNumber}</div>}
-                    </td>
-                    <td>
-                      <div style={{ display: 'flex', gap: '6px' }}>
+                        <div>
+                           <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{client.name}</div>
+                           {client.company && <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{client.company}</div>}
+                           {client.assignedToUserId && <div style={{ fontSize: '0.75rem', color: 'var(--primary-color)' }}>Account Mgr: #{client.assignedToUserId}</div>}
+                        </div>
+                      </td>
+                      <td style={{ border: 'none' }}>
+                        <div style={{ fontWeight: 500 }}>{client.phone}</div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{client.email || '—'}</div>
+                      </td>
+                      <td style={{ border: 'none' }}>
+                        <span className={`badge-pastel ${client.eventType?.toLowerCase().includes('wedding') ? 'purple' : client.eventType?.toLowerCase().includes('corporate') ? 'blue' : 'green'}`}>
+                          {client.eventType || 'General'}
+                        </span>
+                      </td>
+                      <td style={{ border: 'none' }}>
+                        <div style={{ fontSize: '0.85rem' }}>{client.description || '—'}</div>
+                        {client.gstNumber && <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>GST: {client.gstNumber}</div>}
+                      </td>
+                      <td style={{ textAlign: 'right', border: 'none' }}>
+                      <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                        <button 
+                          className="badge-pastel green"
+                          onClick={(e) => { e.stopPropagation(); navigate(`/quotations?clientId=${client.id}`); }}
+                          style={{ cursor: 'pointer', border: 'none' }}
+                        >
+                          View Quotes
+                        </button>
                         {client.phone && (
                            <a href={`tel:${client.phone}`} className="btn btn-ghost btn-sm" title="Call" onClick={(e) => e.stopPropagation()}>📞</a>
                         )}
                         <button className="btn btn-ghost btn-sm" title="Edit" onClick={(e) => e.stopPropagation()}>✏️</button>
-                        <button 
-                          className="btn btn-primary btn-sm"
-                          onClick={(e) => { e.stopPropagation(); navigate(`/quotations?clientId=${client.id}`); }}
-                          style={{ padding: '4px 8px', fontSize: '0.75rem' }}
-                        >
-                          Quotations
-                        </button>
                       </div>
                     </td>
                   </tr>
-                ))
+                  );
+                })
               )}
             </tbody>
           </table>

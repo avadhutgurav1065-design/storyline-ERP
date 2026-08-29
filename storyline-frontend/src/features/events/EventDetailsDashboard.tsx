@@ -1,8 +1,10 @@
 import { useState, useEffect, type FormEvent } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import { eventsApi, financeApi } from '../../api/client';
 
 export default function EventDetailsDashboard() {
+  const { hasRole } = useAuth();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const location = useLocation();
@@ -32,7 +34,7 @@ export default function EventDetailsDashboard() {
   const [users, setUsers] = useState<any[]>([]);
 
   const [showTaskModal, setShowTaskModal] = useState(false);
-  const [taskForm, setTaskForm] = useState({ title: '', description: '', assignedUserId: '', priority: 'MEDIUM', dueDate: '', notes: '' });
+  const [taskForm, setTaskForm] = useState({ title: '', description: '', assignedUserId: '', priority: 'MEDIUM', dueDate: '', dueTime: '', notes: '' });
 
   const [showVendorModal, setShowVendorModal] = useState(false);
   const [vendorForm, setVendorForm] = useState({ vendorId: '', task: '', agreedAmount: '' });
@@ -142,10 +144,11 @@ export default function EventDetailsDashboard() {
       await tasksApi.create({
         event: { id: Number(id) },
         ...taskForm,
+        dueTime: taskForm.dueTime ? (taskForm.dueTime.length === 5 ? taskForm.dueTime + ':00' : taskForm.dueTime) : null,
         assignedUserId: taskForm.assignedUserId ? Number(taskForm.assignedUserId) : null,
       });
       setShowTaskModal(false);
-      setTaskForm({ title: '', description: '', assignedUserId: '', priority: 'MEDIUM', dueDate: '', notes: '' });
+      setTaskForm({ title: '', description: '', assignedUserId: '', priority: 'MEDIUM', dueDate: '', dueTime: '', notes: '' });
       fetchDashboard();
     } catch (err) {
       console.error(err);
@@ -286,7 +289,7 @@ export default function EventDetailsDashboard() {
       </div>
 
       <div style={{ display: 'flex', gap: '15px', borderBottom: '2px solid var(--border)', marginBottom: '20px', overflowX: 'auto', paddingBottom: '5px' }}>
-        {['OVERVIEW', 'TEAM', 'CHECKLIST', 'VENDORS', 'DOCUMENTS', 'FINANCE'].map(tab => (
+        {['OVERVIEW', 'TEAM', 'CHECKLIST', 'VENDORS', 'DOCUMENTS', ...(hasRole('ADMIN') || hasRole('FINANCE_MANAGER') || hasRole('EVENT_MANAGER') ? ['FINANCE'] : [])].map(tab => (
           <div 
             key={tab} 
             onClick={() => setActiveTab(tab)}
@@ -487,7 +490,10 @@ export default function EventDetailsDashboard() {
                           })()
                         : 'Unassigned'}
                       </td>
-                      <td>{task.dueDate || '-'}</td>
+                      <td>
+                        {task.dueDate || '-'}
+                        {task.dueTime && <div style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 600 }}>{task.dueTime}</div>}
+                      </td>
                       <td>
                         <span className={`badge ${task.priority === 'HIGH' ? 'badge-danger' : task.priority === 'MEDIUM' ? 'badge-warning' : 'badge-ghost'}`}>
                           {task.priority}
@@ -776,6 +782,10 @@ export default function EventDetailsDashboard() {
                 <div className="form-group">
                   <label className="form-label">Due Date</label>
                   <input type="date" className="form-input" value={taskForm.dueDate} onChange={e => setTaskForm({...taskForm, dueDate: e.target.value})} />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Time</label>
+                  <input type="time" className="form-input" value={taskForm.dueTime} onChange={e => setTaskForm({...taskForm, dueTime: e.target.value})} />
                 </div>
               </div>
               <div className="form-group">

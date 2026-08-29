@@ -7,9 +7,10 @@ import BottomNav from './BottomNav';
 // Map routes to page titles
 const pageTitles: Record<string, string> = {
   '/': 'Dashboard',
-  '/leads': 'Lead Management',
-  '/clients': 'Client Management',
-  '/followups': 'Follow-ups',
+  '/crm': 'CRM Dashboard',
+  '/crm/leads': 'Lead Management',
+  '/crm/clients': 'Client Management',
+  '/crm/followups': 'Follow-ups',
   '/quotations': 'Quotations',
   '/quotation-history': 'Quotation History',
   '/events': 'All Events',

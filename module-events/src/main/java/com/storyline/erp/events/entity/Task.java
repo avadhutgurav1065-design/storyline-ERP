@@ -3,6 +3,7 @@ package com.storyline.erp.events.entity;
 import com.storyline.erp.common.entity.AuditableEntity;
 import jakarta.persistence.*;
 import java.time.LocalDate;
+import java.time.LocalTime;
 
 @Entity
 @Table(name = "tasks")
@@ -24,6 +25,9 @@ public class Task extends AuditableEntity {
     @Column(name = "due_date")
     private LocalDate dueDate;
 
+    @Column(name = "due_time")
+    private LocalTime dueTime;
+
     private String priority = "MEDIUM"; // HIGH, MEDIUM, LOW
 
     private String status = "PENDING"; // PENDING, IN_PROGRESS, COMPLETED
@@ -43,6 +47,8 @@ public class Task extends AuditableEntity {
     public void setAssignedUserId(Long assignedUserId) { this.assignedUserId = assignedUserId; }
     public LocalDate getDueDate() { return dueDate; }
     public void setDueDate(LocalDate dueDate) { this.dueDate = dueDate; }
+    public LocalTime getDueTime() { return dueTime; }
+    public void setDueTime(LocalTime dueTime) { this.dueTime = dueTime; }
     public String getPriority() { return priority; }
     public void setPriority(String priority) { this.priority = priority; }
     public String getStatus() { return status; }

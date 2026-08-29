@@ -5,10 +5,12 @@ import com.storyline.erp.inventory.dto.ManufactureRequestDto;
 import com.storyline.erp.inventory.service.ManufacturingService;
 import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/inventory/manufacturing")
+@PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_INVENTORY_MANAGER')")
 public class ManufacturingController {
 
     private final ManufacturingService manufacturingService;

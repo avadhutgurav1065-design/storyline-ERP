@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import api, { financeApi } from '../../api/client';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
 export default function ReportsPage() {
   const [stats, setStats] = useState({
@@ -13,7 +14,8 @@ export default function ReportsPage() {
   
   const [finance, setFinance] = useState({
     totalRevenue: 0,
-    totalExpenses: 0,
+    directEventCosts: 0,
+    companyOverheads: 0,
     netProfit: 0
   });
 
@@ -48,9 +50,12 @@ export default function ReportsPage() {
     return <div style={{ padding: '40px', textAlign: 'center' }}>Generating Reports...</div>;
   }
 
-  const maxBarValue = Math.max(finance.totalRevenue, finance.totalExpenses, 1000);
-  const revenueHeight = `${(finance.totalRevenue / maxBarValue) * 100}%`;
-  const expenseHeight = `${(finance.totalExpenses / maxBarValue) * 100}%`;
+  const totalExpenses = (finance.directEventCosts || 0) + (finance.companyOverheads || 0);
+
+  const chartData = [
+    { name: 'Revenue', amount: finance.totalRevenue || 0, fill: '#10B981' },
+    { name: 'Expenses', amount: totalExpenses, fill: '#EF4444' }
+  ];
 
   return (
     <div>
@@ -62,7 +67,7 @@ export default function ReportsPage() {
         <div style={{ display: 'flex', gap: '10px' }}>
           <button className="btn btn-outline" onClick={() => window.print()}>Print / Save PDF</button>
           <button className="btn btn-primary" onClick={() => {
-            const csv = `Metric,Value\nTotal Leads,${stats.totalLeads}\nNew Leads,${stats.newLeads}\nConverted Clients,${stats.totalClients}\nTotal Revenue,${finance.totalRevenue}\nTotal Expenses,${finance.totalExpenses}\nNet Profit,${finance.netProfit}`;
+            const csv = `Metric,Value\nTotal Leads,${stats.totalLeads}\nNew Leads,${stats.newLeads}\nConverted Clients,${stats.totalClients}\nTotal Revenue,${finance.totalRevenue}\nTotal Expenses,${totalExpenses}\nNet Profit,${finance.netProfit}`;
             const blob = new Blob([csv], { type: 'text/csv' });
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -73,8 +78,8 @@ export default function ReportsPage() {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '24px' }}>
-        <div className="card">
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 350px), 1fr))', gap: '20px', marginBottom: '24px' }}>
+        <div className="card" style={{ minWidth: 0, overflow: 'hidden' }}>
           <h3 style={{ marginTop: 0 }}>Sales & CRM Overview</h3>
           <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse' }}>
             <tbody>
@@ -100,22 +105,26 @@ export default function ReportsPage() {
           </table>
         </div>
 
-        <div className="card">
+        <div className="card" style={{ minWidth: 0, overflow: 'hidden' }}>
           <h3 style={{ marginTop: 0 }}>Financial Performance</h3>
-          <div style={{ display: 'flex', height: '200px', alignItems: 'flex-end', justifyContent: 'space-around', padding: '20px 0', borderBottom: '1px solid var(--border)' }}>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '30%', gap: '8px' }}>
-              <div style={{ fontWeight: 'bold', color: 'var(--success)' }}>₹{finance.totalRevenue.toLocaleString()}</div>
-              <div style={{ width: '100%', background: 'var(--success)', height: revenueHeight, minHeight: '10px', borderRadius: '4px 4px 0 0', transition: 'height 1s ease' }}></div>
-              <div style={{ fontSize: '0.75rem', fontWeight: 600 }}>Revenue</div>
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '30%', gap: '8px' }}>
-              <div style={{ fontWeight: 'bold', color: 'var(--danger)' }}>₹{finance.totalExpenses.toLocaleString()}</div>
-              <div style={{ width: '100%', background: 'var(--danger)', height: expenseHeight, minHeight: '10px', borderRadius: '4px 4px 0 0', transition: 'height 1s ease' }}></div>
-              <div style={{ fontSize: '0.75rem', fontWeight: 600 }}>Expenses</div>
-            </div>
-
+          <div style={{ height: '250px', padding: '20px 0', borderBottom: '1px solid var(--border)', width: '100%' }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={chartData} margin={{ top: 20, right: 20, left: 0, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 13, fontWeight: 600}} />
+                <YAxis axisLine={false} tickLine={false} tickFormatter={(val) => `₹${val >= 1000 ? (val/1000).toFixed(0)+'k' : val}`} tick={{fill: '#64748b', fontSize: 12}} />
+                <Tooltip 
+                  cursor={{ fill: '#F8FAFC' }}
+                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: 'var(--shadow-lg)' }}
+                  formatter={(value: any) => `₹${Number(value).toLocaleString()}`} 
+                />
+                <Bar dataKey="amount" radius={[6,6,0,0]} barSize={60}>
+                  {chartData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.fill} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
           </div>
           <div style={{ textAlign: 'center', marginTop: '16px' }}>
             <span style={{ color: 'var(--text-muted)' }}>Net Profit: </span>

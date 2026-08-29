@@ -60,7 +60,12 @@ public class CrmService {
         lead.setStatus(LeadStatus.CONVERTED);
         leadRepository.save(lead);
 
-        Client client = new Client();
+        Client client;
+        if (lead.getExistingClientId() != null) {
+            client = findClientById(lead.getExistingClientId());
+        } else {
+            client = new Client();
+        }
         client.setName(clientDto.name() != null ? clientDto.name() : lead.getName());
         client.setEmail(clientDto.email() != null ? clientDto.email() : lead.getEmail());
         client.setPhone(clientDto.phone() != null ? clientDto.phone() : lead.getPhone());
@@ -68,8 +73,19 @@ public class CrmService {
         client.setAddress(clientDto.address());
         client.setGstNumber(clientDto.gstNumber());
         client.setEventType(clientDto.eventType() != null ? clientDto.eventType() : lead.getEventType());
-        client.setDescription(clientDto.description());
+        // Map requirements to description if description isn't explicitly provided
+        if (lead.getExistingClientId() != null) {
+             // For repeat business, append the new requirements to the existing description
+             String currentDesc = client.getDescription() != null ? client.getDescription() + "\n\n" : "";
+             client.setDescription(currentDesc + "--- New Lead Requirements ---\n" + lead.getRequirements());
+        } else {
+             client.setDescription(clientDto.description() != null ? clientDto.description() : lead.getRequirements());
+        }
         client.setConvertedFromLeadId(lead.getId());
+        // For repeat business, do not blindly overwrite the assigned user if already assigned
+        if (client.getAssignedToUserId() == null) {
+            client.setAssignedToUserId(lead.getAssignedToUserId());
+        }
         
         return mapToDto(clientRepository.save(client));
     }
@@ -121,7 +137,9 @@ public class CrmService {
     private LeadDto mapToDto(Lead lead) {
         return new LeadDto(lead.getId(), lead.getName(), lead.getEmail(), lead.getPhone(),
                 lead.getCompany(), lead.getEventType(), lead.getEventDate(), lead.getBudget(),
-                lead.getStatus(), lead.getSource(), lead.getAssignedToUserId());
+                lead.getStatus(), lead.getSource(), lead.getAssignedToUserId(),
+                lead.getRequirements(), lead.getEventLocation(), lead.getLostReason(),
+                lead.getExistingClientId());
     }
 
     private void updateLeadFromDto(Lead lead, LeadDto dto) {
@@ -135,12 +153,17 @@ public class CrmService {
         if (dto.status() != null) lead.setStatus(dto.status());
         lead.setSource(dto.source());
         lead.setAssignedToUserId(dto.assignedToUserId());
+        lead.setRequirements(dto.requirements());
+        lead.setEventLocation(dto.eventLocation());
+        lead.setLostReason(dto.lostReason());
+        lead.setExistingClientId(dto.existingClientId());
     }
 
     private ClientDto mapToDto(Client client) {
         return new ClientDto(client.getId(), client.getName(), client.getEmail(), client.getPhone(),
                 client.getCompany(), client.getAddress(), client.getGstNumber(), 
-                client.getEventType(), client.getDescription(), client.getConvertedFromLeadId());
+                client.getEventType(), client.getDescription(), client.getConvertedFromLeadId(),
+                client.getAssignedToUserId());
     }
 
     private void updateClientFromDto(Client client, ClientDto dto) {
@@ -152,5 +175,6 @@ public class CrmService {
         client.setGstNumber(dto.gstNumber());
         client.setEventType(dto.eventType());
         client.setDescription(dto.description());
+        client.setAssignedToUserId(dto.assignedToUserId());
     }
 }

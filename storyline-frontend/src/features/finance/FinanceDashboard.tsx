@@ -115,73 +115,99 @@ export default function FinanceDashboard() {
       {activeTab === 'OVERVIEW' && (
         <div className="animate-fade-in">
           {/* Top Level Metrics */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '30px' }}>
-            <div className="card" style={{ padding: '20px', borderLeft: '4px solid var(--primary)' }}>
-              <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '8px' }}>Total Revenue</div>
-              <div style={{ fontSize: '1.8rem', fontWeight: 'bold' }}>₹{metrics.totalRevenue?.toLocaleString()}</div>
-            </div>
-            <div className="card" style={{ padding: '20px', borderLeft: '4px solid var(--warning)' }}>
-              <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '8px' }}>Gross Margin (Event Profit)</div>
-              <div style={{ fontSize: '1.8rem', fontWeight: 'bold' }}>₹{metrics.grossProfit?.toLocaleString()}</div>
-              <div style={{ fontSize: '0.85rem', color: 'var(--success)', marginTop: '4px' }}>{grossMarginPct}% Margin</div>
-            </div>
-            <div className="card" style={{ padding: '20px', borderLeft: '4px solid var(--danger)' }}>
-              <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '8px' }}>Total Overheads</div>
-              <div style={{ fontSize: '1.8rem', fontWeight: 'bold' }}>₹{metrics.companyOverheads?.toLocaleString()}</div>
-            </div>
-            <div className="card" style={{ padding: '20px', borderLeft: '4px solid var(--success)', background: 'var(--bg-secondary)' }}>
-              <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '8px' }}>Net Profit</div>
-              <div style={{ fontSize: '1.8rem', fontWeight: 'bold', color: metrics.netProfit >= 0 ? 'var(--success)' : 'var(--danger)' }}>
-                ₹{metrics.netProfit?.toLocaleString()}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))', gap: '20px', marginBottom: '30px' }}>
+            <div className="card hover-scale" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-secondary)' }}>
+                <span>Total Revenue</span>
               </div>
-              <div style={{ fontSize: '0.85rem', color: 'var(--success)', marginTop: '4px' }}>{netMarginPct}% Net Margin</div>
+              <div style={{ display: 'flex', alignItems: 'flex-end', gap: '12px' }}>
+                <div style={{ fontSize: '2rem', fontWeight: 800, lineHeight: 1 }}>₹{(metrics.totalRevenue/1000).toFixed(1)}k</div>
+                <span className="badge-pastel blue" style={{ marginBottom: '4px' }}>Gross</span>
+              </div>
+            </div>
+            
+            <div className="card hover-scale" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-secondary)' }}>
+                <span>Gross Margin</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'flex-end', gap: '12px' }}>
+                <div style={{ fontSize: '2rem', fontWeight: 800, lineHeight: 1 }}>₹{(metrics.grossProfit/1000).toFixed(1)}k</div>
+                <span className="badge-pastel green" style={{ marginBottom: '4px' }}>{grossMarginPct}%</span>
+              </div>
+            </div>
+
+            <div className="card hover-scale" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-secondary)' }}>
+                <span>Total Overheads</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'flex-end', gap: '12px' }}>
+                <div style={{ fontSize: '2rem', fontWeight: 800, lineHeight: 1 }}>₹{(metrics.companyOverheads/1000).toFixed(1)}k</div>
+                <span className="badge-pastel red" style={{ marginBottom: '4px' }}>Fixed</span>
+              </div>
+            </div>
+
+            <div className="card hover-scale" style={{ display: 'flex', flexDirection: 'column', gap: '16px', background: '#F0FDF4', border: '1px solid #BBF7D0' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#166534' }}>
+                <span>Net Profit</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'flex-end', gap: '12px' }}>
+                <div style={{ fontSize: '2rem', fontWeight: 800, lineHeight: 1, color: '#15803D' }}>
+                  ₹{(metrics.netProfit/1000).toFixed(1)}k
+                </div>
+                <span className="badge-pastel green" style={{ marginBottom: '4px', background: '#DCFCE7' }}>{netMarginPct}% Net</span>
+              </div>
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 400px), 1fr))', gap: '20px' }}>
             {/* Waterfall / Bar Chart */}
-            <div className="card" style={{ padding: '20px' }}>
-              <h3 style={{ marginBottom: '20px' }}>Financial Overview</h3>
-              <div style={{ height: '300px' }}>
+            <div className="card" style={{ padding: '24px', minWidth: 0, overflow: 'hidden' }}>
+              <h3 style={{ marginBottom: '20px', fontSize: '1.1rem' }}>Financial Overview</h3>
+              <div style={{ height: '300px', width: '100%' }}>
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={plData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip formatter={(value: any) => `₹${Number(value).toLocaleString()}`} />
-                    <Legend />
-                    <Bar dataKey="Revenue" fill="#4f46e5" />
-                    <Bar dataKey="Direct Costs" fill="#f59e0b" />
-                    <Bar dataKey="Overheads" fill="#ef4444" />
-                    <Bar dataKey="Net Profit" fill="#10b981" />
+                  <BarChart data={plData} margin={{ top: 20, right: 0, left: 0, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} dy={10} />
+                    <YAxis axisLine={false} tickLine={false} tickFormatter={(value) => `₹${value/1000}k`} tick={{fill: '#64748b', fontSize: 12}} />
+                    <Tooltip 
+                      cursor={{ fill: 'transparent' }} 
+                      contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                      formatter={(value: any) => `₹${Number(value).toLocaleString()}`} 
+                    />
+                    <Legend iconType="circle" wrapperStyle={{ paddingTop: '20px' }} />
+                    <Bar dataKey="Revenue" fill="#3B82F6" radius={[4,4,0,0]} barSize={40} />
+                    <Bar dataKey="Direct Costs" fill="#F59E0B" radius={[4,4,0,0]} barSize={40} />
+                    <Bar dataKey="Overheads" fill="#EF4444" radius={[4,4,0,0]} barSize={40} />
+                    <Bar dataKey="Net Profit" fill="#10B981" radius={[4,4,0,0]} barSize={40} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
             </div>
 
             {/* Expenses Breakdown */}
-            <div className="card" style={{ padding: '20px' }}>
-              <h3 style={{ marginBottom: '20px' }}>Expense Distribution</h3>
-              <div style={{ height: '300px' }}>
+            <div className="card" style={{ padding: '24px', minWidth: 0, overflow: 'hidden' }}>
+              <h3 style={{ marginBottom: '20px', fontSize: '1.1rem' }}>Expense Distribution</h3>
+              <div style={{ height: '300px', width: '100%' }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
                       data={expensesBreakdown}
                       cx="50%"
                       cy="50%"
-                      innerRadius={60}
+                      innerRadius={70}
                       outerRadius={100}
-                      fill="#8884d8"
                       paddingAngle={5}
                       dataKey="value"
-                      label={({name, percent}: any) => `${name} ${(percent * 100).toFixed(0)}%`}
+                      stroke="none"
                     >
-                      {expensesBreakdown.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
+                      <Cell fill="#8B5CF6" />
+                      <Cell fill="#EC4899" />
                     </Pie>
-                    <Tooltip formatter={(value: any) => `₹${Number(value).toLocaleString()}`} />
-                    <Legend verticalAlign="bottom" height={36}/>
+                    <Tooltip 
+                      contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: 'var(--shadow-lg)' }}
+                      formatter={(value: any) => `₹${Number(value).toLocaleString()}`} 
+                    />
+                    <Legend verticalAlign="bottom" iconType="circle" />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
@@ -189,28 +215,28 @@ export default function FinanceDashboard() {
           </div>
 
           {/* Accounts Receivable Aging Report */}
-          <div className="card" style={{ marginTop: '20px', padding: '20px' }}>
-            <h3 style={{ marginBottom: '20px' }}>Accounts Receivable Aging</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '15px' }}>
-              <div style={{ padding: '15px', background: 'var(--bg-secondary)', borderRadius: '8px', textAlign: 'center' }}>
-                <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Current (Not Due)</div>
-                <div style={{ fontSize: '1.4rem', fontWeight: 'bold' }}>₹{metrics.agingCurrent?.toLocaleString()}</div>
+          <div className="card" style={{ marginTop: '20px', padding: '24px', minWidth: 0, overflowX: 'auto' }}>
+            <h3 style={{ marginBottom: '24px', fontSize: '1.1rem' }}>Accounts Receivable Aging</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 150px), 1fr))', gap: '16px' }}>
+              <div className="hover-scale" style={{ padding: '20px', background: 'var(--bg-secondary)', borderRadius: '12px', textAlign: 'center' }}>
+                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Current</div>
+                <div style={{ fontSize: '1.5rem', fontWeight: 800 }}>₹{(metrics.agingCurrent/1000).toFixed(1)}k</div>
               </div>
-              <div style={{ padding: '15px', background: '#fef3c7', borderRadius: '8px', textAlign: 'center' }}>
-                <div style={{ fontSize: '0.9rem', color: '#b45309' }}>1 - 7 Days Overdue</div>
-                <div style={{ fontSize: '1.4rem', fontWeight: 'bold', color: '#b45309' }}>₹{metrics.aging1to7Days?.toLocaleString()}</div>
+              <div className="hover-scale" style={{ padding: '20px', background: '#FEF9C3', borderRadius: '12px', textAlign: 'center' }}>
+                <div style={{ fontSize: '0.85rem', color: '#A16207', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>1 - 7 Days</div>
+                <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#854D0E' }}>₹{(metrics.aging1to7Days/1000).toFixed(1)}k</div>
               </div>
-              <div style={{ padding: '15px', background: '#ffedd5', borderRadius: '8px', textAlign: 'center' }}>
-                <div style={{ fontSize: '0.9rem', color: '#c2410c' }}>8 - 30 Days Overdue</div>
-                <div style={{ fontSize: '1.4rem', fontWeight: 'bold', color: '#c2410c' }}>₹{metrics.aging8to30Days?.toLocaleString()}</div>
+              <div className="hover-scale" style={{ padding: '20px', background: '#FFEDD5', borderRadius: '12px', textAlign: 'center' }}>
+                <div style={{ fontSize: '0.85rem', color: '#C2410C', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>8 - 30 Days</div>
+                <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#9A3412' }}>₹{(metrics.aging8to30Days/1000).toFixed(1)}k</div>
               </div>
-              <div style={{ padding: '15px', background: '#fee2e2', borderRadius: '8px', textAlign: 'center' }}>
-                <div style={{ fontSize: '0.9rem', color: '#b91c1c' }}>30+ Days Overdue</div>
-                <div style={{ fontSize: '1.4rem', fontWeight: 'bold', color: '#b91c1c' }}>₹{metrics.agingOver30Days?.toLocaleString()}</div>
+              <div className="hover-scale" style={{ padding: '20px', background: '#FEE2E2', borderRadius: '12px', textAlign: 'center' }}>
+                <div style={{ fontSize: '0.85rem', color: '#B91C1C', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>30+ Days</div>
+                <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#991B1B' }}>₹{(metrics.agingOver30Days/1000).toFixed(1)}k</div>
               </div>
-              <div style={{ padding: '15px', background: '#f1f5f9', borderRadius: '8px', textAlign: 'center', border: '1px solid #cbd5e1' }}>
-                <div style={{ fontSize: '0.9rem', color: '#334155' }}>Total Outstanding</div>
-                <div style={{ fontSize: '1.4rem', fontWeight: 'bold', color: '#0f172a' }}>₹{metrics.outstandingReceivables?.toLocaleString()}</div>
+              <div className="hover-scale" style={{ padding: '20px', background: 'var(--bg-card)', borderRadius: '12px', textAlign: 'center', border: '1px solid var(--border-color)' }}>
+                <div style={{ fontSize: '0.85rem', color: '#475569', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Total Outstanding</div>
+                <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-primary)' }}>₹{(metrics.outstandingReceivables/1000).toFixed(1)}k</div>
               </div>
             </div>
           </div>
@@ -220,8 +246,8 @@ export default function FinanceDashboard() {
       {activeTab === 'QUOTATIONS' && (
         <div className="animate-fade-in card">
           <h3 style={{ marginBottom: '20px' }}>Sales Pipeline & Quotations</h3>
-          <div className="table-container">
-            <table className="table">
+          <div className="table-container" style={{ border: 'none' }}>
+            <table className="interactive-table">
               <thead>
                 <tr>
                   <th>Quote No</th>

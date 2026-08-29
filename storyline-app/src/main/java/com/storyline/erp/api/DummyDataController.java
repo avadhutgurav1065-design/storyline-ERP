@@ -36,6 +36,7 @@ import com.storyline.erp.sales.repository.QuotationRepository;
 
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -46,6 +47,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/dev")
+@PreAuthorize("hasRole('ROLE_ADMIN')")
 public class DummyDataController {
 
     private final LeadRepository leadRepository;

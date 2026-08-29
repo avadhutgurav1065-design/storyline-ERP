@@ -1,7 +1,9 @@
 import { useState, useEffect, type FormEvent } from 'react';
-import { salesApi, crmApi } from '../../api/client';
+import { salesApi, crmApi, eventsApi } from '../../api/client';
 import { useSearchParams } from 'react-router-dom';
 import { generateQuotationPdf } from '../../utils/pdfGenerator';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Legend } from 'recharts';
+import { FileText, CheckCircle, Clock } from 'lucide-react';
 
 export default function QuotationsPage() {
   const [quotations, setQuotations] = useState<any[]>([]);
@@ -34,10 +36,10 @@ export default function QuotationsPage() {
     try {
       if (initialClientId) {
         const res = await salesApi.getQuotationsByClient(Number(initialClientId));
-        setQuotations(res.data.data.content || []);
+        setQuotations(Array.isArray(res.data.data) ? res.data.data : (res.data.data?.content || []));
       } else {
         const res = await salesApi.listQuotations();
-        setQuotations(res.data.data.content || []);
+        setQuotations(Array.isArray(res.data.data) ? res.data.data : (res.data.data?.content || []));
       }
     } catch (err) {
       console.error(err);
@@ -138,9 +140,56 @@ export default function QuotationsPage() {
   const currentTax = formData.items.reduce((acc: number, item: any) => acc + ((item.quantity * item.unitPrice) * (item.taxPercent || 0) / 100), 0);
   const currentGrandTotal = currentSubtotal + currentTax;
 
+  const getStatusColor = (status: string) => {
+    switch(status) {
+      case 'DRAFT': return 'orange';
+      case 'SENT': return 'blue';
+      case 'REJECTED': return 'red';
+      case 'APPROVED': return 'green';
+      default: return 'gray';
+    }
+  };
+
+  const handleConvertToEvent = async (quote: any) => {
+    try {
+      if (confirm(`Are you sure you want to create an event from quotation ${quote.quoteNumber}?`)) {
+        await eventsApi.createEvent({
+          name: quote.eventName || `Event for ${quote.quoteNumber}`,
+          clientId: quote.clientId,
+          quotationId: quote.id,
+          startDate: quote.eventDate || null,
+          endDate: quote.eventDate || null,
+          pax: quote.pax ? Number(quote.pax) : null,
+          venue: quote.venue || null,
+          budget: quote.grandTotal || 0,
+        });
+        alert('Event successfully created from quotation!');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Failed to create event. Please try again.');
+    }
+  };
+
+  const getStatusChartData = () => {
+    const counts = quotations.reduce((acc: any, curr) => {
+      acc[curr.status] = (acc[curr.status] || 0) + 1;
+      return acc;
+    }, {});
+    
+    return [
+      { name: 'Draft', value: counts.DRAFT || 0, color: '#F59E0B' },
+      { name: 'Sent', value: counts.SENT || 0, color: '#3B82F6' },
+      { name: 'Approved', value: counts.APPROVED || 0, color: '#10B981' },
+      { name: 'Rejected', value: counts.REJECTED || 0, color: '#EF4444' }
+    ].filter(d => d.value > 0);
+  };
+
+  const chartData = getStatusChartData();
+
   return (
-    <div>
-      <div className="page-header">
+    <div className="animate-fade-in" style={{ paddingBottom: '40px' }}>
+      <div className="page-header" style={{ marginBottom: '32px' }}>
         <div>
           <h1 className="page-title">Quotations</h1>
           <p className="page-subtitle">Manage client quotations and pricing</p>
@@ -148,17 +197,64 @@ export default function QuotationsPage() {
         <button className="btn btn-primary" onClick={() => setShowModal(true)}>+ New Quotation</button>
       </div>
 
-      <div className="card" style={{ padding: 0 }}>
-        <div className="table-container" style={{ border: 'none' }}>
-          <table>
+      {/* Top Section with Chart and Stats */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px', marginBottom: '32px' }}>
+        <div className="card" style={{ display: 'flex', flexDirection: 'column' }}>
+          <h3 style={{ marginBottom: '16px', fontSize: '1.1rem' }}>Quote Conversion Status</h3>
+          <div style={{ height: '200px', width: '100%' }}>
+            {chartData.length > 0 ? (
+              <ResponsiveContainer>
+                <PieChart>
+                  <Pie data={chartData} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value" stroke="none">
+                    {chartData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
+                  </Pie>
+                  <RechartsTooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: 'var(--shadow-lg)' }} />
+                  <Legend verticalAlign="middle" align="right" layout="vertical" iconType="circle" />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted)' }}>No data available</div>
+            )}
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <div style={{ padding: '16px', background: 'var(--bg-hover)', borderRadius: '12px', color: '#0284C7' }}>
+              <FileText size={24} />
+            </div>
+            <div>
+              <div style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '4px' }}>Total Pipeline Value</div>
+              <div style={{ fontSize: '1.75rem', fontWeight: 800 }}>
+                ₹{(quotations.filter(q => q.status !== 'REJECTED').reduce((acc, curr) => acc + (curr.grandTotal || 0), 0) / 1000).toFixed(1)}k
+              </div>
+            </div>
+          </div>
+          <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <div style={{ padding: '16px', background: '#DCFCE7', borderRadius: '12px', color: '#16A34A' }}>
+              <CheckCircle size={24} />
+            </div>
+            <div>
+              <div style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '4px' }}>Approved Value</div>
+              <div style={{ fontSize: '1.75rem', fontWeight: 800 }}>
+                ₹{(quotations.filter(q => q.status === 'APPROVED').reduce((acc, curr) => acc + (curr.grandTotal || 0), 0) / 1000).toFixed(1)}k
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="card" style={{ padding: 0, border: 'none', background: 'transparent' }}>
+        <div style={{ overflowX: 'auto' }}>
+          <table className="interactive-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr>
-                <th>Quote No.</th>
-                <th>Event Details</th>
-                <th>Version</th>
-                <th>Amount</th>
-                <th>Status</th>
-                <th>Actions</th>
+                <th style={{ padding: '16px', textAlign: 'left', color: 'var(--text-secondary)', fontWeight: 600, borderBottom: '1px solid var(--border-color)' }}>Quote No.</th>
+                <th style={{ padding: '16px', textAlign: 'left', color: 'var(--text-secondary)', fontWeight: 600, borderBottom: '1px solid var(--border-color)' }}>Event Details</th>
+                <th style={{ padding: '16px', textAlign: 'left', color: 'var(--text-secondary)', fontWeight: 600, borderBottom: '1px solid var(--border-color)' }}>Version</th>
+                <th style={{ padding: '16px', textAlign: 'left', color: 'var(--text-secondary)', fontWeight: 600, borderBottom: '1px solid var(--border-color)' }}>Amount</th>
+                <th style={{ padding: '16px', textAlign: 'left', color: 'var(--text-secondary)', fontWeight: 600, borderBottom: '1px solid var(--border-color)' }}>Status</th>
+                <th style={{ padding: '16px', textAlign: 'right', color: 'var(--text-secondary)', fontWeight: 600, borderBottom: '1px solid var(--border-color)' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -167,29 +263,41 @@ export default function QuotationsPage() {
               ) : quotations.length === 0 ? (
                 <tr><td colSpan={6} style={{ textAlign: 'center', padding: '40px' }}>No quotations found</td></tr>
               ) : (
-                quotations.map((quote) => (
-                  <tr key={quote.id}>
-                    <td>
-                      <div style={{ fontWeight: 600 }}>{quote.quoteNumber}</div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{quote.createdAt?.substring(0,10)}</div>
+                quotations.map((quote) => {
+                  const client = clients.find(c => c.id === quote.clientId);
+                  const avatarColor = client ? ['#E0F2FE', '#FEF08A', '#BBF7D0', '#FCE7F3'][client.id % 4] : '#F3F4F6';
+                  const textColor = client ? ['#0284C7', '#854D0E', '#166534', '#DB2777'][client.id % 4] : '#9CA3AF';
+
+                  return (
+                  <tr key={quote.id} className="hover-row" style={{ background: 'var(--bg-card)', borderBottom: '1px solid var(--border-color)' }}>
+                    <td style={{ padding: '16px' }} data-label="Quote No.">
+                      <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{quote.quoteNumber}</div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px' }}>
+                        {client && (
+                          <div className="avatar" style={{ background: avatarColor, color: textColor, width: 24, height: 24, fontSize: '0.6rem' }}>
+                            {client.name.charAt(0)}
+                          </div>
+                        )}
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{client?.name || 'Unknown Client'}</span>
+                      </div>
                     </td>
-                    <td>
-                      <div>{quote.eventName}</div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                    <td style={{ padding: '16px' }} data-label="Event Details">
+                      <div style={{ fontWeight: 600 }}>{quote.eventName}</div>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '4px' }}>
                         {quote.eventDate || 'TBD'} • {quote.pax || 0} pax
                       </div>
                     </td>
-                    <td>v{quote.version}</td>
-                    <td>
-                      <div style={{ fontWeight: 600 }}>₹{quote.grandTotal?.toLocaleString() || 0}</div>
+                    <td style={{ padding: '16px', color: 'var(--text-secondary)' }} data-label="Version">v{quote.version}</td>
+                    <td style={{ padding: '16px' }} data-label="Amount">
+                      <div style={{ fontWeight: 700, color: '#16A34A', fontSize: '1.05rem' }}>₹{quote.grandTotal?.toLocaleString() || 0}</div>
                       <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Tax: ₹{quote.taxAmount?.toLocaleString() || 0}</div>
                     </td>
-                    <td>
-                      <span className={`badge ${statusColors[quote.status]}`}>
+                    <td style={{ padding: '16px' }} data-label="Status">
+                      <span className={`badge-pastel ${getStatusColor(quote.status)}`}>
                         {quote.status}
                       </span>
                     </td>
-                    <td>
+                    <td style={{ padding: '16px', textAlign: 'right' }} data-label="Actions">
                       <div style={{ display: 'flex', gap: '6px' }}>
                         <button 
                           className="btn btn-ghost btn-sm" 
@@ -209,6 +317,16 @@ export default function QuotationsPage() {
                         >
                           ✏️
                         </button>
+                        {quote.status === 'APPROVED' && (
+                          <button 
+                            className="btn btn-ghost btn-sm" 
+                            title="Convert to Event" 
+                            onClick={() => handleConvertToEvent(quote)}
+                            style={{ color: '#16A34A' }}
+                          >
+                            🚀
+                          </button>
+                        )}
                         <button className="btn btn-ghost btn-sm" title="Download PDF" onClick={() => handleDownloadPdf(quote)}>📥</button>
                         <button className="btn btn-ghost btn-sm" title="Share on WhatsApp" onClick={() => handleShareWhatsApp(quote)}>💬</button>
                         {quote.status === 'DRAFT' && (
@@ -229,7 +347,8 @@ export default function QuotationsPage() {
                       </div>
                     </td>
                   </tr>
-                ))
+                );
+              })
               )}
             </tbody>
           </table>

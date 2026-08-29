@@ -23,7 +23,24 @@ public class TaskService {
     }
 
     public List<Task> getAllTasks() {
-        return taskRepository.findAll();
+        org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null) {
+            boolean isStaff = auth.getAuthorities().stream()
+                    .map(org.springframework.security.core.GrantedAuthority::getAuthority)
+                    .anyMatch(a -> a.equals("ROLE_ADMIN") || a.equals("ROLE_EVENT_MANAGER") || a.equals("ROLE_FINANCE_MANAGER") || a.equals("SCOPE_ALL"));
+            
+            if (isStaff) {
+                return taskRepository.findAll();
+            }
+            
+            try {
+                Long currentUserId = Long.parseLong(auth.getName());
+                return taskRepository.findByAssignedUserId(currentUserId);
+            } catch (Exception e) {
+                // fall through
+            }
+        }
+        throw new org.springframework.security.access.AccessDeniedException("Unauthorized to view tasks.");
     }
 
     public Task getTaskById(Long id) {

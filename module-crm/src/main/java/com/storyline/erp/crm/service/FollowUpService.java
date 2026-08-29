@@ -35,6 +35,14 @@ public class FollowUpService {
     }
 
     public List<FollowUpDto> getClientFollowUps(Long clientId) {
+        Client client = clientRepository.findById(clientId)
+                .orElseThrow(() -> new ResourceNotFoundException("Client not found"));
+                
+        if (client.getConvertedFromLeadId() != null) {
+            return followUpRepository.findByClientIdOrLeadIdOrderByInteractionDateDesc(clientId, client.getConvertedFromLeadId())
+                    .stream().map(this::mapToDto).collect(Collectors.toList());
+        }
+        
         return followUpRepository.findByClientIdOrderByInteractionDateDesc(clientId)
                 .stream().map(this::mapToDto).collect(Collectors.toList());
     }

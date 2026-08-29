@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { vendorsApi } from '../../api/client';
+import { Search, Plus, PhoneCall, Mail } from 'lucide-react';
 
 export default function VendorsPage() {
   const [vendors, setVendors] = useState<any[]>([]);
@@ -16,7 +17,7 @@ export default function VendorsPage() {
     setLoading(true);
     try {
       const res = await vendorsApi.list();
-      setVendors(res.data.data || []);
+      setVendors(Array.isArray(res.data.data) ? res.data.data : (res.data.data?.content || []));
     } catch (err) {
       console.error(err);
     } finally {
@@ -59,45 +60,50 @@ export default function VendorsPage() {
 
   const filteredVendors = vendors.filter(v => {
     const q = searchQuery.toLowerCase();
-    return (v.name?.toLowerCase().includes(q) || 
-            v.serviceType?.toLowerCase().includes(q) || 
-            v.address?.toLowerCase().includes(q));
+    return (v.name?.toLowerCase().includes(q) ||
+      v.serviceType?.toLowerCase().includes(q) ||
+      v.address?.toLowerCase().includes(q));
   });
 
   return (
-    <div>
-      <div className="page-header" style={{ marginBottom: '16px' }}>
+    <div className="page-container animate-fade-in" style={{ paddingBottom: '40px' }}>
+      <div className="page-header" style={{ marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <h1 className="page-title">Vendor Contact Book</h1>
-          <p className="page-subtitle">Search and manage your vendors</p>
+          <p className="page-subtitle">Search and manage your external vendors</p>
         </div>
         <button className="btn btn-primary" onClick={() => {
           setEditingId(null);
           setFormData({ name: '', serviceType: '', phone: '', email: '', address: '' });
           setShowModal(true);
-        }}>+ Add Vendor</button>
+        }}>
+          <Plus size={18} /> Add Vendor
+        </button>
       </div>
 
-      <div style={{ marginBottom: '20px' }}>
-        <input 
-          type="text" 
-          className="form-input" 
-          placeholder="Search by name, work description, or city (e.g. 'sound pune')" 
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          style={{ width: '100%', maxWidth: '600px', padding: '12px' }}
-        />
+      <div style={{ marginBottom: '24px', display: 'flex', gap: '16px' }}>
+        <div style={{ position: 'relative', width: '100%', maxWidth: '600px' }}>
+          <Search size={20} color="var(--text-muted)" style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)' }} />
+          <input
+            type="text"
+            className="form-input hover-scale"
+            placeholder="Search by name, work description, or city (e.g. 'sound pune')"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={{ width: '100%', padding: '16px 16px 16px 48px', borderRadius: '16px', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)' }}
+          />
+        </div>
       </div>
 
-      <div className="card" style={{ padding: 0 }}>
-        <div className="table-container" style={{ border: 'none' }}>
-          <table>
+      <div className="card" style={{ padding: 0, border: 'none', background: 'transparent' }}>
+        <div style={{ overflowX: 'auto' }}>
+          <table className="interactive-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr>
-                <th>Vendor Name & City</th>
-                <th>Work Description</th>
-                <th>Phone Number</th>
-                <th>Actions</th>
+                <th style={{ padding: '16px', textAlign: 'left', color: 'var(--text-secondary)', fontWeight: 600, borderBottom: '1px solid var(--border-color)' }}>Vendor Name & City</th>
+                <th style={{ padding: '16px', textAlign: 'left', color: 'var(--text-secondary)', fontWeight: 600, borderBottom: '1px solid var(--border-color)' }}>Work Description</th>
+                <th style={{ padding: '16px', textAlign: 'left', color: 'var(--text-secondary)', fontWeight: 600, borderBottom: '1px solid var(--border-color)' }}>Phone Number</th>
+                <th style={{ padding: '16px', textAlign: 'right', color: 'var(--text-secondary)', fontWeight: 600, borderBottom: '1px solid var(--border-color)' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -106,32 +112,46 @@ export default function VendorsPage() {
               ) : filteredVendors.length === 0 ? (
                 <tr><td colSpan={4} style={{ textAlign: 'center', padding: '40px' }}>No vendors found</td></tr>
               ) : (
-                filteredVendors.map((vendor) => (
-                  <tr key={vendor.id}>
-                    <td data-label="Vendor">
-                      <div style={{ fontWeight: 600 }}>{vendor.name}</div>
-                      <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{vendor.address || '—'}</div>
-                    </td>
-                    <td data-label="Work">
-                      <span className="badge badge-info">{vendor.serviceType || 'General'}</span>
-                    </td>
-                    <td data-label="Phone">
-                      <div style={{ fontWeight: 600 }}>{vendor.phone}</div>
-                    </td>
-                    <td data-label="Actions">
-                      <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
-                        {vendor.phone && (
-                          <a href={`tel:${vendor.phone}`} className="btn btn-primary btn-sm" style={{ textDecoration: 'none' }}>
-                            📞 Call Now
-                          </a>
-                        )}
-                        <button className="btn btn-secondary btn-sm" onClick={() => handleEdit(vendor)}>
-                          ✏️ Edit
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                filteredVendors.map((vendor) => {
+                  const avatarColor = ['#E0F2FE', '#FEF08A', '#BBF7D0', '#FCE7F3'][vendor.id % 4] || '#F3F4F6';
+                  const textColor = ['#0284C7', '#854D0E', '#166534', '#DB2777'][vendor.id % 4] || '#9CA3AF';
+
+                  return (
+                    <tr key={vendor.id} className="hover-row" style={{ background: 'var(--bg-card)', borderBottom: '1px solid var(--border-color)' }}>
+                      <td style={{ padding: '16px' }} data-label="Vendor">
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                          <div className="avatar" style={{ background: avatarColor, color: textColor, width: 40, height: 40, fontSize: '1rem' }}>
+                            {vendor.name.charAt(0)}
+                          </div>
+                          <div>
+                            <div style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: '1.05rem' }}>{vendor.name}</div>
+                            <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{vendor.address || '—'}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td style={{ padding: '16px' }} data-label="Service">
+                        <span className="badge-pastel blue">{vendor.serviceType || 'General'}</span>
+                      </td>
+                      <td style={{ padding: '16px' }} data-label="Phone">
+                        <div style={{ fontWeight: 600, color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <PhoneCall size={14} color="var(--text-muted)" /> {vendor.phone}
+                        </div>
+                      </td>
+                      <td style={{ padding: '16px', textAlign: 'right' }} data-label="Actions">
+                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                          {vendor.phone && (
+                            <a href={`tel:${vendor.phone}`} className="btn btn-primary btn-sm" style={{ padding: '6px 12px', display: 'flex', alignItems: 'center', gap: '4px', textDecoration: 'none' }}>
+                              <PhoneCall size={14} /> Call Now
+                            </a>
+                          )}
+                          <button className="btn btn-ghost btn-sm" onClick={() => handleEdit(vendor)}>
+                            ✏️ Edit
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })
               )}
             </tbody>
           </table>
@@ -150,19 +170,19 @@ export default function VendorsPage() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px' }}>
                 <div className="form-group">
                   <label className="form-label">Vendor Name *</label>
-                  <input className="form-input" required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
+                  <input className="form-input" required value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
                 </div>
                 <div className="form-group">
                   <label className="form-label">Work Description (e.g. Sound, Lights) *</label>
-                  <input className="form-input" required value={formData.serviceType} onChange={e => setFormData({...formData, serviceType: e.target.value})} />
+                  <input className="form-input" required value={formData.serviceType} onChange={e => setFormData({ ...formData, serviceType: e.target.value })} />
                 </div>
                 <div className="form-group">
                   <label className="form-label">Phone Number *</label>
-                  <input className="form-input" required value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} />
+                  <input className="form-input" required value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} />
                 </div>
                 <div className="form-group">
                   <label className="form-label">City</label>
-                  <input className="form-input" value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} />
+                  <input className="form-input" value={formData.address} onChange={e => setFormData({ ...formData, address: e.target.value })} />
                 </div>
               </div>
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '20px' }}>

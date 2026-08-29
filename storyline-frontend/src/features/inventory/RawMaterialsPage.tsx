@@ -17,8 +17,8 @@ export default function RawMaterialsPage() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const res = await inventoryApi.listMaterials();
-      setMaterials(res.data.data || []);
+      const res = await inventoryApi.listMaterials({ size: 100 });
+      setMaterials(res.data.data?.content || res.data.data || []);
     } catch (err) {
       console.error(err);
       triggerNotification('Error', 'Failed to fetch raw materials', 'error');

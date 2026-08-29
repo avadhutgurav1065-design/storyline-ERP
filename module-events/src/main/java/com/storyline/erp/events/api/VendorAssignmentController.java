@@ -4,11 +4,13 @@ import com.storyline.erp.common.dto.ApiResponse;
 import com.storyline.erp.events.entity.VendorAssignment;
 import com.storyline.erp.events.service.VendorAssignmentService;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/vendor-assignments")
+@PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_EVENT_MANAGER', 'ROLE_EVENT_HEAD')")
 public class VendorAssignmentController {
 
     private final VendorAssignmentService vendorAssignmentService;

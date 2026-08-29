@@ -22,6 +22,10 @@
         </dependency>
         <dependency>
             <groupId>com.storyline</groupId>
+            <artifactId>module-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.storyline</groupId>
             <artifactId>module-identity</artifactId>
         </dependency>
         <dependency>
