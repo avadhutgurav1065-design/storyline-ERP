@@ -11,7 +11,7 @@ public class VendorAssignment extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "event_id", nullable = false)
-    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private Event event;
 
     @ManyToOne(fetch = FetchType.LAZY)

@@ -9,6 +9,7 @@ import java.time.LocalTime;
 @Table(name = "tasks")
 public class Task extends AuditableEntity {
 
+    @com.fasterxml.jackson.annotation.JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "event_id", nullable = false)
     private Event event;
