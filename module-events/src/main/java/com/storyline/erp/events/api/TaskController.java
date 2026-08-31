@@ -20,8 +20,8 @@ public class TaskController {
     }
 
     @GetMapping
-    public ApiResponse<List<Task>> getAllTasks() {
-        return ApiResponse.success(taskService.getAllTasks());
+    public ApiResponse<List<Task>> getAllTasks(@RequestParam(required = false) String filter) {
+        return ApiResponse.success(taskService.getAllTasks(filter));
     }
 
     @GetMapping("/{id}")

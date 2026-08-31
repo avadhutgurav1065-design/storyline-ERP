@@ -10,7 +10,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/vendors")
-@PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_EVENT_MANAGER')")
+@PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_EVENT_MANAGER', 'ROLE_TEAM_MANAGER', 'ROLE_FINANCE_MANAGER')")
 public class VendorController {
 
     private final VendorService vendorService;

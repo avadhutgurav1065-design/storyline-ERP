@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { crmApi } from '../../api/client';
+import { useNotification } from '../../context/NotificationContext';
 
 interface ClientDetailsDrawerProps {
   clientId: number;
@@ -11,6 +12,7 @@ export default function ClientDetailsDrawer({ clientId, onClose, onUpdate }: Cli
   const [client, setClient] = useState<any>(null);
   const [followUps, setFollowUps] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const { triggerNotification } = useNotification();
   
   const [newFollowUp, setNewFollowUp] = useState({
     interactionType: 'CALL',
@@ -80,10 +82,10 @@ export default function ClientDetailsDrawer({ clientId, onClose, onUpdate }: Cli
         existingClientId: client.id,
         requirements: 'New Inquiry from existing client'
       });
-      alert('New opportunity (Lead) successfully created on the Kanban board!');
+      triggerNotification('Success', 'New opportunity (Lead) successfully created on the Kanban board!', 'success');
     } catch (err) {
       console.error('Failed to create opportunity', err);
-      alert('Failed to create opportunity.');
+      triggerNotification('Error', 'Failed to create opportunity.', 'error');
     } finally {
       setIsCreatingOpportunity(false);
     }

@@ -10,7 +10,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/vendor-assignments")
-@PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_EVENT_MANAGER', 'ROLE_EVENT_HEAD')")
+@PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_EVENT_MANAGER', 'ROLE_TEAM_MANAGER', 'ROLE_FINANCE_MANAGER', 'ROLE_FREELANCER')")
 public class VendorAssignmentController {
 
     private final VendorAssignmentService vendorAssignmentService;

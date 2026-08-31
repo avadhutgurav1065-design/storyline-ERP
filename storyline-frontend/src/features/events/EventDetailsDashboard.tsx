@@ -1,13 +1,15 @@
 import { useState, useEffect, type FormEvent } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { eventsApi, financeApi } from '../../api/client';
+import { useNotification } from '../../context/NotificationContext';
+import api, { eventsApi, financeApi, usersApi, vendorsApi, inventoryApi, tasksApi, vendorAssignmentsApi, teamAssignmentsApi } from '../../api/client';
 
 export default function EventDetailsDashboard() {
   const { hasRole } = useAuth();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const location = useLocation();
+  const { triggerNotification } = useNotification();
   const [data, setData] = useState<any>(null);
   const [financeData, setFinanceData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -42,6 +44,8 @@ export default function EventDetailsDashboard() {
 
   const [showDocModal, setShowDocModal] = useState(false);
   const [docForm, setDocForm] = useState({ name: '', documentType: 'GUEST_LIST', fileUrl: '' });
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   const [userSearch, setUserSearch] = useState('');
   const [vendorSearch, setVendorSearch] = useState('');
@@ -77,7 +81,6 @@ export default function EventDetailsDashboard() {
     // Fetch users for the assignment modal
     const fetchUsersAndVendors = async () => {
       try {
-        const { usersApi, vendorsApi, inventoryApi } = await import('../../api/client');
         const [usersRes, vendorsRes, productsRes] = await Promise.all([
           usersApi.list(),
           vendorsApi.list(),
@@ -98,11 +101,10 @@ export default function EventDetailsDashboard() {
   const handleAssignSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!assignForm.userId) {
-      alert("Please select a team member from the dropdown list.");
+      triggerNotification('Warning', 'Please select a team member from the dropdown list.', 'warning');
       return;
     }
     try {
-      const { default: api } = await import('../../api/client');
       const res = await api.post(`/events/${id}/team`, {
         userId: Number(assignForm.userId),
         role: assignForm.role,
@@ -122,7 +124,6 @@ export default function EventDetailsDashboard() {
   const handleHamperSubmit = async (e: FormEvent) => {
     e.preventDefault();
     try {
-      const { inventoryApi } = await import('../../api/client');
       await inventoryApi.issueHamper(Number(hamperForm.productId), { 
         eventId: Number(id), 
         quantity: Number(hamperForm.quantity),
@@ -130,17 +131,16 @@ export default function EventDetailsDashboard() {
       });
       setShowHamperModal(false);
       setHamperForm({ productId: '', quantity: '1', reference: '' });
-      alert("Hamper issued to event successfully.");
+      triggerNotification('Success', 'Hamper issued to event successfully.', 'success');
     } catch (err) {
       console.error(err);
-      alert("Failed to issue hamper.");
+      triggerNotification('Error', 'Failed to issue hamper.', 'error');
     }
   };
 
   const handleTaskSubmit = async (e: FormEvent) => {
     e.preventDefault();
     try {
-      const { tasksApi } = await import('../../api/client');
       await tasksApi.create({
         event: { id: Number(id) },
         ...taskForm,
@@ -158,11 +158,10 @@ export default function EventDetailsDashboard() {
   const handleVendorSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!vendorForm.vendorId) {
-      alert("Please select a vendor from the dropdown list.");
+      triggerNotification('Warning', 'Please select a vendor from the dropdown list.', 'warning');
       return;
     }
     try {
-      const { default: api } = await import('../../api/client');
       const res = await api.post('/vendor-assignments', {
         event: { id: Number(id) },
         vendor: { id: Number(vendorForm.vendorId) },
@@ -175,70 +174,92 @@ export default function EventDetailsDashboard() {
         setVendorForm({ vendorId: '', task: '', agreedAmount: '' });
         fetchDashboard();
       } else {
-        alert("Failed to assign vendor. Server response: " + JSON.stringify(res.data));
+        triggerNotification('Error', 'Failed to assign vendor. Server response: ' + JSON.stringify(res.data), 'error');
       }
     } catch (err: any) {
       console.error(err);
-      alert("Error assigning vendor: " + (err.response?.data?.message || err.message));
+      triggerNotification('Error', 'Error assigning vendor: ' + (err.response?.data?.message || err.message), 'error');
     }
   };
 
   const handleDocSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    if (!selectedFile) {
+      triggerNotification('Error', 'Please select a file to upload', 'error');
+      return;
+    }
+    setUploading(true);
     try {
-      const { default: api } = await import('../../api/client');
-      const res = await api.post(`/events/${id}/documents`, docForm);
+      // Step 1: Upload the actual file via multipart
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+      const uploadRes = await api.post('/files/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      if (!uploadRes.data.success) {
+        triggerNotification('Error', 'File upload failed: ' + uploadRes.data.message, 'error');
+        setUploading(false);
+        return;
+      }
+      const { fileName } = uploadRes.data.data;
+
+      // Step 2: Save the document record with the stored filename
+      const res = await api.post(`/events/${id}/documents`, {
+        name: docForm.name,
+        documentType: docForm.documentType,
+        fileUrl: fileName,
+      });
       if (res.data.success) {
         setShowDocModal(false);
         setDocForm({ name: '', documentType: 'GUEST_LIST', fileUrl: '' });
+        setSelectedFile(null);
         fetchDashboard();
+        triggerNotification('Success', 'Document uploaded successfully', 'success');
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      triggerNotification('Error', 'Failed to upload document: ' + (err.response?.data?.message || err.message), 'error');
+    } finally {
+      setUploading(false);
     }
   };
 
   const handleFileUpload = (e: any) => {
     const file = e.target.files[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setDocForm({ ...docForm, fileUrl: reader.result as string });
-      };
-      reader.readAsDataURL(file);
+      setSelectedFile(file);
+      setDocForm({ ...docForm, fileUrl: file.name });
     }
   };
 
   const handleBudgetSubmit = async (e: FormEvent) => {
     e.preventDefault();
     try {
-      const { eventsApi } = await import('../../api/client');
       await eventsApi.updateEvent(Number(id), {
         ...data.event,
         budget: parseFloat(budgetForm.budget) || 0
       });
       setShowBudgetModal(false);
       fetchDashboard();
+      triggerNotification('Success', 'Budget updated successfully', 'success');
     } catch (err) {
       console.error(err);
-      alert("Failed to update budget");
+      triggerNotification('Error', 'Failed to update budget', 'error');
     }
   };
 
   const updateTaskStatus = async (taskId: number, newStatus: string) => {
     try {
-      const { tasksApi } = await import('../../api/client');
       await tasksApi.update(taskId, { status: newStatus });
       fetchDashboard();
     } catch (err) {
       console.error(err);
-      alert("Failed to update task status");
+      triggerNotification('Error', 'Failed to update task status', 'error');
     }
   };
 
   const updateTaskNotes = async (taskId: number, notes: string) => {
     try {
-      const { tasksApi } = await import('../../api/client');
       await tasksApi.update(taskId, { notes });
       fetchDashboard();
     } catch (err) {
@@ -248,7 +269,6 @@ export default function EventDetailsDashboard() {
 
   const confirmVendorAssignment = async (va: any) => {
     try {
-      const { vendorAssignmentsApi, financeApi } = await import('../../api/client');
       await vendorAssignmentsApi.update(va.id, { ...va, event: {id: Number(id)}, vendor: {id: va.vendorId}, status: 'CONFIRMED' });
       
       await financeApi.createExpense({
@@ -262,9 +282,10 @@ export default function EventDetailsDashboard() {
         status: 'PO_GENERATED'
       });
       fetchDashboard();
+      triggerNotification('Success', 'Vendor confirmed and PO generated', 'success');
     } catch (err) {
       console.error(err);
-      alert("Failed to confirm vendor assignment and generate PO");
+      triggerNotification('Error', 'Failed to confirm vendor assignment and generate PO', 'error');
     }
   };
 
@@ -283,9 +304,14 @@ export default function EventDetailsDashboard() {
             {event.startDate} to {event.endDate} | Venue: {event.venue || 'TBD'}
           </p>
         </div>
-        <span className={`badge ${event.status === 'COMPLETED' ? 'badge-success' : 'badge-primary'}`} style={{ padding: '8px 16px', fontSize: '1rem' }}>
-          {event.status}
-        </span>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <button className="btn btn-primary" onClick={() => navigate(`/finance/expenses?eventId=${event.id}`)}>
+            💸 Log Expense
+          </button>
+          <span className={`badge ${event.status === 'COMPLETED' ? 'badge-success' : 'badge-primary'}`} style={{ padding: '8px 16px', fontSize: '1rem' }}>
+            {event.status}
+          </span>
+        </div>
       </div>
 
       <div style={{ display: 'flex', gap: '15px', borderBottom: '2px solid var(--border)', marginBottom: '20px', overflowX: 'auto', paddingBottom: '5px' }}>
@@ -367,7 +393,6 @@ export default function EventDetailsDashboard() {
                       <div style={{ display: 'flex', gap: '10px' }}>
                         <a href={`tel:`} className="btn btn-primary btn-sm" style={{ flex: 1, textAlign: 'center' }}>📞 Call</a>
                         <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }} onClick={async () => {
-                          const { default: api } = await import('../../api/client');
                           await api.delete(`/events/team/${ta.id}`);
                           fetchDashboard();
                         }}>Remove</button>
@@ -393,7 +418,6 @@ export default function EventDetailsDashboard() {
                       <div style={{ display: 'flex', gap: '10px' }}>
                         <a href={`tel:`} className="btn btn-primary btn-sm" style={{ flex: 1, textAlign: 'center' }}>📞 Call</a>
                         <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }} onClick={async () => {
-                          const { default: api } = await import('../../api/client');
                           await api.delete(`/events/team/${ta.id}`);
                           fetchDashboard();
                         }}>Remove</button>
@@ -418,7 +442,6 @@ export default function EventDetailsDashboard() {
                       <div style={{ display: 'flex', gap: '10px' }}>
                         <a href={`tel:`} className="btn btn-primary btn-sm" style={{ flex: 1, textAlign: 'center' }}>📞 Call</a>
                         <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }} onClick={async () => {
-                          const { default: api } = await import('../../api/client');
                           await api.delete(`/events/team/${ta.id}`);
                           fetchDashboard();
                         }}>Remove</button>
@@ -577,16 +600,29 @@ export default function EventDetailsDashboard() {
                   </div>
                   <div style={{ marginTop: 'auto', display: 'flex', gap: '10px' }}>
                     <button className="btn btn-secondary btn-sm" style={{ flex: 1 }} onClick={() => {
-                      window.open(doc.fileUrl, '_blank');
+                      // Build the proper backend URL for viewing inline
+                      const baseUrl = (import.meta.env.VITE_API_BASE_URL || 'https://storyline-erp-backend.onrender.com/api');
+                      const viewUrl = `${baseUrl}/files/view/${doc.fileUrl}`;
+                      window.open(viewUrl, '_blank');
                     }}>View</button>
-                    <button className="btn btn-primary btn-sm" style={{ flex: 1 }} onClick={() => {
-                      const a = document.createElement('a');
-                      a.href = doc.fileUrl;
-                      a.download = doc.name;
-                      a.click();
+                    <button className="btn btn-primary btn-sm" style={{ flex: 1 }} onClick={async () => {
+                      try {
+                        // Download the file as a blob using authenticated API
+                        const response = await api.get(`/files/download/${doc.fileUrl}`, { responseType: 'blob' });
+                        const blob = new Blob([response.data]);
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = doc.name || 'download';
+                        document.body.appendChild(a);
+                        a.click();
+                        window.URL.revokeObjectURL(url);
+                        document.body.removeChild(a);
+                      } catch (err) {
+                        console.error('Download failed:', err);
+                      }
                     }}>Download</button>
                     <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }} onClick={async () => {
-                      const { default: api } = await import('../../api/client');
                       await api.delete(`/events/documents/${doc.id}`);
                       fetchDashboard();
                     }}>Delete</button>
@@ -606,6 +642,14 @@ export default function EventDetailsDashboard() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
               <h3 style={{ margin: 0 }}>📊 Event Profit & Loss</h3>
               <div style={{ display: 'flex', gap: '10px' }}>
+                {event.quotationId && (
+                  <button className="btn btn-ghost btn-sm" onClick={() => navigate(`/sales?quoteId=${event.quotationId}`)}>
+                    📄 View Quotation
+                  </button>
+                )}
+                <button className="btn btn-ghost btn-sm" onClick={() => navigate(`/finance?eventId=${event.id}`)}>
+                  🧾 View Invoices
+                </button>
                 <button className="btn btn-primary btn-sm" onClick={() => setShowHamperModal(true)}>
                   🎁 Issue Hamper
                 </button>
@@ -736,7 +780,25 @@ export default function EventDetailsDashboard() {
               )}
               <div className="form-group">
                 <label className="form-label">Role Title *</label>
-                <input className="form-input" required value={assignForm.role} onChange={e => setAssignForm({...assignForm, role: e.target.value})} placeholder="e.g. Hospitality Executive" />
+                <input 
+                  className="form-input" 
+                  required 
+                  list="roleOptions"
+                  value={assignForm.role} 
+                  onChange={e => setAssignForm({...assignForm, role: e.target.value})} 
+                  placeholder="Select or type role..." 
+                />
+                <datalist id="roleOptions">
+                  <option value="Event Head" />
+                  <option value="Technical Head" />
+                  <option value="Logistics Head" />
+                  <option value="Hospitality Head" />
+                  <option value="Decor Head" />
+                  <option value="Production Head" />
+                  <option value="Team Manager" />
+                  <option value="Team Member" />
+                  <option value="Freelancer" />
+                </datalist>
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '20px' }}>
@@ -886,11 +948,12 @@ export default function EventDetailsDashboard() {
               </div>
               <div className="form-group">
                 <label className="form-label">Select File *</label>
-                <input type="file" className="form-input" required onChange={handleFileUpload} accept="*/*" />
+                <input type="file" className="form-input" required onChange={handleFileUpload} accept=".pdf,.ppt,.pptx,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.gif,.zip,.rar,.txt,.csv" />
+                {selectedFile && <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '4px' }}>Selected: {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)</div>}
               </div>
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '20px' }}>
-                <button type="button" className="btn btn-secondary" onClick={() => setShowDocModal(false)}>Cancel</button>
-                <button type="submit" className="btn btn-primary" disabled={!docForm.fileUrl}>Upload</button>
+                <button type="button" className="btn btn-secondary" onClick={() => { setShowDocModal(false); setSelectedFile(null); }}>Cancel</button>
+                <button type="submit" className="btn btn-primary" disabled={!selectedFile || uploading}>{uploading ? 'Uploading...' : 'Upload'}</button>
               </div>
             </form>
           </div>

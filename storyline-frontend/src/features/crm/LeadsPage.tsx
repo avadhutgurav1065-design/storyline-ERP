@@ -5,6 +5,7 @@ import { DndContext, DragOverlay, closestCorners, KeyboardSensor, PointerSensor,
 import { SortableContext, arrayMove, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Plus, Search, MoreVertical, Calendar, IndianRupee } from 'lucide-react';
+import { useNotification } from '../../context/NotificationContext';
 
 // Sortable Item Component
 function SortableLeadCard({ lead, onClick, onEdit, onDelete }: any) {
@@ -73,6 +74,7 @@ export default function LeadsPage() {
   const [showModal, setShowModal] = useState(false);
   const [selectedLeadId, setSelectedLeadId] = useState<number | null>(null);
   const [activeDragItem, setActiveDragItem] = useState<any>(null);
+  const { triggerNotification } = useNotification();
 
   const [formData, setFormData] = useState({
     name: '', email: '', phone: '', company: '', eventType: '', budget: '', source: '', requirements: '', eventLocation: '', assignedToUserId: '', existingClientId: ''
@@ -104,8 +106,9 @@ export default function LeadsPage() {
       }
       setShowModal(false);
       fetchLeads();
+      triggerNotification('Success', 'Lead saved successfully', 'success');
     } catch (err) {
-      alert('Failed to save lead.');
+      triggerNotification('Error', 'Failed to save lead.', 'error');
     }
   };
 
@@ -161,7 +164,7 @@ export default function LeadsPage() {
     } catch (err) {
       console.error(err);
       setLeads(previousLeads);
-      alert('Failed to update status.');
+      triggerNotification('Error', 'Failed to update status.', 'error');
     }
   };
 

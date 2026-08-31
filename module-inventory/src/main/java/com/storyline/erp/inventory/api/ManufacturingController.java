@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/inventory/manufacturing")
-@PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_INVENTORY_MANAGER')")
+@PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_EVENT_MANAGER')")
 public class ManufacturingController {
 
     private final ManufacturingService manufacturingService;

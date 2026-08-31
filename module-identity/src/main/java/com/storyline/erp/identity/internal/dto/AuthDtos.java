@@ -54,10 +54,7 @@ public class AuthDtos {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class CreateUserRequest {
-        @NotBlank(message = "Username is required")
-        @Size(min = 3, max = 50, message = "Username must be 3-50 characters")
-        private String username;
-
+        // Username removed as requested by user. We will auto-generate it from email in UserService
         @NotBlank(message = "Email is required")
         @Email(message = "Please provide a valid email")
         private String email;

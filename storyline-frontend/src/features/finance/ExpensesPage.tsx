@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import api, { financeApi, vendorsApi, eventsApi } from '../../api/client';
 import { useNotification } from '../../context/NotificationContext';
 
@@ -31,6 +32,15 @@ export default function ExpensesPage() {
   });
 
   const { triggerNotification } = useNotification();
+  const [searchParams] = useSearchParams();
+  const initialEventId = searchParams.get('eventId');
+
+  useEffect(() => {
+    if (initialEventId) {
+      setPoData(prev => ({ ...prev, eventId: initialEventId }));
+      setShowCreatePOModal(true);
+    }
+  }, [initialEventId]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -70,7 +80,6 @@ export default function ExpensesPage() {
       let nextStatus = 'WORK_COMPLETED';
       if (selectedExpense.status === 'WORK_COMPLETED') nextStatus = 'APPROVED_FOR_PAYMENT';
 
-      const { default: api } = await import('../../api/client');
       await api.patch(`/finance/expenses/${selectedExpense.id}/status?status=${nextStatus}&notes=${encodeURIComponent(statusNotes)}`);
       
       triggerNotification('Success', `Status updated to ${nextStatus}`, 'success');

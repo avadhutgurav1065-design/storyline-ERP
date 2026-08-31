@@ -14,15 +14,10 @@ public class DbCheck {
         try (Connection conn = DriverManager.getConnection(url, user, pass);
              Statement stmt = conn.createStatement()) {
             
-            for (String table : tables) {
-                try {
-                    ResultSet rs = stmt.executeQuery("SELECT count(*) FROM " + table);
-                    if (rs.next()) {
-                        System.out.println(table + " count: " + rs.getInt(1));
-                    }
-                } catch (Exception e) {
-                    System.out.println(table + " error: " + e.getMessage());
-                }
+            System.out.println("Checking vendors table...");
+            ResultSet rs = stmt.executeQuery("SELECT * FROM vendors");
+            while (rs.next()) {
+                System.out.println("Vendor: " + rs.getString("name") + ", " + rs.getString("service_type"));
             }
         } catch (Exception e) {
             e.printStackTrace();

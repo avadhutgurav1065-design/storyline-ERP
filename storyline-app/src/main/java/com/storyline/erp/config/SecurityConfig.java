@@ -45,6 +45,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/login", "/api/auth/refresh", "/api/auth/fix-admin", "/api/dev/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/actuator/health").permitAll()
+                        // File view/download — files are UUID-named (unguessable) so safe to serve without JWT
+                        .requestMatchers("/api/files/view/**", "/api/files/download/**").permitAll()
                         // All other endpoints require authentication
                         .anyRequest().authenticated()
                 )

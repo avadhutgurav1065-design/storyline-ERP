@@ -17,7 +17,7 @@ export default function TasksPage({ filter }: { filter: 'my' | 'team' | 'all' })
     setLoading(true);
     try {
       const [tasksRes, usersRes] = await Promise.all([
-        tasksApi.list(),
+        tasksApi.list({ filter }),
         usersApi.list()
       ]);
       

@@ -10,7 +10,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/inventory")
-@PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_INVENTORY_MANAGER')")
+@PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_EVENT_MANAGER')")
 public class BomController {
 
     private final BomService bomService;

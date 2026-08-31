@@ -33,7 +33,6 @@ export default function HampersPage() {
     setLoading(true);
     try {
       const res = await inventoryApi.listProducts();
-      console.log('PRODUCTS RESPONSE:', res.data);
       let pData = res.data.data;
       if (pData && (pData as any).content) pData = (pData as any).content;
       setProducts(Array.isArray(pData) ? pData : (Array.isArray(res.data) ? res.data : []));

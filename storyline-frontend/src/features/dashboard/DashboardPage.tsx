@@ -31,6 +31,7 @@ export default function DashboardPage() {
   const [recentLeads, setRecentLeads] = useState<any[]>([]);
   const [upcomingEvents, setUpcomingEvents] = useState<any[]>([]);
   const [recentQuotes, setRecentQuotes] = useState<any[]>([]);
+  const [myTasks, setMyTasks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   
   // For Active Pie Chart
@@ -40,12 +41,25 @@ export default function DashboardPage() {
     const fetchDashboardData = async () => {
       setLoading(true);
       try {
-        const [statsRes, leadsRes, eventsRes, quotesRes] = await Promise.all([
+        const promises: Promise<any>[] = [
           api.get('/dashboard/stats').catch(() => ({ data: { data: {} } })),
           crmApi.listLeads({ size: 4, sort: 'createdAt,desc' }).catch(() => ({ data: { data: { content: [] } } })),
           eventsApi.listEvents({ size: 3, sort: 'startDate,asc', status: 'PLANNING' }).catch(() => ({ data: { data: { content: [] } } })),
           salesApi.listQuotations({ size: 3, sort: 'createdAt,desc' }).catch(() => ({ data: { data: { content: [] } } }))
-        ]);
+        ];
+        
+        // If they are ground staff, also fetch their tasks
+        if (!hasRole('ADMIN') && !hasRole('EVENT_MANAGER') && !hasRole('FINANCE_MANAGER')) {
+            promises.push(api.get('/tasks').catch(() => ({ data: { data: [] } })));
+        }
+
+        const results = await Promise.all(promises);
+        
+        const statsRes = results[0];
+        const leadsRes = results[1];
+        const eventsRes = results[2];
+        const quotesRes = results[3];
+        const tasksRes = results[4];
         
         if (statsRes.data && statsRes.data.data) {
           setStats(statsRes.data.data);
@@ -53,6 +67,9 @@ export default function DashboardPage() {
         setRecentLeads(leadsRes.data?.data?.content || []);
         setUpcomingEvents(eventsRes.data?.data?.content || []);
         setRecentQuotes(quotesRes.data?.data?.content || []);
+        if (tasksRes) {
+            setMyTasks(tasksRes.data?.data || []);
+        }
       } catch (err) {
         console.error("Dashboard fetch error:", err);
       } finally {
@@ -60,7 +77,7 @@ export default function DashboardPage() {
       }
     };
     fetchDashboardData();
-  }, []);
+  }, [hasRole]);
 
   const eventData = [
     { name: 'Planning', value: stats.eventCharts?.PLANNING || 0, color: '#f59e0b' },
@@ -131,7 +148,7 @@ export default function DashboardPage() {
         </div>
       ) : (
         <>
-          {(hasRole('ADMIN') || hasRole('EVENT_MANAGER') || hasRole('FINANCE_MANAGER') || hasRole('EVENT_HEAD')) && (
+          {(hasRole('ADMIN') || hasRole('EVENT_MANAGER') || hasRole('FINANCE_MANAGER')) && (
             <>
           {/* 2. Quick Actions */}
           <div style={{ marginBottom: '32px' }}>
@@ -305,100 +322,172 @@ export default function DashboardPage() {
           {/* 5. Real-time Activity Panels */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))', gap: '20px' }}>
             
-            {/* Recent Leads */}
-            {(hasRole('ADMIN') || hasRole('EVENT_MANAGER') || hasRole('FINANCE_MANAGER') || hasRole('EVENT_HEAD')) && (
-            <div className="card premium-card" style={{ padding: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Newest Leads</h3>
-                <button className="btn btn-ghost btn-sm" onClick={() => navigate('/leads')}>View All</button>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                {recentLeads.length === 0 ? (
-                   <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>No leads found.</div>
-                ) : (
-                  recentLeads.map(lead => {
-                    const getAvatarColor = (name: string) => {
-                      const colors = [{ bg: '#E0F2FE', text: '#0284C7' }, { bg: '#FEF08A', text: '#854D0E' }, { bg: '#BBF7D0', text: '#166534' }, { bg: '#FCE7F3', text: '#DB2777' }];
-                      const index = name.length % colors.length;
-                      return colors[index];
-                    };
-                    const avatarStyle = getAvatarColor(lead.name || '');
-                    
-                    return (
-                      <div key={lead.id} className="hover-row" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', borderBottom: '1px solid var(--border-color)', borderRadius: '8px' }}>
-                        <div className="avatar" style={{ background: avatarStyle.bg, color: avatarStyle.text }}>
-                            {lead.name.charAt(0).toUpperCase()}
+            {(hasRole('ADMIN') || hasRole('EVENT_MANAGER') || hasRole('FINANCE_MANAGER')) ? (
+              <>
+                {/* Recent Leads */}
+                <div className="card premium-card" style={{ padding: '24px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                    <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Newest Leads</h3>
+                    <button className="btn btn-ghost btn-sm" onClick={() => navigate('/leads')}>View All</button>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    {recentLeads.length === 0 ? (
+                       <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>No leads found.</div>
+                    ) : (
+                      recentLeads.map(lead => {
+                        const getAvatarColor = (name: string) => {
+                          const colors = [{ bg: '#E0F2FE', text: '#0284C7' }, { bg: '#FEF08A', text: '#854D0E' }, { bg: '#BBF7D0', text: '#166534' }, { bg: '#FCE7F3', text: '#DB2777' }];
+                          const index = name.length % colors.length;
+                          return colors[index];
+                        };
+                        const avatarStyle = getAvatarColor(lead.name || '');
+                        
+                        return (
+                          <div key={lead.id} className="hover-row" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', borderBottom: '1px solid var(--border-color)', borderRadius: '8px' }}>
+                            <div className="avatar" style={{ background: avatarStyle.bg, color: avatarStyle.text }}>
+                                {lead.name.charAt(0).toUpperCase()}
+                            </div>
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontWeight: 600, fontSize: '0.95rem' }}>{lead.name}</div>
+                              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{lead.company || lead.email}</div>
+                            </div>
+                            <span className={`badge-pastel ${lead.eventType?.toLowerCase().includes('wedding') ? 'purple' : 'blue'}`}>
+                              {lead.status}
+                            </span>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+
+                {/* Upcoming Events */}
+                <div className="card premium-card" style={{ padding: '24px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                    <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Upcoming Events</h3>
+                    <button className="btn btn-ghost btn-sm" onClick={() => navigate('/events')}>View All</button>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    {upcomingEvents.length === 0 ? (
+                       <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>No upcoming events in planning.</div>
+                    ) : (
+                      upcomingEvents.map(event => (
+                        <div key={event.id} className="hover-row" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', borderBottom: '1px solid var(--border-color)', borderRadius: '8px' }}>
+                           <div style={{ background: '#FEF9C3', padding: '8px', borderRadius: '8px', textAlign: 'center', minWidth: '45px', border: '1px solid #FEF08A' }}>
+                              <div style={{ fontSize: '0.7rem', color: '#B45309', textTransform: 'uppercase', fontWeight: 700 }}>
+                                 {new Date(event.startDate).toLocaleString('default', { month: 'short' })}
+                              </div>
+                              <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#92400E', lineHeight: 1 }}>
+                                 {new Date(event.startDate).getDate()}
+                              </div>
+                           </div>
+                           <div style={{ flex: 1 }}>
+                             <div style={{ fontWeight: 600, fontSize: '0.95rem' }}>{event.name}</div>
+                             <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{event.venue || 'No venue'}</div>
+                           </div>
+                           <span className="badge-pastel orange">{event.status || 'Planning'}</span>
                         </div>
-                        <div style={{ flex: 1 }}>
-                          <div style={{ fontWeight: 600, fontSize: '0.95rem' }}>{lead.name}</div>
-                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{lead.company || lead.email}</div>
+                      ))
+                    )}
+                  </div>
+                </div>
+
+                {/* Recent Quotations */}
+                <div className="card premium-card" style={{ padding: '24px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                    <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Recent Quotations</h3>
+                    <button className="btn btn-ghost btn-sm" onClick={() => navigate('/quotations')}>View All</button>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    {recentQuotes.length === 0 ? (
+                       <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>No recent quotations.</div>
+                    ) : (
+                      recentQuotes.map(quote => (
+                        <div key={quote.id} className="hover-row" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', borderBottom: '1px solid var(--border-color)', borderRadius: '8px' }}>
+                           <div style={{ flex: 1 }}>
+                             <div style={{ fontWeight: 600, fontSize: '0.95rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <span>{quote.referenceNumber}</span>
+                                <span style={{ color: '#16A34A', fontWeight: 700 }}>₹{quote.totalAmount?.toLocaleString() || 0}</span>
+                             </div>
+                           </div>
+                           <span className={`badge-pastel ${quote.status === 'ACCEPTED' ? 'green' : quote.status === 'SENT' ? 'blue' : 'gray'}`}>{quote.status}</span>
                         </div>
-                        <span className={`badge-pastel ${lead.eventType?.toLowerCase().includes('wedding') ? 'purple' : 'blue'}`}>
-                          {lead.status}
-                        </span>
+                      ))
+                    )}
+                  </div>
+                </div>
+              </>
+            ) : (
+              // ==========================================
+              // GROUND HUB FOR TEAM MEMBERS
+              // ==========================================
+              <>
+                <div className="card premium-card" style={{ padding: '24px', gridColumn: '1 / -1' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+                    <span style={{ fontSize: '2rem' }}>🎯</span>
+                    <div>
+                      <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 700 }}>My Ground Hub</h2>
+                      <p style={{ color: 'var(--text-muted)', margin: 0, fontSize: '0.9rem' }}>Your active tasks and assigned events</p>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
+                    {/* My Assigned Events */}
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                        <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#1e293b' }}>Events I'm Working On</h3>
+                        <button className="btn btn-ghost btn-sm" onClick={() => navigate('/events/my-assignments')}>View My Events</button>
                       </div>
-                    );
-                  })
-                )}
-              </div>
-            </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        {upcomingEvents.length === 0 ? (
+                           <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '8px', border: '1px dashed #cbd5e1', textAlign: 'center', color: 'var(--text-muted)' }}>
+                             You are not assigned to any upcoming events.
+                           </div>
+                        ) : (
+                          upcomingEvents.map(event => (
+                            <div key={event.id} onClick={() => navigate(`/events/${event.id}`)} style={{ cursor: 'pointer', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', transition: 'all 0.2s ease' }} className="hover-scale">
+                              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                <span className="badge-pastel orange" style={{ fontSize: '0.7rem' }}>{event.status}</span>
+                                <span style={{ fontWeight: 600, color: '#0f172a', fontSize: '0.85rem' }}>{new Date(event.startDate).toLocaleDateString()}</span>
+                              </div>
+                              <h4 style={{ margin: '0 0 8px 0', fontSize: '1.05rem', color: '#1e293b' }}>{event.name}</h4>
+                              <div style={{ fontSize: '0.8rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <span>📍</span> {event.venue || 'No venue assigned'}
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+
+                    {/* My Tasks */}
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                        <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#1e293b' }}>My Pending Tasks</h3>
+                        <button className="btn btn-ghost btn-sm" onClick={() => navigate('/tasks/my')}>View All Tasks</button>
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        {myTasks.length === 0 ? (
+                           <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '8px', border: '1px dashed #cbd5e1', textAlign: 'center', color: 'var(--text-muted)' }}>
+                             You have no pending tasks. Great job!
+                           </div>
+                        ) : (
+                          myTasks.slice(0, 4).map(task => (
+                            <div key={task.id} style={{ background: '#fff', border: '1px solid #e2e8f0', borderLeft: `4px solid ${task.priority === 'HIGH' ? '#ef4444' : task.priority === 'MEDIUM' ? '#f59e0b' : '#3b82f6'}`, borderRadius: '8px', padding: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <div>
+                                <h4 style={{ margin: '0 0 4px 0', fontSize: '0.95rem', color: '#1e293b' }}>{task.name}</h4>
+                                <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Due: {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'No date'}</div>
+                              </div>
+                              <span className="badge-pastel gray">{task.status}</span>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </>
             )}
-
-            {/* Upcoming Events */}
-            <div className="card premium-card" style={{ padding: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Upcoming Events</h3>
-                <button className="btn btn-ghost btn-sm" onClick={() => navigate('/events')}>View All</button>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                {upcomingEvents.length === 0 ? (
-                   <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>No upcoming events in planning.</div>
-                ) : (
-                  upcomingEvents.map(event => (
-                    <div key={event.id} className="hover-row" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', borderBottom: '1px solid var(--border-color)', borderRadius: '8px' }}>
-                       <div style={{ background: '#FEF9C3', padding: '8px', borderRadius: '8px', textAlign: 'center', minWidth: '45px', border: '1px solid #FEF08A' }}>
-                          <div style={{ fontSize: '0.7rem', color: '#B45309', textTransform: 'uppercase', fontWeight: 700 }}>
-                             {new Date(event.startDate).toLocaleString('default', { month: 'short' })}
-                          </div>
-                          <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#92400E', lineHeight: 1 }}>
-                             {new Date(event.startDate).getDate()}
-                          </div>
-                       </div>
-                       <div style={{ flex: 1 }}>
-                         <div style={{ fontWeight: 600, fontSize: '0.95rem' }}>{event.name}</div>
-                         <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{event.venue || 'No venue'}</div>
-                       </div>
-                       <span className="badge-pastel orange">{event.status || 'Planning'}</span>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-
-            {/* Recent Quotations */}
-            <div className="card premium-card" style={{ padding: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Recent Quotations</h3>
-                <button className="btn btn-ghost btn-sm" onClick={() => navigate('/quotations')}>View All</button>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                {recentQuotes.length === 0 ? (
-                   <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>No recent quotations.</div>
-                ) : (
-                  recentQuotes.map(quote => (
-                    <div key={quote.id} className="hover-row" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', borderBottom: '1px solid var(--border-color)', borderRadius: '8px' }}>
-                       <div style={{ flex: 1 }}>
-                         <div style={{ fontWeight: 600, fontSize: '0.95rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span>{quote.referenceNumber}</span>
-                            <span style={{ color: '#16A34A', fontWeight: 700 }}>₹{quote.totalAmount?.toLocaleString() || 0}</span>
-                         </div>
-                       </div>
-                       <span className={`badge-pastel ${quote.status === 'ACCEPTED' ? 'green' : quote.status === 'SENT' ? 'blue' : 'gray'}`}>{quote.status}</span>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
 
           </div>
         </>

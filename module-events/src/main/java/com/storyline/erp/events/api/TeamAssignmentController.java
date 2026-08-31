@@ -10,7 +10,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/team-assignments")
-@PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_EVENT_MANAGER', 'ROLE_EVENT_HEAD')")
+@PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_EVENT_MANAGER', 'ROLE_TEAM_MANAGER')")
 public class TeamAssignmentController {
 
     private final TeamAssignmentService teamAssignmentService;

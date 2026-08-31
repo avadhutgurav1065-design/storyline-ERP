@@ -106,8 +106,8 @@ AND (
     OR (p.module = 'TEAMS' AND p.scope = 'ALL')
     OR (p.module = 'VENDORS' AND p.scope = 'ALL')
     OR (p.module = 'TASKS' AND p.scope = 'ALL')
-    OR (p.module = 'HAMPERS' AND p.action = 'READ')
-    OR (p.module = 'FINANCE' AND p.action = 'READ')
+    OR (p.module = 'HAMPERS' AND p.scope = 'ALL')
+    OR (p.module = 'INVENTORY' AND p.scope = 'ALL')
     OR (p.module = 'REPORTS')
 );
 
@@ -121,62 +121,33 @@ AND (
     (p.module = 'FINANCE')
     OR (p.module = 'SALES' AND p.action IN ('READ', 'EXPORT') AND p.scope = 'ALL')
     OR (p.module = 'EVENTS' AND p.action = 'READ' AND p.scope = 'ALL')
-    OR (p.module = 'VENDORS' AND p.action = 'READ' AND p.scope = 'ALL')
+    OR (p.module = 'VENDORS' AND p.scope = 'ALL')
     OR (p.module = 'HAMPERS' AND p.action = 'READ')
     OR (p.module = 'CRM' AND p.action = 'READ' AND p.scope = 'ALL')
     OR (p.module = 'REPORTS')
 );
 
 -- =====================================================
--- Assign permissions to EVENT_HEAD
+-- Assign permissions to TEAM_MANAGER
 -- =====================================================
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id FROM roles r, permissions p
-WHERE r.name = 'EVENT_HEAD'
+WHERE r.name = 'TEAM_MANAGER'
 AND (
     (p.module = 'EVENTS' AND p.scope = 'ASSIGNED')
     OR (p.module = 'TEAMS' AND p.scope = 'ASSIGNED')
     OR (p.module = 'VENDORS' AND p.scope = 'ASSIGNED')
     OR (p.module = 'TASKS' AND p.scope = 'ASSIGNED')
-    OR (p.module = 'CRM' AND p.action = 'READ' AND p.scope = 'ALL')
-    OR (p.module = 'SALES' AND p.action = 'READ' AND p.scope = 'ALL')
-    OR (p.module = 'HAMPERS' AND p.action = 'READ')
 );
 
 -- =====================================================
--- Assign permissions to TEAM_HEAD
+-- Assign permissions to FREELANCER
 -- =====================================================
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id FROM roles r, permissions p
-WHERE r.name = 'TEAM_HEAD'
-AND (
-    (p.module = 'TEAMS' AND p.scope = 'ASSIGNED')
-    OR (p.module = 'TASKS' AND p.scope = 'ASSIGNED')
-    OR (p.module = 'EVENTS' AND p.action = 'READ' AND p.scope = 'ASSIGNED')
-    OR (p.module = 'VENDORS' AND p.action = 'READ' AND p.scope = 'ASSIGNED')
-);
-
--- =====================================================
--- Assign permissions to TEAM_MEMBER
--- =====================================================
-INSERT INTO role_permissions (role_id, permission_id)
-SELECT r.id, p.id FROM roles r, permissions p
-WHERE r.name = 'TEAM_MEMBER'
+WHERE r.name = 'FREELANCER'
 AND (
     (p.module = 'TASKS' AND p.action IN ('READ', 'UPDATE') AND p.scope = 'ASSIGNED')
     OR (p.module = 'EVENTS' AND p.action = 'READ' AND p.scope = 'ASSIGNED')
     OR (p.module = 'TEAMS' AND p.action = 'READ' AND p.scope = 'ASSIGNED')
-);
-
--- =====================================================
--- Assign permissions to INVENTORY_MANAGER
--- =====================================================
-INSERT INTO role_permissions (role_id, permission_id)
-SELECT r.id, p.id FROM roles r, permissions p
-WHERE r.name = 'INVENTORY_MANAGER'
-AND (
-    (p.module = 'HAMPERS')
-    OR (p.module = 'INVENTORY')
-    OR (p.module = 'EVENTS' AND p.action = 'READ' AND p.scope = 'ALL')
-    OR (p.module = 'REPORTS' AND p.action = 'READ')
 );

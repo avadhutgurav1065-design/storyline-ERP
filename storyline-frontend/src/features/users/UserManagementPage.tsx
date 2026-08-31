@@ -3,9 +3,16 @@ import { usersApi } from '../../api/client';
 import type { UserResponse, PageResponse, CreateUserRequest } from '../../types';
 
 const availableRoles = [
-  'ADMIN', 'EVENT_MANAGER', 'EVENT_HEAD', 'TEAM_HEAD',
-  'TEAM_MEMBER', 'FINANCE_MANAGER', 'INVENTORY_MANAGER', 'VENDOR', 'FREELANCER'
+  'ADMIN', 'EVENT_MANAGER', 'TEAM_MANAGER', 'FINANCE_MANAGER', 'FREELANCER'
 ];
+
+const roleColors: Record<string, string> = {
+  ADMIN: 'badge-danger',
+  EVENT_MANAGER: 'badge-primary',
+  TEAM_MANAGER: 'badge-secondary',
+  FINANCE_MANAGER: 'badge-warning',
+  FREELANCER: 'badge-success',
+};
 
 export default function UserManagementPage() {
   const [users, setUsers] = useState<UserResponse[]>([]);
@@ -17,7 +24,7 @@ export default function UserManagementPage() {
 
   // New user form
   const [formData, setFormData] = useState<CreateUserRequest>({
-    username: '', email: '', password: '', fullName: '', phone: '', roles: [],
+    email: '', password: '', fullName: '', phone: '', roles: [],
   });
   const [formError, setFormError] = useState('');
 
@@ -45,7 +52,7 @@ export default function UserManagementPage() {
     try {
       await usersApi.create(formData);
       setShowModal(false);
-      setFormData({ username: '', email: '', password: '', fullName: '', phone: '', roles: [] });
+      setFormData({ email: '', password: '', fullName: '', phone: '', roles: [] });
       fetchUsers();
     } catch (err: any) {
       setFormError(err.response?.data?.message || 'Failed to create user');
@@ -59,18 +66,6 @@ export default function UserManagementPage() {
     } catch (err) {
       console.error('Failed to toggle status:', err);
     }
-  };
-
-  const roleColors: Record<string, string> = {
-    ADMIN: 'badge-danger',
-    EVENT_MANAGER: 'badge-primary',
-    EVENT_HEAD: 'badge-info',
-    TEAM_HEAD: 'badge-warning',
-    TEAM_MEMBER: 'badge-success',
-    FINANCE_MANAGER: 'badge-primary',
-    INVENTORY_MANAGER: 'badge-secondary',
-    VENDOR: 'badge-warning',
-    FREELANCER: 'badge-warning'
   };
 
   return (
@@ -142,11 +137,14 @@ export default function UserManagementPage() {
                     <td>{user.phone || '—'}</td>
                     <td>
                       <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
-                        {user.roles?.map((role) => (
-                          <span key={role} className={`badge ${roleColors[role] || 'badge-primary'}`}>
-                            {role.replace('_', ' ')}
-                          </span>
-                        ))}
+                        {user.roles?.map((role: any) => {
+                          const roleName = typeof role === 'string' ? role : role.name || 'UNKNOWN';
+                          return (
+                            <span key={roleName} className={`badge ${roleColors[roleName] || 'badge-primary'}`}>
+                              {roleName.replace('_', ' ')}
+                            </span>
+                          );
+                        })}
                       </div>
                     </td>
                     <td>
@@ -240,11 +238,6 @@ export default function UserManagementPage() {
                 <label className="form-label">Full Name *</label>
                 <input className="form-input" required value={formData.fullName}
                   onChange={(e) => setFormData({ ...formData, fullName: e.target.value })} />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Username *</label>
-                <input className="form-input" required value={formData.username}
-                  onChange={(e) => setFormData({ ...formData, username: e.target.value })} />
               </div>
               <div className="form-group">
                 <label className="form-label">Email *</label>

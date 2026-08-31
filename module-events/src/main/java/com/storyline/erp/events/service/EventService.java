@@ -51,19 +51,19 @@ public class EventService {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         
         boolean isAdmin = false;
-        boolean isStaff = false;
+        boolean isManager = false;
         
         if (auth != null) {
             isAdmin = auth.getAuthorities().stream()
                     .map(GrantedAuthority::getAuthority)
                     .anyMatch(a -> a.equals("ROLE_ADMIN") || a.equals("SCOPE_ALL"));
                     
-            isStaff = auth.getAuthorities().stream()
+            isManager = auth.getAuthorities().stream()
                     .map(GrantedAuthority::getAuthority)
-                    .anyMatch(a -> a.equals("ROLE_STAFF") || a.equals("ROLE_EVENT_MANAGER"));
+                    .anyMatch(a -> a.equals("ROLE_EVENT_MANAGER"));
         }
 
-        if (isAdmin || isStaff) {
+        if (isAdmin || isManager) {
             return eventRepository.findAll(pageable);
         }
 
@@ -139,14 +139,14 @@ public class EventService {
             if (!isAdminOrStaff) {
                 Long currentUserId = extractUserId(auth);
                 if (currentUserId != null) {
-                    if (event.getEventHeadId() != null && !event.getEventHeadId().equals(currentUserId)) {
-                        // Check if they are in team assignments
-                        boolean isAssigned = teamAssignmentRepository.findByEventId(id).stream()
-                                .anyMatch(ta -> ta.getUserId().equals(currentUserId));
-                        if (!isAssigned) {
-                            throw new org.springframework.security.access.AccessDeniedException("Unauthorized to view this event's dashboard.");
-                        }
+                    boolean isHead = event.getEventHeadId() != null && event.getEventHeadId().equals(currentUserId);
+                    boolean isAssigned = teamAssignmentRepository.findByEventId(id).stream()
+                            .anyMatch(ta -> ta.getUserId().equals(currentUserId));
+                    if (!isHead && !isAssigned) {
+                        throw new org.springframework.security.access.AccessDeniedException("Unauthorized to view this event's dashboard.");
                     }
+                } else {
+                    throw new org.springframework.security.access.AccessDeniedException("Unauthorized to view this event's dashboard.");
                 }
             }
         }

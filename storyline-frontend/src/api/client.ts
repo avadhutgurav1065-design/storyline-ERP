@@ -172,7 +172,7 @@ export const inventoryApi = {
 };
 
 export const tasksApi = {
-  list: () => api.get<ApiResponse<any[]>>('/tasks'),
+  list: (params?: any) => api.get<ApiResponse<any[]>>('/tasks', { params }),
   create: (data: any) => api.post<ApiResponse<any>>('/tasks', data),
   update: (id: number, data: any) => api.put<ApiResponse<any>>(`/tasks/${id}`, data),
   delete: (id: number) => api.delete<ApiResponse<void>>(`/tasks/${id}`),

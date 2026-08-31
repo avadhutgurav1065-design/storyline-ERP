@@ -22,22 +22,36 @@ public class TaskService {
         this.eventPublisher = eventPublisher;
     }
 
-    public List<Task> getAllTasks() {
+    public List<Task> getAllTasks(String filter) {
         org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
         if (auth != null) {
             boolean isStaff = auth.getAuthorities().stream()
                     .map(org.springframework.security.core.GrantedAuthority::getAuthority)
                     .anyMatch(a -> a.equals("ROLE_ADMIN") || a.equals("ROLE_EVENT_MANAGER") || a.equals("ROLE_FINANCE_MANAGER") || a.equals("SCOPE_ALL"));
             
-            if (isStaff) {
-                return taskRepository.findAll();
-            }
-            
             try {
                 Long currentUserId = Long.parseLong(auth.getName());
+                
+                // If filter is explicitly "my", return only their assigned tasks regardless of role
+                if ("my".equalsIgnoreCase(filter)) {
+                    return taskRepository.findByAssignedUserId(currentUserId);
+                }
+                
+                // If filter is explicitly "team", return tasks for events they are assigned to
+                if ("team".equalsIgnoreCase(filter)) {
+                    return taskRepository.findTeamTasksByUserId(currentUserId);
+                }
+                
+                // If no filter, managers see all
+                if (isStaff) {
+                    return taskRepository.findAll();
+                }
+                
+                // If no filter and team member, default to their own tasks
                 return taskRepository.findByAssignedUserId(currentUserId);
+                
             } catch (Exception e) {
-                // fall through
+                if (isStaff) return taskRepository.findAll();
             }
         }
         throw new org.springframework.security.access.AccessDeniedException("Unauthorized to view tasks.");

@@ -55,8 +55,10 @@ public class EventController {
         Event event = new Event();
         event.setId(id);
         document.setEvent(event);
-        return ApiResponse.success("Document added", eventDocumentRepository.save(document));
+        EventDocument saved = eventDocumentRepository.save(document);
+        return ApiResponse.success("Document added", saved);
     }
+
 
     @DeleteMapping("/documents/{documentId}")
     public ApiResponse<Void> removeDocument(@PathVariable Long documentId) {

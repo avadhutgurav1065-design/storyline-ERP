@@ -20,6 +20,7 @@ export default function ProfilePage() {
   const [employeeId, setEmployeeId] = useState(user?.employeeId || '');
 
   const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
 
   // Password Form State
   const [currentPassword, setCurrentPassword] = useState('');
@@ -146,6 +147,7 @@ export default function ProfilePage() {
   const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      setIsUploadingAvatar(true);
       const reader = new FileReader();
       reader.onloadend = () => {
         const base64String = reader.result as string;
@@ -181,10 +183,14 @@ export default function ProfilePage() {
           // Automatically save the avatar change
           authApi.updateProfile({ avatarUrl: compressedBase64 })
             .then(() => refreshUser())
-            .then(() => triggerNotification('Success', 'Avatar updated!', 'success'))
+            .then(() => {
+               triggerNotification('Success', 'Profile Photo Successfully Updated!', 'success');
+               setIsUploadingAvatar(false);
+            })
             .catch((err) => {
                console.error('Avatar upload error:', err);
-               triggerNotification('Error', err.response?.data?.message || 'Failed to save avatar. Is the backend updated?', 'error');
+               triggerNotification('Error', err.response?.data?.message || 'Failed to save avatar', 'error');
+               setIsUploadingAvatar(false);
             });
         };
       };
@@ -199,7 +205,11 @@ export default function ProfilePage() {
     .substring(0, 2)
     .toUpperCase() || 'U';
 
-  const userRole = user?.roles?.[0]?.replace('ROLE_', '').replace('_', ' ') || 'EMPLOYEE';
+  const roleObj = user?.roles?.[0];
+  const roleStr = typeof roleObj === 'string' ? roleObj : (roleObj as any)?.name || '';
+  const userRole = (typeof roleStr === 'string' && roleStr) 
+    ? roleStr.replace('ROLE_', '').replace('_', ' ') 
+    : 'EMPLOYEE';
 
   return (
     <div className="page-container">
@@ -255,6 +265,23 @@ export default function ProfilePage() {
               }}>
                 📷
               </div>
+              
+              {isUploadingAvatar && (
+                <div style={{
+                  position: 'absolute',
+                  top: 0, left: 0, right: 0, bottom: 0,
+                  backgroundColor: 'rgba(0,0,0,0.5)',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '0.9rem',
+                  fontWeight: 'bold',
+                  color: 'white'
+                }}>
+                  Uploading...
+                </div>
+              )}
             </div>
             <input 
               type="file" 

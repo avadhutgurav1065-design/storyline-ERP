@@ -12,6 +12,7 @@ export default function QuotationsPage() {
   const [showModal, setShowModal] = useState(false);
   const [searchParams] = useSearchParams();
   const initialClientId = searchParams.get('clientId');
+  const quoteIdParam = searchParams.get('quoteId');
 
   const [formData, setFormData] = useState<any>({
     clientId: initialClientId || '',
@@ -39,7 +40,11 @@ export default function QuotationsPage() {
         setQuotations(Array.isArray(res.data.data) ? res.data.data : (res.data.data?.content || []));
       } else {
         const res = await salesApi.listQuotations();
-        setQuotations(Array.isArray(res.data.data) ? res.data.data : (res.data.data?.content || []));
+        let allQuotes = Array.isArray(res.data.data) ? res.data.data : (res.data.data?.content || []);
+        if (quoteIdParam) {
+          allQuotes = allQuotes.filter((q: any) => String(q.id) === String(quoteIdParam));
+        }
+        setQuotations(allQuotes);
       }
     } catch (err) {
       console.error(err);
@@ -150,26 +155,6 @@ export default function QuotationsPage() {
     }
   };
 
-  const handleConvertToEvent = async (quote: any) => {
-    try {
-      if (confirm(`Are you sure you want to create an event from quotation ${quote.quoteNumber}?`)) {
-        await eventsApi.createEvent({
-          name: quote.eventName || `Event for ${quote.quoteNumber}`,
-          clientId: quote.clientId,
-          quotationId: quote.id,
-          startDate: quote.eventDate || null,
-          endDate: quote.eventDate || null,
-          pax: quote.pax ? Number(quote.pax) : null,
-          venue: quote.venue || null,
-          budget: quote.grandTotal || 0,
-        });
-        alert('Event successfully created from quotation!');
-      }
-    } catch (err) {
-      console.error(err);
-      alert('Failed to create event. Please try again.');
-    }
-  };
 
   const getStatusChartData = () => {
     const counts = quotations.reduce((acc: any, curr) => {
@@ -317,16 +302,7 @@ export default function QuotationsPage() {
                         >
                           ✏️
                         </button>
-                        {quote.status === 'APPROVED' && (
-                          <button 
-                            className="btn btn-ghost btn-sm" 
-                            title="Convert to Event" 
-                            onClick={() => handleConvertToEvent(quote)}
-                            style={{ color: '#16A34A' }}
-                          >
-                            🚀
-                          </button>
-                        )}
+
                         <button className="btn btn-ghost btn-sm" title="Download PDF" onClick={() => handleDownloadPdf(quote)}>📥</button>
                         <button className="btn btn-ghost btn-sm" title="Share on WhatsApp" onClick={() => handleShareWhatsApp(quote)}>💬</button>
                         {quote.status === 'DRAFT' && (

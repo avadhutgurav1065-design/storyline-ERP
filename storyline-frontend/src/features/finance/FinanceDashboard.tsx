@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { financeApi, salesApi } from '../../api/client';
 import { useNotification } from '../../context/NotificationContext';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
@@ -15,6 +16,14 @@ export default function FinanceDashboard() {
 
   const [loading, setLoading] = useState(true);
   const { triggerNotification } = useNotification();
+  const [searchParams] = useSearchParams();
+  const eventIdParam = searchParams.get('eventId');
+  
+  useEffect(() => {
+    if (eventIdParam) {
+      setActiveTab('INVOICES');
+    }
+  }, [eventIdParam]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -33,9 +42,14 @@ export default function FinanceDashboard() {
         financeApi.listExpenses({ size: 200 })
       ]);
       
+      let allInvoices = invoicesRes.data.data?.content || [];
+      if (eventIdParam) {
+        allInvoices = allInvoices.filter((inv: any) => String(inv.eventId) === String(eventIdParam));
+      }
+      
       setMetrics(metricsRes.data.data || metricsRes.data);
       setQuotations(quotesRes.data.data?.content || []);
-      setInvoices(invoicesRes.data.data?.content || []);
+      setInvoices(allInvoices);
       setPayments(paymentsRes.data.data?.content || []);
       setExpenses(expensesRes.data.data?.content || []);
       

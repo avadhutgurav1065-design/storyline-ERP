@@ -50,15 +50,15 @@ public class UserService {
      */
     public UserResponse createUser(CreateUserRequest request) {
         // Validate uniqueness
-        if (userRepository.existsByUsername(request.getUsername())) {
-            throw new BusinessException("Username '" + request.getUsername() + "' is already taken");
+        if (userRepository.existsByUsername(request.getEmail())) {
+            throw new BusinessException("Email '" + request.getEmail() + "' is already taken");
         }
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new BusinessException("Email '" + request.getEmail() + "' is already registered");
         }
 
         User user = User.builder()
-                .username(request.getUsername())
+                .username(request.getEmail())
                 .email(request.getEmail())
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
                 .fullName(request.getFullName())

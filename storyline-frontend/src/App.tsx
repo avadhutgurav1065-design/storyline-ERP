@@ -114,20 +114,20 @@ function AppRoutes() {
         <Route path="/quotation-history" element={<RoleRoute allowedRoles={['ADMIN', 'EVENT_MANAGER', 'FINANCE_MANAGER']}><QuotationHistoryPage /></RoleRoute>} />
 
         {/* Events (Phase 3) */}
-        <Route path="/events" element={<RoleRoute allowedRoles={['ADMIN', 'EVENT_MANAGER', 'EVENT_HEAD']}><EventsPage /></RoleRoute>} />
-        <Route path="/events/active" element={<RoleRoute allowedRoles={['ADMIN', 'EVENT_MANAGER', 'EVENT_HEAD']}><ActiveEventsPage /></RoleRoute>} />
-        <Route path="/events/my-assignments" element={<RoleRoute allowedRoles={['TEAM_MEMBER', 'FREELANCER']}><ActiveEventsPage /></RoleRoute>} />
+        <Route path="/events" element={<RoleRoute allowedRoles={['ADMIN', 'EVENT_MANAGER', 'TEAM_MANAGER']}><EventsPage /></RoleRoute>} />
+        <Route path="/events/active" element={<RoleRoute allowedRoles={['ADMIN', 'EVENT_MANAGER', 'TEAM_MANAGER']}><ActiveEventsPage /></RoleRoute>} />
+        <Route path="/events/my-assignments" element={<RoleRoute allowedRoles={['TEAM_MANAGER', 'FREELANCER']}><ActiveEventsPage /></RoleRoute>} />
         <Route path="/events/:id" element={<EventDetailsDashboard />} />
-        <Route path="/events/calendar" element={<RoleRoute allowedRoles={['ADMIN', 'EVENT_MANAGER']}><EventCalendarPage /></RoleRoute>} />
+        <Route path="/events/calendar" element={<RoleRoute allowedRoles={['ADMIN', 'EVENT_MANAGER', 'TEAM_MANAGER']}><EventCalendarPage /></RoleRoute>} />
         <Route path="/tasks" element={<RoleRoute allowedRoles={['ADMIN', 'EVENT_MANAGER']}><TasksPage filter="all" /></RoleRoute>} />
 
         {/* Teams Placeholders (Phase 3) */}
-        <Route path="/teams" element={<RoleRoute allowedRoles={['ADMIN', 'EVENT_MANAGER']}><TeamManagementPage /></RoleRoute>} />
-        <Route path="/members" element={<RoleRoute allowedRoles={['ADMIN', 'EVENT_MANAGER']}><MembersPage /></RoleRoute>} />
+        <Route path="/teams" element={<RoleRoute allowedRoles={['ADMIN', 'EVENT_MANAGER', 'TEAM_MANAGER']}><TeamManagementPage /></RoleRoute>} />
+        <Route path="/members" element={<RoleRoute allowedRoles={['ADMIN', 'EVENT_MANAGER', 'TEAM_MANAGER']}><MembersPage /></RoleRoute>} />
 
         {/* Vendors Placeholders (Phase 3) */}
-        <Route path="/vendors" element={<RoleRoute allowedRoles={['ADMIN', 'EVENT_MANAGER']}><VendorsPage /></RoleRoute>} />
-        <Route path="/vendor-assignments" element={<RoleRoute allowedRoles={['ADMIN', 'EVENT_MANAGER', 'EVENT_HEAD']}><VendorAssignmentsPage /></RoleRoute>} />
+        <Route path="/vendors" element={<RoleRoute allowedRoles={['ADMIN', 'EVENT_MANAGER', 'TEAM_MANAGER', 'FINANCE_MANAGER']}><VendorsPage /></RoleRoute>} />
+        <Route path="/vendor-assignments" element={<RoleRoute allowedRoles={['ADMIN', 'EVENT_MANAGER', 'TEAM_MANAGER', 'FINANCE_MANAGER', 'FREELANCER']}><VendorAssignmentsPage /></RoleRoute>} />
 
         {/* Tasks Placeholders (Phase 3) */}
         <Route path="/tasks/my" element={<TasksPage filter="my" />} />
@@ -135,17 +135,17 @@ function AppRoutes() {
         <Route path="/tasks/all" element={<RoleRoute allowedRoles={['ADMIN', 'EVENT_MANAGER']}><TasksPage filter="all" /></RoleRoute>} />
 
         {/* Inventory & Hamper (Phase 5) */}
-        <Route path="/hampers" element={<RoleRoute allowedRoles={['ADMIN', 'INVENTORY_MANAGER']}><HampersPage /></RoleRoute>} />
-        <Route path="/raw-materials" element={<RoleRoute allowedRoles={['ADMIN', 'INVENTORY_MANAGER']}><RawMaterialsPage /></RoleRoute>} />
-        <Route path="/bom" element={<RoleRoute allowedRoles={['ADMIN', 'INVENTORY_MANAGER']}><BomPage /></RoleRoute>} />
-        <Route path="/manufacturing" element={<RoleRoute allowedRoles={['ADMIN', 'INVENTORY_MANAGER']}><ManufacturingPage /></RoleRoute>} />
-        <Route path="/dispatch" element={<RoleRoute allowedRoles={['ADMIN', 'INVENTORY_MANAGER']}><DispatchPage /></RoleRoute>} />
+        <Route path="/hampers" element={<RoleRoute allowedRoles={['ADMIN', 'EVENT_MANAGER']}><HampersPage /></RoleRoute>} />
+        <Route path="/raw-materials" element={<RoleRoute allowedRoles={['ADMIN', 'EVENT_MANAGER']}><RawMaterialsPage /></RoleRoute>} />
+        <Route path="/bom" element={<RoleRoute allowedRoles={['ADMIN', 'EVENT_MANAGER']}><BomPage /></RoleRoute>} />
+        <Route path="/manufacturing" element={<RoleRoute allowedRoles={['ADMIN', 'EVENT_MANAGER']}><ManufacturingPage /></RoleRoute>} />
+        <Route path="/dispatch" element={<RoleRoute allowedRoles={['ADMIN', 'EVENT_MANAGER']}><DispatchPage /></RoleRoute>} />
 
         {/* Finance (Phase 5) */}
         <Route path="/finance/invoices" element={<RoleRoute allowedRoles={['ADMIN', 'FINANCE_MANAGER']}><InvoicesPage /></RoleRoute>} />
         <Route path="/finance/client-payments" element={<RoleRoute allowedRoles={['ADMIN', 'FINANCE_MANAGER']}><ClientPaymentsPage /></RoleRoute>} />
         <Route path="/finance/vendor-payments" element={<RoleRoute allowedRoles={['ADMIN', 'FINANCE_MANAGER']}><ExpensesPage /></RoleRoute>} />
-        <Route path="/finance/expenses" element={<RoleRoute allowedRoles={['ADMIN', 'FINANCE_MANAGER']}><ExpensesPage /></RoleRoute>} />
+        <Route path="/finance/expenses" element={<RoleRoute allowedRoles={['ADMIN', 'FINANCE_MANAGER', 'EVENT_MANAGER', 'TEAM_MEMBER']}><ExpensesPage /></RoleRoute>} />
         <Route path="/finance/overheads" element={<RoleRoute allowedRoles={['ADMIN', 'FINANCE_MANAGER']}><OverheadsPage /></RoleRoute>} />
         <Route path="/finance/dashboard" element={<RoleRoute allowedRoles={['ADMIN', 'FINANCE_MANAGER']}><FinanceDashboard /></RoleRoute>} />
         <Route path="/finance/petty-cash" element={<RoleRoute allowedRoles={['ADMIN', 'FINANCE_MANAGER']}><PettyCashPage /></RoleRoute>} />

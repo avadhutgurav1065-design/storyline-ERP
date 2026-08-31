@@ -60,8 +60,8 @@ export default function VendorAssignmentsPage() {
     <div>
       <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
         <div>
-          <h1 className="page-title">Global Vendor Dashboard</h1>
-          <p className="page-subtitle">Overview of vendor assignments and external costs across all active events</p>
+          <h1 className="page-title">Event Vendor Dashboard</h1>
+          <p className="page-subtitle">Overview of vendor assignments and external costs for your events</p>
         </div>
         <button className="btn btn-outline" onClick={() => fetchDashboardData()}>
           <span style={{ marginRight: '8px' }}>↻</span> Sync Data

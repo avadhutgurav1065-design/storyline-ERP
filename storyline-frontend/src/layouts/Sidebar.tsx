@@ -46,23 +46,23 @@ const navigation: NavGroup[] = [
   {
     title: 'Events',
     items: [
-      { path: '/events', label: 'All Events', icon: '🗓️', roles: ['ADMIN', 'EVENT_MANAGER', 'EVENT_HEAD'] },
-      { path: '/events/active', label: 'Active Events', icon: '🔥', roles: ['ADMIN', 'EVENT_MANAGER', 'EVENT_HEAD'] },
-      { path: '/events/my-assignments', label: 'My Assigned Events', icon: '🎯', roles: ['TEAM_MEMBER', 'FREELANCER'] },
-      { path: '/events/calendar', icon: '📅', label: 'Calendar', roles: ['ADMIN', 'EVENT_MANAGER'] },
+      { path: '/events', label: 'All Events', icon: '🗓️', roles: ['ADMIN', 'EVENT_MANAGER', 'TEAM_MANAGER'] },
+      { path: '/events/active', label: 'Active Events', icon: '🔥', roles: ['ADMIN', 'EVENT_MANAGER', 'TEAM_MANAGER'] },
+      { path: '/events/my-assignments', label: 'My Assigned Events', icon: '🎯', roles: ['TEAM_MANAGER', 'FREELANCER'] },
+      { path: '/events/calendar', icon: '📅', label: 'Calendar', roles: ['ADMIN', 'EVENT_MANAGER', 'TEAM_MANAGER'] },
     ],
   },
   {
     title: 'Teams',
     items: [
-      { path: '/teams', label: 'Teams', icon: '👷', roles: ['ADMIN', 'EVENT_MANAGER'] },
-      { path: '/members', label: 'Members', icon: '👤' },
+      { path: '/teams', label: 'Teams', icon: '👷', roles: ['ADMIN', 'EVENT_MANAGER', 'TEAM_MANAGER'] },
+      { path: '/members', label: 'Members', icon: '👤', roles: ['ADMIN', 'EVENT_MANAGER', 'TEAM_MANAGER'] },
     ],
   },
   {
     title: 'Vendors',
     items: [
-      { path: '/vendors', label: 'Vendors', icon: '🤝', roles: ['ADMIN', 'EVENT_MANAGER'] },
+      { path: '/vendors', label: 'Vendors', icon: '🤝', roles: ['ADMIN', 'EVENT_MANAGER', 'TEAM_MANAGER', 'FINANCE_MANAGER'] },
       { path: '/vendor-assignments', label: 'Assignments', icon: '📋' },
     ],
   },
@@ -77,8 +77,8 @@ const navigation: NavGroup[] = [
   {
     title: 'Hampers',
     items: [
-      { path: '/hampers', label: 'Products & BOM', icon: '🎁', roles: ['ADMIN', 'INVENTORY_MANAGER'] },
-      { path: '/raw-materials', label: 'Raw Materials', icon: '📦', roles: ['ADMIN', 'INVENTORY_MANAGER'] },
+      { path: '/hampers', label: 'Products & BOM', icon: '🎁', roles: ['ADMIN', 'EVENT_MANAGER'] },
+      { path: '/raw-materials', label: 'Raw Materials', icon: '📦', roles: ['ADMIN', 'EVENT_MANAGER'] },
     ],
   },
   {
