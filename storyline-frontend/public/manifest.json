@@ -1,0 +1,17 @@
+{
+  "name": "Storyline ERP",
+  "short_name": "Storyline",
+  "description": "Storyline Management Software",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#6366F1",
+  "icons": [
+    {
+      "src": "/logo.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ]
+}
