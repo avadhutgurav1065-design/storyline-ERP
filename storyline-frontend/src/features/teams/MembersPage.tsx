@@ -129,8 +129,9 @@ export default function MembersPage() {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontSize: '1.5rem',
+                    fontSize: '1.8rem',
                     fontWeight: 700,
+                    lineHeight: 1,
                     boxShadow: '0 4px 10px rgba(0,0,0,0.1)'
                   }}>
                     {getMemberInitials(m.fullName)}

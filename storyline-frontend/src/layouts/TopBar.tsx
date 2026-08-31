@@ -156,8 +156,17 @@ export default function TopBar({ collapsed, onToggle, onMobileToggle, title }: T
         {/* User */}
         <div style={{ position: 'relative' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }} onClick={() => setShowProfileMenu(!showProfileMenu)}>
-            <div className="user-avatar" title={user?.fullName}>
-              {initials}
+            <div 
+              className="user-avatar" 
+              title={user?.fullName}
+              style={{
+                backgroundImage: user?.avatarUrl ? `url(${user.avatarUrl})` : 'none',
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                backgroundColor: user?.avatarUrl ? 'transparent' : 'var(--primary)',
+              }}
+            >
+              {!user?.avatarUrl && initials}
             </div>
             <div className="user-name-text" style={{ lineHeight: 1.2 }}>
               <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)' }}>

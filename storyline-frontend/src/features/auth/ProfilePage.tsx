@@ -217,7 +217,7 @@ export default function ProfilePage() {
         <h1>My Profile</h1>
       </div>
 
-      <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '20px' }}>
+      <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(350px, 100%), 1fr))', gap: '20px' }}>
         
         {/* Left Column: Profile Card & Preferences */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -361,7 +361,7 @@ export default function ProfilePage() {
             <h2 className="section-title">Personal & HR Details</h2>
             <form onSubmit={handleUpdateProfile} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
               
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))', gap: '15px' }}>
                 <div className="form-group">
                   <label>Full Name</label>
                   <input type="text" className="form-input" value={fullName} onChange={(e) => setFullName(e.target.value)} required />
@@ -372,7 +372,7 @@ export default function ProfilePage() {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))', gap: '15px' }}>
                 <div className="form-group">
                   <label>Phone Number</label>
                   <input type="text" className="form-input" value={phone} onChange={(e) => setPhone(e.target.value)} />
@@ -390,7 +390,7 @@ export default function ProfilePage() {
 
               <h3 style={{ fontSize: '0.95rem', marginTop: '10px', color: 'var(--text-secondary)' }}>Emergency Contact</h3>
               
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))', gap: '15px' }}>
                 <div className="form-group">
                   <label>Contact Name</label>
                   <input type="text" className="form-input" value={emergencyContactName} onChange={(e) => setEmergencyContactName(e.target.value)} />
@@ -410,7 +410,7 @@ export default function ProfilePage() {
           {/* Change Password Form */}
           <div className="card">
             <h2 className="section-title">Security</h2>
-            <form onSubmit={handleChangePassword} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', alignItems: 'end' }}>
+            <form onSubmit={handleChangePassword} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))', gap: '15px', alignItems: 'end' }}>
               <div className="form-group" style={{ marginBottom: 0 }}>
                 <label>Current Password</label>
                 <input type="password" className="form-input" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} required />

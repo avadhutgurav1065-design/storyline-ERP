@@ -153,7 +153,7 @@ export default function DashboardPage() {
           {/* 2. Quick Actions */}
           <div style={{ marginBottom: '32px' }}>
             <div style={{ display: 'flex', gap: '16px', overflowX: 'auto', paddingBottom: '8px' }}>
-              <button onClick={() => navigate('/leads')} className="quick-action-btn">
+              <button onClick={() => navigate('/crm/leads')} className="quick-action-btn">
                 <span style={{ fontSize: '1.25rem', background: '#e0e7ff', color: '#4f46e5', padding: '10px', borderRadius: '12px' }}>👥</span>
                 <div style={{ textAlign: 'left' }}>
                   <div style={{ fontWeight: 600 }}>Add Lead</div>
@@ -328,7 +328,7 @@ export default function DashboardPage() {
                 <div className="card premium-card" style={{ padding: '24px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                     <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Newest Leads</h3>
-                    <button className="btn btn-ghost btn-sm" onClick={() => navigate('/leads')}>View All</button>
+                    <button className="btn btn-ghost btn-sm" onClick={() => navigate('/crm/leads')}>View All</button>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                     {recentLeads.length === 0 ? (

@@ -51,7 +51,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     localStorage.setItem('accessToken', accessToken);
     localStorage.setItem('refreshToken', refreshToken);
-    localStorage.setItem('user', JSON.stringify(userData));
+    
+    // Don't store potentially huge base64 avatar in localStorage to avoid QuotaExceededError
+    const userForStorage = { ...userData };
+    delete userForStorage.avatarUrl;
+    localStorage.setItem('user', JSON.stringify(userForStorage));
 
     setUser(userData);
   };
@@ -67,8 +71,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const response = await authApi.me();
       const userData = response.data.data;
-      localStorage.setItem('user', JSON.stringify(userData));
       setUser(userData);
+      try {
+        const userForStorage = { ...userData };
+        delete userForStorage.avatarUrl;
+        localStorage.setItem('user', JSON.stringify(userForStorage));
+      } catch (e) {
+        console.warn('Could not save user to localStorage', e);
+      }
     } catch (error) {
       console.error("Failed to refresh user data", error);
     }

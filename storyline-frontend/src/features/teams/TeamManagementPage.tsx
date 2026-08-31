@@ -92,12 +92,12 @@ export default function TeamManagementPage() {
             const hasHead = team.some(t => t.isHead || (t.role && t.role.toUpperCase().includes('HEAD')));
             
             return (
-              <div key={ev.id} className="card" style={{ display: 'flex', padding: '24px', gap: '24px', alignItems: 'center' }}>
+              <div key={ev.id} className="card" style={{ display: 'flex', flexWrap: 'wrap', padding: '24px', gap: '20px', alignItems: 'center' }}>
                 
                 {/* Event Details Left */}
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-                    <h2 style={{ margin: 0, fontSize: '1.25rem', color: 'var(--text-main)' }}>{ev.name}</h2>
+                <div style={{ flex: '1 1 200px', minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px', flexWrap: 'wrap' }}>
+                    <h2 style={{ margin: 0, fontSize: '1.25rem', color: 'var(--text-main)', wordBreak: 'break-word' }}>{ev.name}</h2>
                     <span className={`badge ${ev.status === 'CONFIRMED' ? 'badge-success' : 'badge-primary'}`}>{ev.status}</span>
                   </div>
                   <div style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>
@@ -106,7 +106,7 @@ export default function TeamManagementPage() {
                   </div>
                   
                   {/* Warning Badges */}
-                  <div style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
+                  <div style={{ display: 'flex', gap: '8px', marginTop: '16px', flexWrap: 'wrap' }}>
                     {team.length === 0 && (
                       <span className="badge badge-warning" style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' }}>
                         ⚠️ No Team Assigned
@@ -121,8 +121,8 @@ export default function TeamManagementPage() {
                 </div>
 
                 {/* Face-pile Avatars Center */}
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                  <div style={{ fontSize: '0.85rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 600, marginBottom: '12px' }}>
+                <div style={{ flex: '0 0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <div style={{ fontSize: '0.85rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 600, marginBottom: '12px', whiteSpace: 'nowrap' }}>
                     Assigned Team ({team.length})
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'center' }}>
@@ -143,7 +143,7 @@ export default function TeamManagementPage() {
                                 color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
                                 fontSize: '0.8rem', fontWeight: 600, border: '2px solid var(--card-bg)',
                                 marginLeft: '-12px', boxShadow: '0 2px 5px rgba(0,0,0,0.1)',
-                                cursor: 'pointer', zIndex: 5 - idx
+                                cursor: 'pointer', zIndex: 5 - idx, lineHeight: 1
                               }}
                             >
                               {getInitials(name)}
@@ -166,11 +166,11 @@ export default function TeamManagementPage() {
                 </div>
 
                 {/* Actions Right */}
-                <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-end' }}>
+                <div style={{ flex: '0 0 auto' }}>
                   <button 
                     className="btn btn-primary" 
                     onClick={() => navigate(`/events/${ev.id}`)}
-                    style={{ padding: '10px 24px' }}
+                    style={{ padding: '10px 24px', whiteSpace: 'nowrap' }}
                   >
                     Manage Team →
                   </button>
