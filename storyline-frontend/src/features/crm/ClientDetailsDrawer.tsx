@@ -106,7 +106,7 @@ export default function ClientDetailsDrawer({ clientId, onClose, onUpdate }: Cli
       <div 
         style={{ width: '600px', backgroundColor: 'var(--bg-card)', height: '100%', overflowY: 'auto', display: 'flex', flexDirection: 'column', boxShadow: '-5px 0 25px rgba(0,0,0,0.1)' }}
         onClick={e => e.stopPropagation()}
-        className="animate-slide-in-right"
+        className="drawer-container animate-slide-in-right"
       >
         {loading ? (
           <div style={{ padding: '40px', textAlign: 'center' }}>Loading details...</div>

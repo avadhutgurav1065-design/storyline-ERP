@@ -283,7 +283,7 @@ export default function QuotationsPage() {
                       </span>
                     </td>
                     <td style={{ padding: '16px', textAlign: 'right' }} data-label="Actions">
-                      <div style={{ display: 'flex', gap: '6px' }}>
+                      <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end', alignItems: 'center' }}>
                         <button 
                           className="btn btn-ghost btn-sm" 
                           title="Edit Quotation"

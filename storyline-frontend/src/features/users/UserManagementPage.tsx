@@ -103,7 +103,7 @@ export default function UserManagementPage() {
                 <th>Phone</th>
                 <th>Roles</th>
                 <th>Status</th>
-                <th>Actions</th>
+                <th style={{ textAlign: 'right' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -152,8 +152,8 @@ export default function UserManagementPage() {
                         {user.active ? 'Active' : 'Inactive'}
                       </span>
                     </td>
-                    <td>
-                      <div style={{ display: 'flex', gap: '6px' }}>
+                    <td style={{ textAlign: 'right' }}>
+                      <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end', alignItems: 'center' }}>
                         <button className="btn btn-ghost btn-sm" title="Edit">✏️</button>
                         <button
                           className="btn btn-ghost btn-sm"

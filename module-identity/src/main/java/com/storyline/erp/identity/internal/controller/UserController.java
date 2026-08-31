@@ -28,7 +28,7 @@ public class UserController {
      * List all users with optional search and filter.
      */
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EVENT_MANAGER', 'TEAM_MANAGER')")
     public ResponseEntity<ApiResponse<PageResponse<UserResponse>>> listUsers(
             @RequestParam(required = false) String search,
             @RequestParam(required = false) Boolean active,

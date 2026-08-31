@@ -55,17 +55,19 @@ export default function EventDetailsDashboard() {
   const fetchDashboard = async () => {
     setLoading(true);
     try {
-      const [res, financeRes] = await Promise.all([
-        eventsApi.getEventDashboard(Number(id)),
-        financeApi.getEventProfitAndLoss(Number(id))
-      ]);
+      const res = await eventsApi.getEventDashboard(Number(id));
       setData(res.data.data);
+    } catch (err) {
+      console.error("Failed to load event data:", err);
+    }
+
+    try {
+      const financeRes = await financeApi.getEventProfitAndLoss(Number(id));
       setFinanceData(financeRes.data.data);
     } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
+      console.warn("Finance data access restricted or failed");
     }
+    setLoading(false);
   };
 
   const getUserName = (userId: number) => {
@@ -81,18 +83,22 @@ export default function EventDetailsDashboard() {
     // Fetch users for the assignment modal
     const fetchUsersAndVendors = async () => {
       try {
-        const [usersRes, vendorsRes, productsRes] = await Promise.all([
-          usersApi.list(),
-          vendorsApi.list(),
-          inventoryApi ? inventoryApi.listProducts() : Promise.resolve({ data: { data: [] } })
-        ]);
+        const usersRes = await usersApi.list();
         const usersData = usersRes.data.data as any;
-        const vendorsData = vendorsRes.data.data as any;
         setUsers(usersData.content || usersData || []);
+      } catch (err) { console.warn("Users access restricted"); }
+      
+      try {
+        const vendorsRes = await vendorsApi.list();
+        const vendorsData = vendorsRes.data.data as any;
         setVendors(vendorsData.content || vendorsData || []);
-        setProducts(productsRes.data.data || []);
-      } catch (err) {
-        console.error(err);
+      } catch (err) { console.warn("Vendors access restricted"); }
+      
+      if (inventoryApi) {
+        try {
+          const productsRes = await inventoryApi.listProducts();
+          setProducts(productsRes.data.data || []);
+        } catch (err) { console.warn("Products access restricted"); }
       }
     };
     fetchUsersAndVendors();

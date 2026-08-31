@@ -179,9 +179,9 @@ export default function LeadsPage() {
           <div style={{ position: 'relative' }}>
             <Search size={18} style={{ position: 'absolute', left: 12, top: 11, color: 'var(--text-muted)' }} />
             <input
-              type="text" className="form-input" placeholder="Search..."
+              type="text" className="form-input search-input" placeholder="Search..."
               value={search} onChange={(e) => setSearch(e.target.value)}
-              style={{ paddingLeft: '36px', width: '250px' }}
+              style={{ paddingLeft: '36px' }}
             />
           </div>
           <button className="btn btn-primary" onClick={() => { setFormData({} as any); setShowModal(true); }}>
@@ -244,7 +244,7 @@ export default function LeadsPage() {
       {/* Modal */}
       {showModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }} onClick={() => setShowModal(false)}>
-           <div className="card animate-fade-in" style={{ width: '100%', maxWidth: '500px' }} onClick={e => e.stopPropagation()}>
+           <div className="card animate-fade-in modal-container" style={{ width: '100%', maxWidth: '500px' }} onClick={e => e.stopPropagation()}>
              <div className="card-header">
                <div className="card-title">{(formData as any).id ? 'Edit Lead' : 'Add New Lead'}</div>
                <button className="btn btn-ghost btn-sm" onClick={() => setShowModal(false)}>✕</button>

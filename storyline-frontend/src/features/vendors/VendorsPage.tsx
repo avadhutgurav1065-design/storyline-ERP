@@ -138,7 +138,7 @@ export default function VendorsPage() {
                         </div>
                       </td>
                       <td style={{ padding: '16px', textAlign: 'right' }} data-label="Actions">
-                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', alignItems: 'center', flexWrap: 'wrap' }}>
                           {vendor.phone && (
                             <a href={`tel:${vendor.phone}`} className="btn btn-primary btn-sm" style={{ padding: '6px 12px', display: 'flex', alignItems: 'center', gap: '4px', textDecoration: 'none' }}>
                               <PhoneCall size={14} /> Call Now

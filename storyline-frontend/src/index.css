@@ -426,6 +426,8 @@ h4 { font-size: 1.125rem; }
   padding-bottom: 16px;
   height: calc(100vh - 180px);
   min-height: 400px;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
 }
 
 .kanban-column {
@@ -436,6 +438,7 @@ h4 { font-size: 1.125rem; }
   display: flex;
   flex-direction: column;
   max-height: 100%;
+  scroll-snap-align: center;
 }
 
 .kanban-column-header {
@@ -761,6 +764,7 @@ th {
   letter-spacing: 0.5px;
   text-align: left;
   border-bottom: 1px solid var(--border-color);
+  vertical-align: middle;
 }
 
 td {
@@ -768,6 +772,7 @@ td {
   font-size: 0.875rem;
   color: var(--text-primary);
   border-bottom: 1px solid var(--border-color);
+  vertical-align: middle;
 }
 
 tr:last-child td {
@@ -1132,7 +1137,48 @@ tr:hover td {
   table td:last-child::before {
     display: none;
   }
+
+  /* --- Mobile Optimization Additions --- */
+  .kanban-board {
+    padding: 0 16px 16px 16px;
+  }
   
+  .kanban-column {
+    flex: 0 0 85vw;
+  }
+
+  .page-header {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .page-header > div:last-child {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .page-header > div:last-child > div {
+    flex: 1;
+  }
+
+  .page-header > div:last-child input {
+    width: 100% !important;
+  }
+
+  .drawer-container {
+    width: 100% !important;
+  }
+
+  .modal-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+  }
+
   .topbar-toggle {
     display: none;
   }

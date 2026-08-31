@@ -50,7 +50,7 @@ export default function QuotationPdfView() {
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '2px solid #333', paddingBottom: '20px', marginBottom: '30px' }}>
         <div>
-          <h1 style={{ margin: '0 0 10px 0', color: '#111' }}>STORYLINE EVENTS</h1>
+          <img src="/transparent-logo.png" alt="Storyline Events" style={{ maxHeight: '100px', marginBottom: '10px' }} />
           <p style={{ margin: '0', color: '#555' }}>123 Event Horizon Way<br/>Mumbai, MH 400001<br/>contact@storylineevents.com</p>
         </div>
         <div style={{ textAlign: 'right' }}>
