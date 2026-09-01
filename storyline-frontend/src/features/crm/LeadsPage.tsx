@@ -77,7 +77,7 @@ export default function LeadsPage() {
   const { triggerNotification } = useNotification();
 
   const [formData, setFormData] = useState({
-    name: '', email: '', phone: '', company: '', eventType: '', budget: '', source: '', requirements: '', eventLocation: '', assignedToUserId: '', existingClientId: ''
+    name: '', email: '', phone: '', company: '', eventType: '', eventDate: '', budget: '', source: '', requirements: '', eventLocation: '', assignedToUserId: '', existingClientId: ''
   });
 
   const fetchLeads = async () => {
