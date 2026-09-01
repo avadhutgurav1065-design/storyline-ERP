@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { financeApi, salesApi } from '../../api/client';
+import { financeApi, salesApi, eventsApi } from '../../api/client';
 import { useNotification } from '../../context/NotificationContext';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 

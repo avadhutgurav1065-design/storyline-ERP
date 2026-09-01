@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { tasksApi, usersApi } from '../../api/client';
+import { tasksApi, lookupsApi } from '../../api/client';
 import { useNotification } from '../../context/NotificationContext';
 
 export default function TasksPage({ filter }: { filter: 'my' | 'team' | 'all' }) {
