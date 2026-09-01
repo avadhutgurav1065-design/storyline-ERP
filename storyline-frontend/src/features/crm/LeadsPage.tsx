@@ -254,29 +254,56 @@ export default function LeadsPage() {
                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                  <div className="form-group">
                    <label className="form-label">Name *</label>
-                   <input className="form-input" required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
+                   <input className="form-input" required value={formData.name || ''} onChange={e => setFormData({...formData, name: e.target.value})} />
                  </div>
-                  <div className="form-group">
+                 <div className="form-group">
+                   <label className="form-label">Email</label>
+                   <input type="email" className="form-input" value={formData.email || ''} onChange={e => setFormData({...formData, email: e.target.value})} />
+                 </div>
+                 <div className="form-group">
                     <label className="form-label">Phone *</label>
-                    <input className="form-input" required value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} />
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">Event Location</label>
-                    <input className="form-input" placeholder="e.g. Goa" value={formData.eventLocation} onChange={e => setFormData({...formData, eventLocation: e.target.value})} />
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">Assigned Rep ID</label>
-                    <input className="form-input" type="number" placeholder="User ID" value={formData.assignedToUserId} onChange={e => setFormData({...formData, assignedToUserId: e.target.value})} />
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">Existing Client ID</label>
-                    <input className="form-input" type="number" placeholder="Optional (Repeat Business)" value={formData.existingClientId} onChange={e => setFormData({...formData, existingClientId: e.target.value})} />
-                  </div>
-                  <div className="form-group" style={{ gridColumn: 'span 2' }}>
-                    <label className="form-label">Event Brief / Requirements</label>
-                    <textarea className="form-input" rows={3} placeholder="e.g. 500 pax, beach wedding, vegetarian catering" value={formData.requirements} onChange={e => setFormData({...formData, requirements: e.target.value})} />
-                  </div>
-                </div>
+                    <input className="form-input" required value={formData.phone || ''} onChange={e => setFormData({...formData, phone: e.target.value})} />
+                 </div>
+                 <div className="form-group">
+                    <label className="form-label">Company</label>
+                    <input className="form-input" value={formData.company || ''} onChange={e => setFormData({...formData, company: e.target.value})} />
+                 </div>
+                 <div className="form-group">
+                    <label className="form-label">Event Type</label>
+                    <select className="form-select" value={formData.eventType || ''} onChange={e => setFormData({...formData, eventType: e.target.value})}>
+                      <option value="">Select Type</option>
+                      <option value="Wedding">Wedding</option>
+                      <option value="Corporate">Corporate</option>
+                      <option value="Party">Party</option>
+                      <option value="Concert">Concert</option>
+                      <option value="Other">Other</option>
+                    </select>
+                 </div>
+                 <div className="form-group">
+                    <label className="form-label">Event Date</label>
+                    <input type="date" className="form-input" value={formData.eventDate || ''} onChange={e => setFormData({...formData, eventDate: e.target.value})} />
+                 </div>
+                 <div className="form-group">
+                    <label className="form-label">Budget (₹)</label>
+                    <input type="number" className="form-input" value={formData.budget || ''} onChange={e => setFormData({...formData, budget: e.target.value})} />
+                 </div>
+                 <div className="form-group">
+                   <label className="form-label">Event Location</label>
+                   <input className="form-input" placeholder="e.g. Goa" value={formData.eventLocation || ''} onChange={e => setFormData({...formData, eventLocation: e.target.value})} />
+                 </div>
+                 <div className="form-group">
+                   <label className="form-label">Lead Source</label>
+                   <input className="form-input" placeholder="e.g. Instagram" value={formData.source || ''} onChange={e => setFormData({...formData, source: e.target.value})} />
+                 </div>
+                 <div className="form-group">
+                   <label className="form-label">Assigned Rep ID</label>
+                   <input className="form-input" type="number" placeholder="User ID" value={formData.assignedToUserId || ''} onChange={e => setFormData({...formData, assignedToUserId: e.target.value})} />
+                 </div>
+                 <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                   <label className="form-label">Event Brief / Requirements</label>
+                   <textarea className="form-input" rows={3} placeholder="e.g. 500 pax, beach wedding, vegetarian catering" value={formData.requirements || ''} onChange={e => setFormData({...formData, requirements: e.target.value})} />
+                 </div>
+               </div>
                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '20px' }}>
                  <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
                  <button type="submit" className="btn btn-primary">Save Lead</button>

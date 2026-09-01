@@ -23,7 +23,7 @@ export default function UserManagementPage() {
   const [totalPages, setTotalPages] = useState(0);
 
   // New user form
-  const [formData, setFormData] = useState<CreateUserRequest>({
+  const [formData, setFormData] = useState<CreateUserRequest & { id?: number }>({
     email: '', password: '', fullName: '', phone: '', roles: [],
   });
   const [formError, setFormError] = useState('');
@@ -50,12 +50,21 @@ export default function UserManagementPage() {
     e.preventDefault();
     setFormError('');
     try {
-      await usersApi.create(formData);
+      if (formData.id) {
+        // password and email not sent on update usually, but we send what's allowed
+        await usersApi.update(formData.id, {
+          fullName: formData.fullName,
+          phone: formData.phone,
+          roles: formData.roles
+        });
+      } else {
+        await usersApi.create(formData);
+      }
       setShowModal(false);
       setFormData({ email: '', password: '', fullName: '', phone: '', roles: [] });
       fetchUsers();
     } catch (err: any) {
-      setFormError(err.response?.data?.message || 'Failed to create user');
+      setFormError(err.response?.data?.message || `Failed to ${formData.id ? 'update' : 'create'} user`);
     }
   };
 
@@ -75,7 +84,10 @@ export default function UserManagementPage() {
           <h1 className="page-title">User Management</h1>
           <p className="page-subtitle">Manage system users and their roles</p>
         </div>
-        <button className="btn btn-primary" onClick={() => setShowModal(true)}>
+        <button className="btn btn-primary" onClick={() => {
+          setFormData({ email: '', password: '', fullName: '', phone: '', roles: [] });
+          setShowModal(true);
+        }}>
           + Add User
         </button>
       </div>
@@ -154,7 +166,17 @@ export default function UserManagementPage() {
                     </td>
                     <td style={{ textAlign: 'right' }}>
                       <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end', alignItems: 'center' }}>
-                        <button className="btn btn-ghost btn-sm" title="Edit">✏️</button>
+                        <button className="btn btn-ghost btn-sm" title="Edit" onClick={() => {
+                          setFormData({
+                            id: user.id,
+                            email: user.email,
+                            password: '', // Password is not required/sent during update
+                            fullName: user.fullName || '',
+                            phone: user.phone || '',
+                            roles: user.roles?.map((r: any) => typeof r === 'string' ? r : r.name) || [],
+                          });
+                          setShowModal(true);
+                        }}>✏️</button>
                         <button
                           className="btn btn-ghost btn-sm"
                           title={user.active ? 'Deactivate' : 'Activate'}
@@ -218,7 +240,7 @@ export default function UserManagementPage() {
         }}>
           <div className="card animate-fade-in" style={{ width: '100%', maxWidth: '480px', maxHeight: '90vh', overflow: 'auto' }}>
             <div className="card-header">
-              <div className="card-title">Create New User</div>
+              <div className="card-title">{formData.id ? 'Edit User' : 'Create New User'}</div>
               <button className="btn btn-ghost btn-sm" onClick={() => setShowModal(false)}>✕</button>
             </div>
 
@@ -240,15 +262,17 @@ export default function UserManagementPage() {
                   onChange={(e) => setFormData({ ...formData, fullName: e.target.value })} />
               </div>
               <div className="form-group">
-                <label className="form-label">Email *</label>
-                <input type="email" className="form-input" required value={formData.email}
+                <label className="form-label">Email {formData.id ? '' : '*'}</label>
+                <input type="email" className="form-input" required={!formData.id} disabled={!!formData.id} value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })} />
               </div>
-              <div className="form-group">
-                <label className="form-label">Password *</label>
-                <input type="password" className="form-input" required minLength={8} value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })} />
-              </div>
+              {!formData.id && (
+                <div className="form-group">
+                  <label className="form-label">Password *</label>
+                  <input type="password" className="form-input" required minLength={8} value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })} />
+                </div>
+              )}
               <div className="form-group">
                 <label className="form-label">Phone</label>
                 <input className="form-input" value={formData.phone || ''}
@@ -278,7 +302,7 @@ export default function UserManagementPage() {
               </div>
               <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '20px' }}>
                 <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
-                <button type="submit" className="btn btn-primary">Create User</button>
+                <button type="submit" className="btn btn-primary">{formData.id ? 'Update User' : 'Create User'}</button>
               </div>
             </form>
           </div>

@@ -1,5 +1,7 @@
 import { useState, useEffect, type FormEvent } from 'react';
 import api from '../../api/client';
+import LeadDetailsDrawer from './LeadDetailsDrawer';
+import ClientDetailsDrawer from './ClientDetailsDrawer';
 
 export default function FollowupsPage() {
   const [followups, setFollowups] = useState<any[]>([]);
@@ -7,6 +9,8 @@ export default function FollowupsPage() {
   const [clients, setClients] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [selectedLeadId, setSelectedLeadId] = useState<number | null>(null);
+  const [selectedClientId, setSelectedClientId] = useState<number | null>(null);
   const [formData, setFormData] = useState({
     leadId: '',
     clientId: '',
@@ -106,7 +110,18 @@ export default function FollowupsPage() {
                 <tr><td colSpan={5} style={{ textAlign: 'center', padding: '40px' }}>No follow-ups logged yet</td></tr>
               ) : (
                 followups.map((fu) => (
-                  <tr key={fu.id}>
+                  <tr 
+                    key={fu.id} 
+                    className="hover-row"
+                    onClick={() => {
+                      if (fu.leadId) {
+                        setSelectedLeadId(fu.leadId);
+                      } else if (fu.clientId) {
+                        setSelectedClientId(fu.clientId);
+                      }
+                    }}
+                    style={{ cursor: 'pointer' }}
+                  >
                     <td>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <span>{getTypeIcon(fu.interactionType)}</span>
@@ -206,8 +221,24 @@ export default function FollowupsPage() {
           </div>
         </div>
       )}
+      {selectedLeadId && (
+        <LeadDetailsDrawer
+          leadId={selectedLeadId}
+          onClose={() => setSelectedLeadId(null)}
+          onUpdate={fetchFollowups}
+        />
+      )}
+
+      {selectedClientId && (
+        <ClientDetailsDrawer
+          clientId={selectedClientId}
+          onClose={() => setSelectedClientId(null)}
+          onUpdate={fetchFollowups}
+        />
+      )}
     </div>
   );
 }
+
 
 

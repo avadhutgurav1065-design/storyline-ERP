@@ -73,7 +73,7 @@ export default function EventDetailsDashboard() {
   const getUserName = (userId: number) => {
     const user = users.find(u => Number(u.id) === Number(userId));
     if (!user) return `User ID: ${userId}`;
-    const nameStr = [user.firstName, user.lastName].filter(Boolean).join(' ').trim();
+    const nameStr = user.fullName || user.username || user.email || 'Unknown';
     return nameStr ? nameStr : user.username || `User ID: ${userId}`;
   };
 
@@ -97,7 +97,9 @@ export default function EventDetailsDashboard() {
       if (inventoryApi) {
         try {
           const productsRes = await inventoryApi.listProducts();
-          setProducts(productsRes.data.data || []);
+          let pData = productsRes.data.data;
+          if (pData && (pData as any).content) pData = (pData as any).content;
+          setProducts(Array.isArray(pData) ? pData : []);
         } catch (err) { console.warn("Products access restricted"); }
       }
     };
@@ -111,7 +113,8 @@ export default function EventDetailsDashboard() {
       return;
     }
     try {
-      const res = await api.post(`/events/${id}/team`, {
+      const res = await api.post(`/team-assignments`, {
+        event: { id: Number(id) },
         userId: Number(assignForm.userId),
         role: assignForm.role,
         department: assignForm.assignmentLevel === 'EVENT_HEAD' ? 'GENERAL' : assignForm.department,
@@ -515,7 +518,7 @@ export default function EventDetailsDashboard() {
                         {task.assignedUserId ? 
                           (() => {
                             const assignee = users.find(u => Number(u.id) === Number(task.assignedUserId));
-                            return assignee ? `${assignee.firstName} ${assignee.lastName}` : `User ID: ${task.assignedUserId}`;
+                            return assignee ? (assignee.fullName || assignee.username || assignee.email) : `User ID: ${task.assignedUserId}`;
                           })()
                         : 'Unassigned'}
                       </td>
@@ -619,7 +622,9 @@ export default function EventDetailsDashboard() {
                         const url = window.URL.createObjectURL(blob);
                         const a = document.createElement('a');
                         a.href = url;
-                        a.download = doc.name || 'download';
+                        const extension = doc.fileUrl ? doc.fileUrl.split('.').pop() : '';
+                        const hasExtension = doc.name && doc.name.includes('.');
+                        a.download = hasExtension ? doc.name : `${doc.name || 'download'}${extension ? '.' + extension : ''}`;
                         document.body.appendChild(a);
                         a.click();
                         window.URL.revokeObjectURL(url);
@@ -649,11 +654,11 @@ export default function EventDetailsDashboard() {
               <h3 style={{ margin: 0 }}>📊 Event Profit & Loss</h3>
               <div style={{ display: 'flex', gap: '10px' }}>
                 {event.quotationId && (
-                  <button className="btn btn-ghost btn-sm" onClick={() => navigate(`/sales?quoteId=${event.quotationId}`)}>
+                  <button className="btn btn-ghost btn-sm" onClick={() => navigate(`/quotations?quoteId=${event.quotationId}`)}>
                     📄 View Quotation
                   </button>
                 )}
-                <button className="btn btn-ghost btn-sm" onClick={() => navigate(`/finance?eventId=${event.id}`)}>
+                <button className="btn btn-ghost btn-sm" onClick={() => navigate(`/finance/invoices`)}>
                   🧾 View Invoices
                 </button>
                 <button className="btn btn-primary btn-sm" onClick={() => setShowHamperModal(true)}>
@@ -707,7 +712,7 @@ export default function EventDetailsDashboard() {
             </div>
 
             <div style={{ display: 'flex', gap: '10px' }}>
-              <button className="btn btn-outline" onClick={() => navigate('/finance/invoices')}>Manage Invoices</button>
+              <button className="btn btn-outline" onClick={() => navigate(`/finance/invoices`)}>Manage Invoices</button>
               <button className="btn btn-primary" onClick={() => navigate('/finance/expenses')}>Log Event Expense</button>
             </div>
           </div>
@@ -723,50 +728,32 @@ export default function EventDetailsDashboard() {
               <button className="btn btn-ghost btn-sm" onClick={() => setShowAssignModal(false)}>✕</button>
             </div>
             <form onSubmit={handleAssignSubmit}>
-              <div className="form-group" style={{ position: 'relative' }}>
+              <div className="form-group">
                 <label className="form-label">Select Team Member *</label>
-                <input 
-                  type="text" 
-                  className="form-input" 
-                  placeholder="Search user by name..." 
-                  value={userSearch} 
-                  onChange={e => {
-                    setUserSearch(e.target.value);
-                    setShowUserDropdown(true);
-                    if (assignForm.userId) setAssignForm({...assignForm, userId: ''});
-                  }} 
-                  onFocus={() => setShowUserDropdown(true)}
-                  onBlur={() => setTimeout(() => setShowUserDropdown(false), 200)}
-                  style={{ marginBottom: '8px' }} 
-                />
-                {showUserDropdown && (
-                  <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 1000, background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: '4px', maxHeight: '180px', overflowY: 'auto', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
-                    {users.filter(u => `${u.firstName} ${u.lastName} ${u.username}`.toLowerCase().includes(userSearch.toLowerCase())).length === 0 ? (
-                       <div style={{ padding: '8px 12px', color: 'var(--text-muted)' }}>No users found</div>
-                    ) : (
-                      users.filter(u => `${u.firstName} ${u.lastName} ${u.username}`.toLowerCase().includes(userSearch.toLowerCase())).map(u => (
-                        <div 
-                          key={u.id}
-                          style={{ padding: '8px 12px', cursor: 'pointer', borderBottom: '1px solid var(--border)' }}
-                          onMouseDown={() => {
-                            setAssignForm({...assignForm, userId: String(u.id)});
-                            setUserSearch(getUserName(u.id));
-                            setShowUserDropdown(false);
-                          }}
-                        >
-                          {getUserName(u.id)}
-                        </div>
-                      ))
-                    )}
-                  </div>
-                )}
+                <select 
+                  className="form-select" 
+                  required 
+                  value={assignForm.userId} 
+                  onChange={e => setAssignForm({...assignForm, userId: e.target.value})}
+                >
+                  <option value="">-- Select Member --</option>
+                  {users.map(u => (
+                    <option key={u.id} value={u.id}>
+                      {u.fullName || u.username || u.email} {u.roles ? `(${u.roles.join(', ')})` : ''}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div className="form-group">
                 <label className="form-label">Assignment Level *</label>
                 <select className="form-select" required value={assignForm.assignmentLevel} onChange={e => setAssignForm({...assignForm, assignmentLevel: e.target.value})}>
                   <option value="EVENT_HEAD">Event Head</option>
+                  <option value="CORE_TEAM">Core Team</option>
                   <option value="DEPARTMENT_HEAD">Department Head</option>
+                  <option value="VENDOR_MANAGER">Vendor Manager</option>
                   <option value="TEAM_MEMBER">Team Member</option>
+                  <option value="ON_SITE_COORDINATOR">On-site Coordinator</option>
+                  <option value="VOLUNTEER">Volunteer</option>
                 </select>
               </div>
               
@@ -781,6 +768,13 @@ export default function EventDetailsDashboard() {
                     <option value="LOGISTICS">Logistics</option>
                     <option value="PRODUCTION">Production</option>
                     <option value="SOUND_LIGHT">Sound & Light</option>
+                    <option value="CATERING">Catering</option>
+                    <option value="ENTERTAINMENT">Entertainment</option>
+                    <option value="SECURITY">Security</option>
+                    <option value="GUEST_RELATIONS">Guest Relations</option>
+                    <option value="MARKETING">Marketing</option>
+                    <option value="FINANCE">Finance</option>
+                    <option value="STAGE_MANAGEMENT">Stage Management</option>
                   </select>
                 </div>
               )}
@@ -841,7 +835,7 @@ export default function EventDetailsDashboard() {
                       const user = users.find(u => Number(u.id) === Number(ta.userId));
                       return (
                         <option key={ta.userId} value={ta.userId}>
-                          {user ? `${user.firstName} ${user.lastName}` : `User ID ${ta.userId}`} - {ta.role}
+                          {user ? (user.fullName || user.username || user.email) : `User ID ${ta.userId}`} - {ta.role}
                         </option>
                       );
                     })}
@@ -1013,6 +1007,34 @@ export default function EventDetailsDashboard() {
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '20px' }}>
                 <button type="button" className="btn btn-secondary" onClick={() => setShowHamperModal(false)}>Cancel</button>
                 <button type="submit" className="btn btn-primary">Issue & Charge Cost</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showBudgetModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}>
+          <div className="card animate-fade-in" style={{ width: '100%', maxWidth: '400px', maxHeight: '90vh', overflowY: 'auto' }}>
+            <div className="card-header">
+              <div className="card-title">Set Event Budget</div>
+              <button className="btn btn-ghost btn-sm" onClick={() => setShowBudgetModal(false)}>✕</button>
+            </div>
+            <form onSubmit={handleBudgetSubmit}>
+              <div className="form-group">
+                <label className="form-label">Total Budget Amount (₹) *</label>
+                <input 
+                  type="number" 
+                  className="form-input" 
+                  required 
+                  value={budgetForm.budget} 
+                  onChange={e => setBudgetForm({...budgetForm, budget: e.target.value})} 
+                  placeholder="e.g. 500000" 
+                />
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '20px' }}>
+                <button type="button" className="btn btn-secondary" onClick={() => setShowBudgetModal(false)}>Cancel</button>
+                <button type="submit" className="btn btn-primary">Save Budget</button>
               </div>
             </form>
           </div>

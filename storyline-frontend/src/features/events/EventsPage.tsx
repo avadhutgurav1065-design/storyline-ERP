@@ -43,13 +43,23 @@ export default function EventsPage() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     try {
-      await eventsApi.createEvent({
-        ...formData,
-        clientId: formData.clientId ? Number(formData.clientId) : null,
-        startDate: formData.startDate || null,
-        endDate: formData.endDate || null,
-        pax: formData.pax ? Number(formData.pax) : null,
-      });
+      if ((formData as any).id) {
+        await eventsApi.updateEvent((formData as any).id, {
+          ...formData,
+          clientId: formData.clientId ? Number(formData.clientId) : null,
+          startDate: formData.startDate || null,
+          endDate: formData.endDate || null,
+          pax: formData.pax ? Number(formData.pax) : null,
+        });
+      } else {
+        await eventsApi.createEvent({
+          ...formData,
+          clientId: formData.clientId ? Number(formData.clientId) : null,
+          startDate: formData.startDate || null,
+          endDate: formData.endDate || null,
+          pax: formData.pax ? Number(formData.pax) : null,
+        });
+      }
       setShowModal(false);
       setFormData({ name: '', clientId: '', startDate: '', endDate: '', venue: '', pax: '' });
       fetchEvents();
@@ -175,6 +185,7 @@ export default function EventsPage() {
               </div>
 
               <div style={{ display: 'flex', gap: '8px', borderTop: '1px solid var(--border-color)', paddingTop: '16px' }}>
+                <button className="btn btn-ghost" style={{ flex: 1, padding: '8px', fontSize: '0.85rem' }} onClick={(e) => { e.stopPropagation(); setFormData({ ...(evt as any), startDate: evt.startDate || '', endDate: evt.endDate || '' }); setShowModal(true); }}>Edit</button>
                 <button className="btn btn-ghost" style={{ flex: 1, padding: '8px', fontSize: '0.85rem' }} onClick={(e) => { e.stopPropagation(); navigate(`/events/${evt.id}?tab=CHECKLIST`); }}>Tasks</button>
                 <button className="btn btn-ghost" style={{ flex: 1, padding: '8px', fontSize: '0.85rem' }} onClick={(e) => { e.stopPropagation(); navigate(`/events/${evt.id}?tab=TEAM`); }}>Team</button>
               </div>
@@ -188,7 +199,7 @@ export default function EventsPage() {
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}>
           <div className="card animate-fade-in" style={{ width: '100%', maxWidth: '500px', maxHeight: '90vh', overflowY: 'auto' }}>
             <div className="card-header">
-              <div className="card-title">Create New Event</div>
+              <div className="card-title">{(formData as any).id ? 'Edit Event' : 'Create New Event'}</div>
               <button className="btn btn-ghost btn-sm" onClick={() => setShowModal(false)}>✕</button>
             </div>
             <form onSubmit={handleSubmit}>
@@ -228,7 +239,7 @@ export default function EventsPage() {
               
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '20px' }}>
                 <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
-                <button type="submit" className="btn btn-primary">Create Event</button>
+                <button type="submit" className="btn btn-primary">{(formData as any).id ? 'Update Event' : 'Create Event'}</button>
               </div>
             </form>
           </div>

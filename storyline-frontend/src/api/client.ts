@@ -54,6 +54,7 @@ export const authApi = {
 export const usersApi = {
   list: (params?: any) => api.get<ApiResponse<any>>('/users', { params }),
   create: (data: any) => api.post<ApiResponse<any>>('/users', data),
+  update: (id: number, data: any) => api.put<ApiResponse<any>>(`/users/${id}`, data),
   toggleStatus: (id: number) => api.patch<ApiResponse<any>>(`/users/${id}/status`, {}),
   delete: (id: number) => api.delete<ApiResponse<any>>(`/users/${id}`),
 };

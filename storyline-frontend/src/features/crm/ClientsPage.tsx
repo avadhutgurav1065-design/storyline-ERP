@@ -13,7 +13,7 @@ export default function ClientsPage() {
 
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({
-    name: '', email: '', phone: '', company: '', address: '', gstNumber: '', eventType: '', description: ''
+    id: null as number | null, name: '', email: '', phone: '', company: '', address: '', gstNumber: '', eventType: '', description: ''
   });
 
   const fetchClients = async () => {
@@ -35,9 +35,13 @@ export default function ClientsPage() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     try {
-      await crmApi.createClient(formData);
+      if (formData.id) {
+        await crmApi.updateClient(formData.id, formData);
+      } else {
+        await crmApi.createClient(formData);
+      }
       setShowModal(false);
-      setFormData({ name: '', email: '', phone: '', company: '', address: '', gstNumber: '', eventType: '', description: '' });
+      setFormData({ id: null, name: '', email: '', phone: '', company: '', address: '', gstNumber: '', eventType: '', description: '' });
       fetchClients();
     } catch (err) {
       console.error(err);
@@ -51,7 +55,10 @@ export default function ClientsPage() {
           <h1 className="page-title">Client Management</h1>
           <p className="page-subtitle">Manage your converted clients and billing details</p>
         </div>
-        <button className="btn btn-primary" onClick={() => setShowModal(true)}>+ New Client</button>
+        <button className="btn btn-primary" onClick={() => {
+          setFormData({ id: null, name: '', email: '', phone: '', company: '', address: '', gstNumber: '', eventType: '', description: '' });
+          setShowModal(true);
+        }}>+ New Client</button>
       </div>
 
       <div className="card" style={{ marginBottom: '20px' }}>
@@ -125,7 +132,21 @@ export default function ClientsPage() {
                         {client.phone && (
                            <a href={`tel:${client.phone}`} className="btn btn-ghost btn-sm" title="Call" onClick={(e) => e.stopPropagation()}>📞</a>
                         )}
-                        <button className="btn btn-ghost btn-sm" title="Edit" onClick={(e) => e.stopPropagation()}>✏️</button>
+                        <button className="btn btn-ghost btn-sm" title="Edit" onClick={(e) => {
+                          e.stopPropagation();
+                          setFormData({
+                            id: client.id,
+                            name: client.name || '',
+                            email: client.email || '',
+                            phone: client.phone || '',
+                            company: client.company || '',
+                            address: client.address || '',
+                            gstNumber: client.gstNumber || '',
+                            eventType: client.eventType || '',
+                            description: client.description || ''
+                          });
+                          setShowModal(true);
+                        }}>✏️</button>
                       </div>
                     </td>
                   </tr>
@@ -142,7 +163,7 @@ export default function ClientsPage() {
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}>
           <div className="card animate-fade-in" style={{ width: '100%', maxWidth: '500px', maxHeight: '90vh', overflowY: 'auto' }}>
             <div className="card-header">
-              <div className="card-title">Add New Client</div>
+              <div className="card-title">{formData.id ? 'Edit Client' : 'Add New Client'}</div>
               <button className="btn btn-ghost btn-sm" onClick={() => setShowModal(false)}>✕</button>
             </div>
             <form onSubmit={handleSubmit}>
@@ -182,7 +203,7 @@ export default function ClientsPage() {
               </div>
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '20px' }}>
                 <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
-                <button type="submit" className="btn btn-primary">Save Client</button>
+                <button type="submit" className="btn btn-primary">{formData.id ? 'Update Client' : 'Save Client'}</button>
               </div>
             </form>
           </div>
