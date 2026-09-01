@@ -7,7 +7,7 @@ import jakarta.persistence.*;
 @Table(name = "team_assignments")
 public class TeamAssignment extends BaseEntity {
 
-    @com.fasterxml.jackson.annotation.JsonIgnore
+    @com.fasterxml.jackson.annotation.JsonProperty(access = com.fasterxml.jackson.annotation.JsonProperty.Access.WRITE_ONLY)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "event_id", nullable = false)
     private Event event;
