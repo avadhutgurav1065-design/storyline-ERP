@@ -37,6 +37,10 @@ public class NotificationService {
             for (DeviceToken token : tokens) {
                 Message fcmMessage = Message.builder()
                         .setToken(token.getToken())
+                        .setNotification(com.google.firebase.messaging.Notification.builder()
+                                .setTitle(title)
+                                .setBody(message)
+                                .build())
                         .putData("title", title)
                         .putData("body", message)
                         .putData("type", type != null ? type : "info")

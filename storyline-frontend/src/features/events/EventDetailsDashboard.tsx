@@ -2,7 +2,7 @@ import { useState, useEffect, type FormEvent } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useNotification } from '../../context/NotificationContext';
-import api, { eventsApi, financeApi, usersApi, vendorsApi, inventoryApi, tasksApi, vendorAssignmentsApi, teamAssignmentsApi } from '../../api/client';
+import api, { eventsApi, financeApi, lookupsApi, inventoryApi, tasksApi, vendorAssignmentsApi, teamAssignmentsApi } from '../../api/client';
 
 export default function EventDetailsDashboard() {
   const { hasRole } = useAuth();
@@ -83,15 +83,15 @@ export default function EventDetailsDashboard() {
     // Fetch users for the assignment modal
     const fetchUsersAndVendors = async () => {
       try {
-        const usersRes = await usersApi.list({ size: 1000 });
+        const usersRes = await lookupsApi.users();
         const usersData = usersRes.data.data as any;
-        setUsers(usersData.content || usersData || []);
+        setUsers(usersData || []);
       } catch (err) { console.warn("Users access restricted"); }
       
       try {
-        const vendorsRes = await vendorsApi.list();
+        const vendorsRes = await lookupsApi.vendors();
         const vendorsData = vendorsRes.data.data as any;
-        setVendors(vendorsData.content || vendorsData || []);
+        setVendors(vendorsData || []);
       } catch (err) { console.warn("Vendors access restricted"); }
       
       if (inventoryApi) {

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { eventsApi, teamAssignmentsApi, usersApi } from '../../api/client';
+import { eventsApi, teamAssignmentsApi, lookupsApi } from '../../api/client';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 
@@ -20,11 +20,11 @@ export default function TeamManagementPage() {
       // Fetch all active events and all users
       const [eventsRes, usersRes] = await Promise.all([
         eventsApi.listEvents({ size: 50, sort: 'startDate,desc' }),
-        usersApi.list()
+        lookupsApi.users()
       ]);
 
       const eventsList = eventsRes.data.data.content || [];
-      const usersList = usersRes.data.data.content || [];
+      const usersList = usersRes.data.data || [];
 
       // Create a map of users for fast avatar lookup
       const uMap: Record<number, any> = {};

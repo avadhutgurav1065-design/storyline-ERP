@@ -15,10 +15,12 @@ import java.util.List;
 public class TeamAssignmentService {
 
     private final TeamAssignmentRepository teamAssignmentRepository;
+    private final com.storyline.erp.events.repository.EventRepository eventRepository;
     private final ApplicationEventPublisher eventPublisher;
 
-    public TeamAssignmentService(TeamAssignmentRepository teamAssignmentRepository, ApplicationEventPublisher eventPublisher) {
+    public TeamAssignmentService(TeamAssignmentRepository teamAssignmentRepository, com.storyline.erp.events.repository.EventRepository eventRepository, ApplicationEventPublisher eventPublisher) {
         this.teamAssignmentRepository = teamAssignmentRepository;
+        this.eventRepository = eventRepository;
         this.eventPublisher = eventPublisher;
     }
 
@@ -30,11 +32,18 @@ public class TeamAssignmentService {
         TeamAssignment saved = teamAssignmentRepository.save(assignment);
         if (saved.getUserId() != null) {
             String roleName = saved.getRole() != null ? saved.getRole() : "the team";
+            String eventName = "Unknown Event";
+            if (saved.getEvent() != null && saved.getEvent().getId() != null) {
+                eventName = eventRepository.findById(saved.getEvent().getId())
+                        .map(com.storyline.erp.events.entity.Event::getName)
+                        .orElse(String.valueOf(saved.getEvent().getId()));
+            }
+            
             eventPublisher.publishEvent(new NotificationEvent(
                     this,
                     saved.getUserId(),
                     "Assigned to Event",
-                    "You have been assigned to event ID " + (saved.getEvent() != null ? saved.getEvent().getId() : "") + " as " + roleName,
+                    "You have been assigned to event '" + eventName + "' as " + roleName,
                     "EVENT_ASSIGNED"
             ));
         }

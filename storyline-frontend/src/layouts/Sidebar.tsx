@@ -48,7 +48,7 @@ const navigation: NavGroup[] = [
     items: [
       { path: '/events', label: 'All Events', icon: '🗓️', roles: ['ADMIN', 'EVENT_MANAGER', 'TEAM_MANAGER'] },
       { path: '/events/active', label: 'Active Events', icon: '🔥', roles: ['ADMIN', 'EVENT_MANAGER', 'TEAM_MANAGER'] },
-      { path: '/events/my-assignments', label: 'My Assigned Events', icon: '🎯', roles: ['TEAM_MANAGER', 'FREELANCER'] },
+      { path: '/events/my-assignments', label: 'My Assigned Events', icon: '🎯' },
       { path: '/events/calendar', icon: '📅', label: 'Calendar', roles: ['ADMIN', 'EVENT_MANAGER', 'TEAM_MANAGER'] },
     ],
   },

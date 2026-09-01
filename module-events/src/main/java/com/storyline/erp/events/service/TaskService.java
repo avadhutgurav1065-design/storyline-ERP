@@ -15,10 +15,12 @@ import java.util.List;
 public class TaskService {
 
     private final TaskRepository taskRepository;
+    private final com.storyline.erp.events.repository.EventRepository eventRepository;
     private final ApplicationEventPublisher eventPublisher;
 
-    public TaskService(TaskRepository taskRepository, ApplicationEventPublisher eventPublisher) {
+    public TaskService(TaskRepository taskRepository, com.storyline.erp.events.repository.EventRepository eventRepository, ApplicationEventPublisher eventPublisher) {
         this.taskRepository = taskRepository;
+        this.eventRepository = eventRepository;
         this.eventPublisher = eventPublisher;
     }
 
@@ -65,11 +67,17 @@ public class TaskService {
     public Task createTask(Task task) {
         Task saved = taskRepository.save(task);
         if (saved.getAssignedUserId() != null) {
+            String eventName = "an Event";
+            if (saved.getEvent() != null && saved.getEvent().getId() != null) {
+                eventName = eventRepository.findById(saved.getEvent().getId())
+                        .map(com.storyline.erp.events.entity.Event::getName)
+                        .orElse("an Event");
+            }
             eventPublisher.publishEvent(new NotificationEvent(
                     this,
                     saved.getAssignedUserId(),
                     "New Task Assigned",
-                    "You have been assigned a new task: " + saved.getTitle(),
+                    "You have been assigned a new task: '" + saved.getTitle() + "' for event: " + eventName,
                     "TASK_ASSIGNED"
             ));
         }
@@ -91,11 +99,17 @@ public class TaskService {
         Task saved = taskRepository.save(task);
         
         if (newlyAssigned) {
+            String eventName = "an Event";
+            if (saved.getEvent() != null && saved.getEvent().getId() != null) {
+                eventName = eventRepository.findById(saved.getEvent().getId())
+                        .map(com.storyline.erp.events.entity.Event::getName)
+                        .orElse("an Event");
+            }
             eventPublisher.publishEvent(new NotificationEvent(
                     this,
                     saved.getAssignedUserId(),
                     "New Task Assigned",
-                    "You have been assigned a task: " + saved.getTitle(),
+                    "You have been assigned a task: '" + saved.getTitle() + "' for event: " + eventName,
                     "TASK_ASSIGNED"
             ));
         }

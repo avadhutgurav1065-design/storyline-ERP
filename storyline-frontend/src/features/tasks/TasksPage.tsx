@@ -18,11 +18,11 @@ export default function TasksPage({ filter }: { filter: 'my' | 'team' | 'all' })
     try {
       const [tasksRes, usersRes] = await Promise.all([
         tasksApi.list({ filter }),
-        usersApi.list({ size: 1000 })
+        lookupsApi.users()
       ]);
       
       const allTasks = tasksRes.data.data || [];
-      const usersList = usersRes.data.data.content || [];
+      const usersList = usersRes.data.data || [];
       
       const uMap: Record<number, any> = {};
       usersList.forEach((u: any) => { uMap[u.id] = u; });

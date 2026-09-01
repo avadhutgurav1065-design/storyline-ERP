@@ -11,6 +11,7 @@ const NotificationContext = createContext<NotificationContextType | undefined>(u
 
 export function NotificationProvider({ children }: { children: ReactNode }) {
   const [toast, setToast] = useState<{title: string, message: string, type: string} | null>(null);
+  const [showPermissionBanner, setShowPermissionBanner] = useState(false);
 
   // A simple beep sound using standard web audio API to avoid needing assets
   const playBeep = () => {
@@ -69,12 +70,9 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
         if (localStorage.getItem('accessToken')) {
            initFirebaseMessaging();
         }
-      } else if (Notification.permission !== 'denied') {
-        Notification.requestPermission().then((permission) => {
-          if (permission === 'granted' && localStorage.getItem('accessToken')) {
-             initFirebaseMessaging();
-          }
-        });
+      } else if (Notification.permission === 'default') {
+        // Show banner to ask for user gesture
+        setShowPermissionBanner(true);
       }
     }
 
@@ -120,10 +118,56 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     }, 5000);
   };
 
+  const handleEnableNotifications = () => {
+    if ('Notification' in window) {
+      Notification.requestPermission().then((permission) => {
+        setShowPermissionBanner(false);
+        if (permission === 'granted' && localStorage.getItem('accessToken')) {
+          initFirebaseMessaging();
+        }
+      });
+    }
+  };
+
   return (
     <NotificationContext.Provider value={{ triggerNotification, initFirebaseMessaging }}>
       {children}
       
+      {/* Permission Banner */}
+      {showPermissionBanner && (
+        <div style={{
+          position: 'fixed',
+          top: '0',
+          left: '0',
+          right: '0',
+          backgroundColor: '#3b82f6',
+          color: 'white',
+          padding: '12px 24px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          zIndex: 10000,
+          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+        }}>
+          <div>
+            <strong>Enable Notifications</strong>
+            <p style={{ margin: '4px 0 0 0', fontSize: '0.9rem' }}>Stay updated on your assigned tasks and events.</p>
+          </div>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button 
+              onClick={() => setShowPermissionBanner(false)}
+              style={{ padding: '6px 12px', background: 'transparent', border: '1px solid white', color: 'white', borderRadius: '4px', cursor: 'pointer' }}>
+              Later
+            </button>
+            <button 
+              onClick={handleEnableNotifications}
+              style={{ padding: '6px 12px', background: 'white', border: 'none', color: '#3b82f6', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
+              Enable
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Toast UI */}
       {toast && (
         <div style={{

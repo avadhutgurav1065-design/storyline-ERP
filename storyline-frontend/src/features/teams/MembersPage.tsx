@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { usersApi, tasksApi } from '../../api/client';
+import { usersApi, tasksApi, lookupsApi } from '../../api/client';
 
 export default function MembersPage() {
   const [members, setMembers] = useState<any[]>([]);
@@ -22,10 +22,10 @@ export default function MembersPage() {
     try {
       setLoading(true);
       const [membersRes, tasksRes] = await Promise.all([
-        usersApi.list(),
+        lookupsApi.users(),
         tasksApi.list()
       ]);
-      setMembers(membersRes.data.data.content || []);
+      setMembers(membersRes.data.data || []);
       setTasks(tasksRes.data.data || []);
     } catch (err) {
       console.error(err);

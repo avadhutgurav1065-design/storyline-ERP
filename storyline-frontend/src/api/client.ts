@@ -179,6 +179,13 @@ export const tasksApi = {
   delete: (id: number) => api.delete<ApiResponse<void>>(`/tasks/${id}`),
 };
 
+export const lookupsApi = {
+  users: () => api.get<ApiResponse<any[]>>('/lookups/users'),
+  events: () => api.get<ApiResponse<any[]>>('/lookups/events'),
+  clients: () => api.get<ApiResponse<any[]>>('/lookups/clients'),
+  vendors: () => api.get<ApiResponse<any[]>>('/lookups/vendors'),
+  products: () => api.get<ApiResponse<any[]>>('/lookups/products'),
+};
 
 
 // ====================================================
