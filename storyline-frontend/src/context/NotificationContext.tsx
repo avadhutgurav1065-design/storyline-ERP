@@ -50,7 +50,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
         new Notification(title, { 
           body: message,
           vibrate: [200, 100, 200]
-        });
+        } as any);
       } catch (e) {
         console.warn("System notification failed", e);
       }
