@@ -59,8 +59,8 @@ export default function TopBar({ collapsed, onToggle, onMobileToggle, title }: T
     // Initial fetch
     fetchNotifications();
     
-    // Poll every 30 seconds
-    const interval = setInterval(fetchNotifications, 30000);
+    // Poll every 5 seconds
+    const interval = setInterval(fetchNotifications, 5000);
     return () => clearInterval(interval);
   }, [user]);
 

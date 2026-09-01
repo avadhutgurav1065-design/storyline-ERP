@@ -124,9 +124,11 @@ export default function EventDetailsDashboard() {
         setShowAssignModal(false);
         setAssignForm({ userId: '', role: '', department: '', assignmentLevel: 'TEAM_MEMBER' });
         fetchDashboard();
+        triggerNotification('Success', 'Team member assigned successfully!', 'success');
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      triggerNotification('Error', 'Failed to assign team member: ' + (err.response?.data?.message || err.message), 'error');
     }
   };
 
@@ -159,8 +161,10 @@ export default function EventDetailsDashboard() {
       setShowTaskModal(false);
       setTaskForm({ title: '', description: '', assignedUserId: '', priority: 'MEDIUM', dueDate: '', dueTime: '', notes: '' });
       fetchDashboard();
-    } catch (err) {
+      triggerNotification('Success', 'Task created successfully!', 'success');
+    } catch (err: any) {
       console.error(err);
+      triggerNotification('Error', 'Failed to create task: ' + (err.response?.data?.message || err.message), 'error');
     }
   };
 
@@ -402,7 +406,7 @@ export default function EventDetailsDashboard() {
                       <div style={{ display: 'flex', gap: '10px' }}>
                         <a href={`tel:`} className="btn btn-primary btn-sm" style={{ flex: 1, textAlign: 'center' }}>📞 Call</a>
                         <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }} onClick={async () => {
-                          await api.delete(`/events/team/${ta.id}`);
+                          await teamAssignmentsApi.remove(ta.id);
                           fetchDashboard();
                         }}>Remove</button>
                       </div>
@@ -427,7 +431,7 @@ export default function EventDetailsDashboard() {
                       <div style={{ display: 'flex', gap: '10px' }}>
                         <a href={`tel:`} className="btn btn-primary btn-sm" style={{ flex: 1, textAlign: 'center' }}>📞 Call</a>
                         <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }} onClick={async () => {
-                          await api.delete(`/events/team/${ta.id}`);
+                          await teamAssignmentsApi.remove(ta.id);
                           fetchDashboard();
                         }}>Remove</button>
                       </div>
@@ -451,7 +455,7 @@ export default function EventDetailsDashboard() {
                       <div style={{ display: 'flex', gap: '10px' }}>
                         <a href={`tel:`} className="btn btn-primary btn-sm" style={{ flex: 1, textAlign: 'center' }}>📞 Call</a>
                         <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }} onClick={async () => {
-                          await api.delete(`/events/team/${ta.id}`);
+                          await teamAssignmentsApi.remove(ta.id);
                           fetchDashboard();
                         }}>Remove</button>
                       </div>

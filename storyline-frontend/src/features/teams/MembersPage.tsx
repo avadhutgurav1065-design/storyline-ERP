@@ -103,90 +103,108 @@ export default function MembersPage() {
       {loading ? (
         <div style={{ textAlign: 'center', padding: '60px' }}>Loading members...</div>
       ) : (
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
-          gap: '24px',
-          marginTop: '20px'
-        }}>
-          {members.map((m) => {
-            // Calculate active tasks
-            const memberTasks = tasks.filter(t => t.assigneeId === m.id && t.status !== 'COMPLETED');
-            const empType = getEmploymentType(m.roleName);
-            const avatarBg = avatarGradients[(m.id || 0) % avatarGradients.length];
+        <div>
+          <h2 style={{marginTop: '30px', marginBottom: '15px', color: 'var(--text-main)', fontSize: '1.25rem'}}>In-House Team</h2>
+          {members.filter(m => getEmploymentType(m.roleName) === 'In-House').length === 0 ? (
+            <p style={{color: 'var(--text-muted)'}}>No in-house team members found.</p>
+          ) : (
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+              gap: '24px',
+            }}>
+              {members.filter(m => getEmploymentType(m.roleName) === 'In-House').map((m) => {
+                const memberTasks = tasks.filter(t => t.assigneeId === m.id && t.status !== 'COMPLETED');
+                const avatarBg = avatarGradients[(m.id || 0) % avatarGradients.length];
 
-            return (
-              <div key={m.id} className="card" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                
-                {/* Header section */}
-                <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-                  <div style={{
-                    width: '64px',
-                    height: '64px',
-                    borderRadius: '16px',
-                    background: avatarBg,
-                    color: 'white',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '1.8rem',
-                    fontWeight: 700,
-                    lineHeight: 1,
-                    boxShadow: '0 4px 10px rgba(0,0,0,0.1)'
-                  }}>
-                    {getMemberInitials(m.fullName)}
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                      <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--text-main)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {m.fullName}
-                      </h3>
-                      <span style={{
-                        width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#10b981', display: 'inline-block', boxShadow: '0 0 0 2px rgba(16, 185, 129, 0.2)'
-                      }} title="Online"></span>
+                return (
+                  <div key={m.id} className="card" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                      <div style={{ width: '64px', height: '64px', borderRadius: '16px', background: avatarBg, color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.8rem', fontWeight: 700, lineHeight: 1, boxShadow: '0 4px 10px rgba(0,0,0,0.1)' }}>
+                        {getMemberInitials(m.fullName)}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                          <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--text-main)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.fullName}</h3>
+                          <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#10b981', display: 'inline-block', boxShadow: '0 0 0 2px rgba(16, 185, 129, 0.2)' }} title="Online"></span>
+                        </div>
+                        <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '6px' }}>{m.email}</div>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <span className="badge badge-primary">{m.roleName || 'Staff'}</span>
+                          <span className="badge badge-success">In-House</span>
+                        </div>
+                      </div>
                     </div>
-                    <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '6px' }}>{m.email}</div>
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      <span className="badge badge-primary">{m.roleName || 'Staff'}</span>
-                      <span className={`badge ${empType === 'In-House' ? 'badge-success' : 'badge-warning'}`}>{empType}</span>
+                    <div style={{ backgroundColor: 'var(--bg-main)', borderRadius: '8px', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid var(--border-color)' }}>
+                      <div>
+                        <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.5px' }}>Active Tasks</div>
+                        <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--text-main)' }}>{memberTasks.length}</div>
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.5px' }}>Status</div>
+                        <div style={{ fontSize: '0.95rem', fontWeight: 600, color: memberTasks.length > 5 ? '#ef4444' : '#10b981' }}>{memberTasks.length > 5 ? 'Overloaded' : 'Available'}</div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-
-                {/* Stats Section */}
-                <div style={{ 
-                  backgroundColor: 'var(--bg-main)', 
-                  borderRadius: '8px', 
-                  padding: '12px 16px',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  border: '1px solid var(--border-color)'
-                }}>
-                  <div>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.5px' }}>Active Tasks</div>
-                    <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--text-main)' }}>{memberTasks.length}</div>
-                  </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.5px' }}>Status</div>
-                    <div style={{ fontSize: '0.95rem', fontWeight: 600, color: memberTasks.length > 5 ? '#ef4444' : '#10b981' }}>
-                      {memberTasks.length > 5 ? 'Overloaded' : 'Available'}
+                    <div style={{ display: 'flex', gap: '12px', marginTop: 'auto' }}>
+                      <a href={`mailto:${m.email}`} className="btn btn-outline" style={{ flex: 1, textAlign: 'center', padding: '8px' }}>Email</a>
+                      <button className="btn btn-primary" style={{ flex: 1, padding: '8px' }} onClick={() => handleAssignTaskClick(m)}>Assign Task</button>
                     </div>
                   </div>
-                </div>
+                );
+              })}
+            </div>
+          )}
 
-                {/* Actions */}
-                <div style={{ display: 'flex', gap: '12px', marginTop: 'auto' }}>
-                  <a href={`mailto:${m.email}`} className="btn btn-outline" style={{ flex: 1, textAlign: 'center', padding: '8px' }}>
-                    Email
-                  </a>
-                  <button className="btn btn-primary" style={{ flex: 1, padding: '8px' }} onClick={() => handleAssignTaskClick(m)}>
-                    Assign Task
-                  </button>
-                </div>
-              </div>
-            );
-          })}
+          <h2 style={{marginTop: '40px', marginBottom: '15px', color: 'var(--text-main)', fontSize: '1.25rem'}}>Freelancers & Temporary Staff</h2>
+          {members.filter(m => getEmploymentType(m.roleName) === 'Freelancer').length === 0 ? (
+            <p style={{color: 'var(--text-muted)'}}>No freelancers assigned currently.</p>
+          ) : (
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+              gap: '24px',
+            }}>
+              {members.filter(m => getEmploymentType(m.roleName) === 'Freelancer').map((m) => {
+                const memberTasks = tasks.filter(t => t.assigneeId === m.id && t.status !== 'COMPLETED');
+                const avatarBg = avatarGradients[(m.id || 0) % avatarGradients.length];
+
+                return (
+                  <div key={m.id} className="card" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                      <div style={{ width: '64px', height: '64px', borderRadius: '16px', background: avatarBg, color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.8rem', fontWeight: 700, lineHeight: 1, boxShadow: '0 4px 10px rgba(0,0,0,0.1)' }}>
+                        {getMemberInitials(m.fullName)}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                          <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--text-main)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.fullName}</h3>
+                          <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#10b981', display: 'inline-block', boxShadow: '0 0 0 2px rgba(16, 185, 129, 0.2)' }} title="Online"></span>
+                        </div>
+                        <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '6px' }}>{m.email}</div>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <span className="badge badge-primary">{m.roleName || 'Staff'}</span>
+                          <span className="badge badge-warning">Freelancer</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div style={{ backgroundColor: 'var(--bg-main)', borderRadius: '8px', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid var(--border-color)' }}>
+                      <div>
+                        <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.5px' }}>Active Tasks</div>
+                        <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--text-main)' }}>{memberTasks.length}</div>
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.5px' }}>Status</div>
+                        <div style={{ fontSize: '0.95rem', fontWeight: 600, color: memberTasks.length > 5 ? '#ef4444' : '#10b981' }}>{memberTasks.length > 5 ? 'Overloaded' : 'Available'}</div>
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: '12px', marginTop: 'auto' }}>
+                      <a href={`mailto:${m.email}`} className="btn btn-outline" style={{ flex: 1, textAlign: 'center', padding: '8px' }}>Email</a>
+                      <button className="btn btn-primary" style={{ flex: 1, padding: '8px' }} onClick={() => handleAssignTaskClick(m)}>Assign Task</button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
 
