@@ -1,13 +1,13 @@
 import { initializeApp } from "firebase/app";
 import { getMessaging, getToken, onMessage } from "firebase/messaging";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyCdX4EEBysyUOk_65G1peHx61Vp1kwJiy8",
-  authDomain: "storyline-erp-push.firebaseapp.com",
-  projectId: "storyline-erp-push",
-  storageBucket: "storyline-erp-push.firebasestorage.app",
-  messagingSenderId: "346455774672",
-  appId: "1:346455774672:web:d2c60005aae6ba7732d5d5"
+export const firebaseConfig = {
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
 const app = initializeApp(firebaseConfig);

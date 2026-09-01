@@ -1,14 +1,16 @@
 importScripts('https://www.gstatic.com/firebasejs/9.2.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/9.2.0/firebase-messaging-compat.js');
 
-const firebaseConfig = {
-  apiKey: "AIzaSyCdX4EEBysyUOk_65G1peHx61Vp1kwJiy8",
-  authDomain: "storyline-erp-push.firebaseapp.com",
-  projectId: "storyline-erp-push",
-  storageBucket: "storyline-erp-push.firebasestorage.app",
-  messagingSenderId: "346455774672",
-  appId: "1:346455774672:web:d2c60005aae6ba7732d5d5"
-};
+const urlParams = new URLSearchParams(location.search);
+const configParam = urlParams.get('config');
+
+let firebaseConfig;
+if (configParam) {
+  firebaseConfig = JSON.parse(decodeURIComponent(configParam));
+} else {
+  // Fallback for direct loads without config
+  firebaseConfig = {};
+}
 
 firebase.initializeApp(firebaseConfig);
 

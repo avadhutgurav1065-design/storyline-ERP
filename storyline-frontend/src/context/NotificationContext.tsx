@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import { messaging, getToken, onMessage } from '../firebase';
+import { messaging, getToken, onMessage, firebaseConfig } from '../firebase';
 import { notificationsApi } from '../api/client';
 
 interface NotificationContextType {
@@ -32,9 +32,17 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 
   const initFirebaseMessaging = async () => {
     try {
-      if ('Notification' in window && Notification.permission === 'granted') {
-        const token = await getToken(messaging, { vapidKey: 'BMc2i-L0xTqXyR0-rSlyFmJ8-uP3E2kG8tYqDkG62gQv77n9a2h16cT2sUvY6mK1qUvY6mK1qUvY6mK1qU' }); // Using a default vapidKey or omitting if not strictly required, but for VAPID we need one usually. However, without VAPID specified it might still work for simple configs. Actually, omitting vapidKey for now to see if it just works. Let's rely on standard getToken.
-        const actualToken = await getToken(messaging);
+      if ('Notification' in window && Notification.permission === 'granted' && navigator.serviceWorker) {
+        // Register SW with config injected in URL
+        const swUrl = `/firebase-messaging-sw.js?config=${encodeURIComponent(JSON.stringify(firebaseConfig))}`;
+        const registration = await navigator.serviceWorker.register(swUrl);
+        
+        // getToken using our custom registration
+        const actualToken = await getToken(messaging, { 
+          serviceWorkerRegistration: registration,
+          vapidKey: 'BMc2i-L0xTqXyR0-rSlyFmJ8-uP3E2kG8tYqDkG62gQv77n9a2h16cT2sUvY6mK1qUvY6mK1qUvY6mK1qU' 
+        });
+        
         if (actualToken) {
            console.log("FCM Token:", actualToken);
            await notificationsApi.registerDeviceToken(actualToken);
