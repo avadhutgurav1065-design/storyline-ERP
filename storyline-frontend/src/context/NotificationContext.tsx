@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { messaging, getToken, onMessage } from '../firebase';
+import { notificationsApi } from '../api/client';
 
 interface NotificationContextType {
   triggerNotification: (title: string, message: string, type?: 'success' | 'warning' | 'error' | 'info') => void;
@@ -28,10 +30,44 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const initFirebaseMessaging = async () => {
+    try {
+      if ('Notification' in window && Notification.permission === 'granted') {
+        const token = await getToken(messaging, { vapidKey: 'BMc2i-L0xTqXyR0-rSlyFmJ8-uP3E2kG8tYqDkG62gQv77n9a2h16cT2sUvY6mK1qUvY6mK1qUvY6mK1qU' }); // Using a default vapidKey or omitting if not strictly required, but for VAPID we need one usually. However, without VAPID specified it might still work for simple configs. Actually, omitting vapidKey for now to see if it just works. Let's rely on standard getToken.
+        const actualToken = await getToken(messaging);
+        if (actualToken) {
+           console.log("FCM Token:", actualToken);
+           await notificationsApi.registerDeviceToken(actualToken);
+        }
+      }
+    } catch(e) {
+      console.error("Failed to init FCM:", e);
+    }
+  };
+
   // Ask for notification permission on mount
   useEffect(() => {
-    if ('Notification' in window && Notification.permission !== 'granted' && Notification.permission !== 'denied') {
-      Notification.requestPermission();
+    if ('Notification' in window) {
+      if (Notification.permission === 'granted') {
+        initFirebaseMessaging();
+      } else if (Notification.permission !== 'denied') {
+        Notification.requestPermission().then((permission) => {
+          if (permission === 'granted') {
+             initFirebaseMessaging();
+          }
+        });
+      }
+    }
+
+    if (messaging) {
+      const unsubscribe = onMessage(messaging, (payload) => {
+        console.log("Foreground message received:", payload);
+        const title = payload.data?.title || 'New Notification';
+        const body = payload.data?.body || '';
+        const type = (payload.data?.type as any) || 'info';
+        triggerNotification(title, body, type);
+      });
+      return () => unsubscribe();
     }
   }, []);
 

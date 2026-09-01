@@ -216,6 +216,7 @@ export const notificationsApi = {
   getUnreadNotifications: () => api.get<ApiResponse<any[]>>('/notifications/unread'),
   markAsRead: (id: number) => api.post<ApiResponse<void>>(`/notifications/${id}/read`),
   markAllAsRead: () => api.post<ApiResponse<void>>('/notifications/read-all'),
+  registerDeviceToken: (token: string) => api.post<ApiResponse<void>>('/notifications/tokens', { token }),
 };
 
 export const dashboardApi = {
