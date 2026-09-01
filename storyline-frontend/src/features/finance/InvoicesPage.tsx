@@ -275,7 +275,7 @@ export default function InvoicesPage() {
                           <div style={{ fontWeight: 600 }}>{client.name}</div>
                           <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{client.company || 'Individual'}</div>
                         </div>
-                      ) : inv.clientId}
+                      ) : 'Unknown Client'}
                     </td>
                     <td>{inv.issueDate}</td>
                     <td>
@@ -462,28 +462,37 @@ export default function InvoicesPage() {
 
               <div style={{ background: 'var(--bg-secondary)', padding: '15px', borderRadius: '8px', marginBottom: '15px' }}>
                 <h4 style={{ margin: '0 0 10px 0', fontSize: '0.9rem' }}>Invoice 1: {scheduleData.split1Name}</h4>
-                <div style={{ display: 'flex', gap: '10px' }}>
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                   <input type="number" className="form-input" style={{ width: '80px' }} value={scheduleData.split1} onChange={e => setScheduleData({...scheduleData, split1: Number(e.target.value)})} /> <span style={{ padding: '8px 0' }}>%</span>
                   <input type="text" className="form-input" value={scheduleData.split1Name} onChange={e => setScheduleData({...scheduleData, split1Name: e.target.value})} />
                   <input type="number" className="form-input" placeholder="Days to due" style={{ width: '100px' }} value={scheduleData.split1Days} onChange={e => setScheduleData({...scheduleData, split1Days: Number(e.target.value)})} />
+                  <div style={{ fontWeight: 'bold', minWidth: '100px', textAlign: 'right' }}>
+                    ₹{((parseFloat(scheduleData.grandTotal || '0') * scheduleData.split1) / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </div>
                 </div>
               </div>
 
               <div style={{ background: 'var(--bg-secondary)', padding: '15px', borderRadius: '8px', marginBottom: '15px' }}>
                 <h4 style={{ margin: '0 0 10px 0', fontSize: '0.9rem' }}>Invoice 2: {scheduleData.split2Name}</h4>
-                <div style={{ display: 'flex', gap: '10px' }}>
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                   <input type="number" className="form-input" style={{ width: '80px' }} value={scheduleData.split2} onChange={e => setScheduleData({...scheduleData, split2: Number(e.target.value)})} /> <span style={{ padding: '8px 0' }}>%</span>
                   <input type="text" className="form-input" value={scheduleData.split2Name} onChange={e => setScheduleData({...scheduleData, split2Name: e.target.value})} />
                   <input type="number" className="form-input" placeholder="Days to due" style={{ width: '100px' }} value={scheduleData.split2Days} onChange={e => setScheduleData({...scheduleData, split2Days: Number(e.target.value)})} />
+                  <div style={{ fontWeight: 'bold', minWidth: '100px', textAlign: 'right' }}>
+                    ₹{((parseFloat(scheduleData.grandTotal || '0') * scheduleData.split2) / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </div>
                 </div>
               </div>
 
               <div style={{ background: 'var(--bg-secondary)', padding: '15px', borderRadius: '8px', marginBottom: '24px' }}>
                 <h4 style={{ margin: '0 0 10px 0', fontSize: '0.9rem' }}>Invoice 3: {scheduleData.split3Name}</h4>
-                <div style={{ display: 'flex', gap: '10px' }}>
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                   <input type="number" className="form-input" style={{ width: '80px' }} value={scheduleData.split3} onChange={e => setScheduleData({...scheduleData, split3: Number(e.target.value)})} /> <span style={{ padding: '8px 0' }}>%</span>
                   <input type="text" className="form-input" value={scheduleData.split3Name} onChange={e => setScheduleData({...scheduleData, split3Name: e.target.value})} />
                   <input type="number" className="form-input" placeholder="Days to due" style={{ width: '100px' }} value={scheduleData.split3Days} onChange={e => setScheduleData({...scheduleData, split3Days: Number(e.target.value)})} />
+                  <div style={{ fontWeight: 'bold', minWidth: '100px', textAlign: 'right' }}>
+                    ₹{((parseFloat(scheduleData.grandTotal || '0') * scheduleData.split3) / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </div>
                 </div>
               </div>
               

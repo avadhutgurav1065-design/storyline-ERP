@@ -210,7 +210,7 @@ export default function ExpensesPage() {
           <span style={{ fontWeight: 600, color: 'var(--primary)' }}>{exp.poNumber || `PO-${exp.id}`}</span>
           <span className="badge badge-ghost">{exp.status}</span>
         </div>
-        <div style={{ fontSize: '1.1rem', fontWeight: 'bold', marginBottom: '4px' }}>{v?.name || `Vendor ${exp.vendorId}`}</div>
+        <div style={{ fontSize: '1.1rem', fontWeight: 'bold', marginBottom: '4px' }}>{v?.name || 'Unknown Vendor'}</div>
         <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>{exp.description}</div>
         <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '4px' }}>🗓 Event: {ev?.name || 'General'}</div>
         

@@ -33,13 +33,15 @@ export default function FinanceDashboard() {
         quotesRes,
         invoicesRes,
         paymentsRes,
-        expensesRes
+        expensesRes,
+        eventsRes
       ] = await Promise.all([
         financeApi.getProfitAndLoss(),
         salesApi.listQuotations({ size: 100 }),
         financeApi.listInvoices({ size: 100 }),
         financeApi.listPayments({ size: 100 }),
-        financeApi.listExpenses({ size: 200 })
+        financeApi.listExpenses({ size: 200 }),
+        financeApi.listPayments().then(() => eventsApi.listEvents()).catch(() => eventsApi.listEvents()) // Ensure events are fetched concurrently
       ]);
       
       let allInvoices = invoicesRes.data.data?.content || [];
@@ -52,6 +54,12 @@ export default function FinanceDashboard() {
       setInvoices(allInvoices);
       setPayments(paymentsRes.data.data?.content || []);
       setExpenses(expensesRes.data.data?.content || []);
+      
+      const evts = Array.isArray(eventsRes.data.data) ? eventsRes.data.data : (eventsRes.data.data?.content || []);
+      (window as any)._eventsMap = evts.reduce((acc: any, e: any) => {
+        acc[e.id] = e.name;
+        return acc;
+      }, {});
       
     } catch (err) {
       console.error(err);
@@ -413,7 +421,7 @@ export default function FinanceDashboard() {
                 {eventExtraExpenses.map(e => (
                   <tr key={e.id}>
                     <td style={{ fontWeight: 500 }}>{e.title}</td>
-                    <td>EVT-{e.eventId}</td>
+                    <td>{((window as any)._eventsMap && (window as any)._eventsMap[e.eventId]) || 'Unknown Event'}</td>
                     <td>{e.category}</td>
                     <td>₹{e.amount?.toLocaleString()}</td>
                     <td>

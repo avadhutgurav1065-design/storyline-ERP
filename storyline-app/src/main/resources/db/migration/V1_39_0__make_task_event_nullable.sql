@@ -1,0 +1,1 @@
+ALTER TABLE tasks ALTER COLUMN event_id DROP NOT NULL;

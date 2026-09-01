@@ -72,9 +72,9 @@ export default function EventDetailsDashboard() {
 
   const getUserName = (userId: number) => {
     const user = users.find(u => Number(u.id) === Number(userId));
-    if (!user) return `User ID: ${userId}`;
+    if (!user) return 'Unknown User';
     const nameStr = user.fullName || user.username || user.email || 'Unknown';
-    return nameStr ? nameStr : user.username || `User ID: ${userId}`;
+    return nameStr ? nameStr : user.username || 'Unknown User';
   };
 
   useEffect(() => {
@@ -522,7 +522,7 @@ export default function EventDetailsDashboard() {
                         {task.assignedUserId ? 
                           (() => {
                             const assignee = users.find(u => Number(u.id) === Number(task.assignedUserId));
-                            return assignee ? (assignee.fullName || assignee.username || assignee.email) : `User ID: ${task.assignedUserId}`;
+                            return assignee ? (assignee.fullName || assignee.username || assignee.email) : 'Unknown User';
                           })()
                         : 'Unassigned'}
                       </td>
@@ -568,7 +568,7 @@ export default function EventDetailsDashboard() {
                 const vendorInfo = vendors.find(v => Number(v.id) === Number(va.vendorId)) || va.vendor;
                 return (
                   <div key={va.id} style={{ padding: '15px', background: 'var(--bg-secondary)', borderRadius: '12px', border: '1px solid var(--border)' }}>
-                    <div style={{ fontWeight: 600, fontSize: '1.1rem', marginBottom: '5px' }}>{vendorInfo?.name || `Vendor ID: ${va.vendorId}`}</div>
+                    <div style={{ fontWeight: 600, fontSize: '1.1rem', marginBottom: '5px' }}>{vendorInfo?.name || 'Unknown Vendor'}</div>
                     <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '5px' }}>📞 {vendorInfo?.phone || 'No Phone'}</div>
                     <div style={{ fontSize: '0.9rem', color: 'var(--primary)', fontWeight: 500 }}>Task: {va.task}</div>
                     <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '8px', display: 'flex', justifyContent: 'space-between' }}>
@@ -839,7 +839,7 @@ export default function EventDetailsDashboard() {
                       const user = users.find(u => Number(u.id) === Number(ta.userId));
                       return (
                         <option key={ta.userId} value={ta.userId}>
-                          {user ? (user.fullName || user.username || user.email) : `User ID ${ta.userId}`} - {ta.role}
+                          {user ? (user.fullName || user.username || user.email) : 'Unknown User'} - {ta.role}
                         </option>
                       );
                     })}

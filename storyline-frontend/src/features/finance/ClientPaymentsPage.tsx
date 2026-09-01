@@ -1,9 +1,10 @@
 import { useState, useEffect, type FormEvent } from 'react';
-import { financeApi, eventsApi } from '../../api/client';
+import { financeApi, eventsApi, crmApi } from '../../api/client';
 
 export default function ClientPaymentsPage() {
   const [payments, setPayments] = useState<any[]>([]);
   const [events, setEvents] = useState<any[]>([]);
+  const [clients, setClients] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
 
@@ -20,12 +21,14 @@ export default function ClientPaymentsPage() {
   const fetchPayments = async () => {
     setLoading(true);
     try {
-      const [res, eventsRes] = await Promise.all([
+      const [res, eventsRes, clientsRes] = await Promise.all([
         financeApi.listPayments(),
-        eventsApi.listEvents()
+        eventsApi.listEvents(),
+        crmApi.listClients({ size: 100 })
       ]);
       setPayments(res.data.data.content || []);
-      setEvents(eventsRes.data.data.content || []);
+      setEvents(Array.isArray(eventsRes.data.data) ? eventsRes.data.data : (eventsRes.data.data?.content || []));
+      setClients(Array.isArray(clientsRes.data.data) ? clientsRes.data.data : (clientsRes.data.data?.content || []));
     } catch (err) {
       console.error(err);
     } finally {
@@ -55,6 +58,16 @@ export default function ClientPaymentsPage() {
     }
   };
 
+  const clientsMap = clients.reduce((acc: any, c: any) => {
+    acc[c.id] = c;
+    return acc;
+  }, {});
+
+  const eventsMap = events.reduce((acc: any, e: any) => {
+    acc[e.id] = e;
+    return acc;
+  }, {});
+
   return (
     <div>
       <div className="page-header">
@@ -72,8 +85,8 @@ export default function ClientPaymentsPage() {
               <tr>
                 <th>Ref ID</th>
                 <th>Date</th>
-                <th>Client ID</th>
-                <th>Event ID</th>
+                <th>Client</th>
+                <th>Event</th>
                 <th>Invoice ID</th>
                 <th>Amount</th>
                 <th>Method</th>
@@ -82,16 +95,16 @@ export default function ClientPaymentsPage() {
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={7} style={{ textAlign: 'center', padding: '40px' }}>Loading payments...</td></tr>
+                <tr><td colSpan={8} style={{ textAlign: 'center', padding: '40px' }}>Loading payments...</td></tr>
               ) : payments.length === 0 ? (
-                <tr><td colSpan={7} style={{ textAlign: 'center', padding: '40px' }}>No payments found</td></tr>
+                <tr><td colSpan={8} style={{ textAlign: 'center', padding: '40px' }}>No payments found</td></tr>
               ) : (
                 payments.map((p) => (
                   <tr key={p.id}>
                     <td><div style={{ fontWeight: 600 }}>{p.paymentReference}</div></td>
                     <td>{p.paymentDate}</td>
-                    <td>{p.clientId}</td>
-                    <td>{p.eventId || '-'}</td>
+                    <td>{clientsMap[p.clientId]?.name || p.clientId}</td>
+                    <td>{eventsMap[p.eventId]?.name || p.eventId || '-'}</td>
                     <td>{p.invoiceId || '-'}</td>
                     <td><div style={{ fontWeight: 600, color: 'var(--success)' }}>₹{p.amount?.toLocaleString()}</div></td>
                     <td>{p.paymentMethod}</td>
@@ -114,8 +127,13 @@ export default function ClientPaymentsPage() {
             <form onSubmit={handleSubmit}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 <div className="form-group">
-                  <label className="form-label">Client ID *</label>
-                  <input type="number" className="form-input" required value={formData.clientId} onChange={e => setFormData({...formData, clientId: e.target.value})} />
+                  <label className="form-label">Client *</label>
+                  <select className="form-input" required value={formData.clientId} onChange={e => setFormData({...formData, clientId: e.target.value})}>
+                    <option value="">Select Client...</option>
+                    {clients.map(c => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
                 </div>
                 <div className="form-group">
                   <label className="form-label">Invoice ID (Optional)</label>

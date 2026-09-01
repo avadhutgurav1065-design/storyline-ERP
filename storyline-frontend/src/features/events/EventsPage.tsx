@@ -157,7 +157,6 @@ export default function EventsPage() {
             <div key={evt.id} className="card" style={{ transition: 'transform 0.2s', cursor: 'pointer' }} onClick={() => navigate(`/events/${evt.id}`)} onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-4px)'} onMouseLeave={e => e.currentTarget.style.transform = 'none'}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
                 <span className={`badge-pastel ${getStatusColor(evt.status)}`}>{evt.status}</span>
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>ID: {evt.id}</span>
               </div>
               
               <h3 style={{ margin: '0 0 16px 0', fontSize: '1.25rem', fontWeight: 600 }}>{evt.name}</h3>

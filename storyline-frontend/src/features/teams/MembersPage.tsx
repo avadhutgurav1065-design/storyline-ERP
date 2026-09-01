@@ -47,8 +47,8 @@ export default function MembersPage() {
         description: taskDescription || `Task assigned directly from Members page.`,
         status: 'PENDING',
         priority: taskPriority,
-        dueDate: taskDueDate ? new Date(taskDueDate).toISOString() : null,
-        assigneeId: selectedMember.id,
+        dueDate: taskDueDate ? taskDueDate : null,
+        assignedUserId: selectedMember.id,
       });
       // Refresh tasks
       const tasksRes = await tasksApi.list();
@@ -114,7 +114,7 @@ export default function MembersPage() {
               gap: '24px',
             }}>
               {members.filter(m => getEmploymentType(m.roleName) === 'In-House').map((m) => {
-                const memberTasks = tasks.filter(t => t.assigneeId === m.id && t.status !== 'COMPLETED');
+                const memberTasks = tasks.filter(t => t.assignedUserId === m.id && t.status !== 'COMPLETED');
                 const avatarBg = avatarGradients[(m.id || 0) % avatarGradients.length];
 
                 return (
@@ -165,7 +165,7 @@ export default function MembersPage() {
               gap: '24px',
             }}>
               {members.filter(m => getEmploymentType(m.roleName) === 'Freelancer').map((m) => {
-                const memberTasks = tasks.filter(t => t.assigneeId === m.id && t.status !== 'COMPLETED');
+                const memberTasks = tasks.filter(t => t.assignedUserId === m.id && t.status !== 'COMPLETED');
                 const avatarBg = avatarGradients[(m.id || 0) % avatarGradients.length];
 
                 return (

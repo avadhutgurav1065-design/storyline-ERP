@@ -41,7 +41,7 @@ public class FinanceService {
 
     public InvoiceDto createInvoice(InvoiceDto dto) {
         Invoice invoice = new Invoice();
-        String invoiceNumber = "INV-" + System.currentTimeMillis();
+        String invoiceNumber = "INV-" + System.currentTimeMillis() + "-" + UUID.randomUUID().toString().substring(0, 4).toUpperCase();
         invoice.setInvoiceNumber(invoiceNumber);
         updateInvoiceFromDto(invoice, dto);
         return mapToDto(invoiceRepository.save(invoice));
