@@ -39,8 +39,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
         
         // getToken using our custom registration
         const actualToken = await getToken(messaging, { 
-          serviceWorkerRegistration: registration,
-          vapidKey: 'BMc2i-L0xTqXyR0-rSlyFmJ8-uP3E2kG8tYqDkG62gQv77n9a2h16cT2sUvY6mK1qUvY6mK1qUvY6mK1qU' 
+          serviceWorkerRegistration: registration
         });
         
         if (actualToken) {
