@@ -4,6 +4,7 @@ import { notificationsApi } from '../api/client';
 
 interface NotificationContextType {
   triggerNotification: (title: string, message: string, type?: 'success' | 'warning' | 'error' | 'info') => void;
+  initFirebaseMessaging: () => Promise<void>;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
@@ -31,6 +32,11 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   };
 
   const initFirebaseMessaging = async () => {
+    // Only init if logged in, otherwise backend returns 403 when saving token
+    if (!localStorage.getItem('accessToken')) {
+      return;
+    }
+
     try {
       if ('Notification' in window && Notification.permission === 'granted' && navigator.serviceWorker) {
         // Register SW with config injected in URL
@@ -44,7 +50,11 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
         
         if (actualToken) {
            console.log("FCM Token:", actualToken);
-           await notificationsApi.registerDeviceToken(actualToken);
+           try {
+             await notificationsApi.registerDeviceToken(actualToken);
+           } catch(apiError) {
+             console.warn("Failed to save FCM token to backend:", apiError);
+           }
         }
       }
     } catch(e) {
@@ -56,10 +66,12 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if ('Notification' in window) {
       if (Notification.permission === 'granted') {
-        initFirebaseMessaging();
+        if (localStorage.getItem('accessToken')) {
+           initFirebaseMessaging();
+        }
       } else if (Notification.permission !== 'denied') {
         Notification.requestPermission().then((permission) => {
-          if (permission === 'granted') {
+          if (permission === 'granted' && localStorage.getItem('accessToken')) {
              initFirebaseMessaging();
           }
         });
@@ -109,7 +121,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <NotificationContext.Provider value={{ triggerNotification }}>
+    <NotificationContext.Provider value={{ triggerNotification, initFirebaseMessaging }}>
       {children}
       
       {/* Toast UI */}

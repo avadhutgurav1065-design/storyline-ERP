@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import type { UserResponse, LoginRequest } from '../types';
 import { authApi } from '../api/client';
+import { useNotification } from './NotificationContext';
 
 interface AuthContextType {
   user: UserResponse | null;
@@ -18,6 +19,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { initFirebaseMessaging } = useNotification();
 
   // On mount, check if user is already logged in
   useEffect(() => {
@@ -58,6 +60,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('user', JSON.stringify(userForStorage));
 
     setUser(userData);
+    
+    // Initialize push notifications now that we are logged in
+    initFirebaseMessaging().catch(e => console.warn("Failed to init messaging after login", e));
   };
 
   const logout = () => {
