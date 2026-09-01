@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 
 interface NotificationContextType {
   triggerNotification: (title: string, message: string, type?: 'success' | 'warning' | 'error' | 'info') => void;
@@ -28,6 +28,13 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Ask for notification permission on mount
+  useEffect(() => {
+    if ('Notification' in window && Notification.permission !== 'granted' && Notification.permission !== 'denied') {
+      Notification.requestPermission();
+    }
+  }, []);
+
   const triggerNotification = (title: string, message: string, type: 'success' | 'warning' | 'error' | 'info' = 'info') => {
     // 1. Play sound
     playBeep();
@@ -37,7 +44,19 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       navigator.vibrate([200, 100, 200]);
     }
 
-    // 3. Show Toast UI
+    // 3. System Notification (Mobile notification bar)
+    if ('Notification' in window && Notification.permission === 'granted') {
+      try {
+        new Notification(title, { 
+          body: message,
+          vibrate: [200, 100, 200]
+        });
+      } catch (e) {
+        console.warn("System notification failed", e);
+      }
+    }
+
+    // 4. Show Toast UI
     setToast({ title, message, type });
     
     // Auto-hide toast after 5 seconds

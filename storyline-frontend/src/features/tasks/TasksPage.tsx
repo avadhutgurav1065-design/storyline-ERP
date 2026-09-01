@@ -18,7 +18,7 @@ export default function TasksPage({ filter }: { filter: 'my' | 'team' | 'all' })
     try {
       const [tasksRes, usersRes] = await Promise.all([
         tasksApi.list({ filter }),
-        usersApi.list()
+        usersApi.list({ size: 1000 })
       ]);
       
       const allTasks = tasksRes.data.data || [];
@@ -125,7 +125,7 @@ export default function TasksPage({ filter }: { filter: 'my' | 'team' | 'all' })
                 <tr><td colSpan={6} style={{ textAlign: 'center', padding: '40px' }}>No tasks found</td></tr>
               ) : (
                 tasks.map((task) => {
-                  const assignee = usersMap[task.assigneeId];
+                  const assignee = usersMap[task.assignedUserId];
                   const avatarColor = assignee ? ['#E0F2FE', '#FEF08A', '#BBF7D0', '#FCE7F3'][assignee.id % 4] : '#F3F4F6';
                   const textColor = assignee ? ['#0284C7', '#854D0E', '#166534', '#DB2777'][assignee.id % 4] : '#9CA3AF';
 

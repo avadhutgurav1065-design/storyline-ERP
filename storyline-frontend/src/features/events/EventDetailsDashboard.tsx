@@ -83,7 +83,7 @@ export default function EventDetailsDashboard() {
     // Fetch users for the assignment modal
     const fetchUsersAndVendors = async () => {
       try {
-        const usersRes = await usersApi.list();
+        const usersRes = await usersApi.list({ size: 1000 });
         const usersData = usersRes.data.data as any;
         setUsers(usersData.content || usersData || []);
       } catch (err) { console.warn("Users access restricted"); }
